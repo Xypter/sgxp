@@ -13,3 +13,6 @@ At present my programming knowledge is mediocre at best, which means that things
 
 If you are a programmer and feel like you could be useful to this project, I encourage you to DM me over on [Discord](https://discordapp.com/channels/@me/196978916123082752) or visit the SGXP [Discord Server](https://discord.gg/YBXbDSHm9f) and hit me up.
 
+## Getting Started
+
+Linked [here](https://github.com/Xypter/SGXP/issues/1) is a running list of all the things I would like to implement into this application. If you think there is something that should be added, I suggest adding a comment below it so I can add it in.
