@@ -1,0 +1,13 @@
+:root {
+  --border-color: #000500;
+  --page-color: #052014;
+  --font-color: #18ff5d;
+  --font-link-color: #ff7e29;
+  --font-link-hover: #ff6b6b;
+}
+
+body {
+  background-color: black;
+  background-attachment: fixed;
+  background-image: url("../static/img/themes/mfz/bg_02.png");
+}

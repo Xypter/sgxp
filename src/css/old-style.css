@@ -1,0 +1,674 @@
+
+body{
+  background-image: url("../img/30.gif");
+  background-attachment: fixed;
+  background-repeat: tile;
+  color: #f7fff7;
+  font-family: 'Nunito-Regular', sans-serif;
+  font-size: 10pt;
+  line-height:1.2em;
+  margin:0;
+  padding:0;
+}
+
+h1{
+  font-family: 'Logo';
+  font-size: 36pt;
+  text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black;
+  text-align: center;
+}
+
+h2{
+  font-family: 'Bit';
+  font-size: 36pt;
+  text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black;
+  text-align: center;
+  line-height: 0px;
+}
+
+.b{
+  font-weight: bold;
+  text-align: left;
+  padding: 0px 20px;
+}
+
+.b2{
+  font-family: 'Nunito-Black';
+  font-size: 24px;
+  text-align: center;
+  margin: 20px auto;
+  padding: 0px 20px;
+}
+
+@font-face {
+  font-family: 'Bit';
+  src:  url('Gamer.ttf');
+}
+
+@font-face {
+  font-family: 'Logo';
+  src:  url('04B_19__.ttf');
+}
+
+@font-face {
+  font-family: 'Cube';
+  src:  url('D3CutebitmapismA.ttf');
+}
+
+@font-face {
+  font-family: 'Nunito-Regular';
+  src:  url('Nunito-Regular.ttf');
+}
+
+@font-face {
+  font-family: 'Nunito-Black';
+  src:  url('Nunito-Black.ttf');
+}
+
+a{
+  text-decoration: none;
+  color: #f6e27f;
+  margin:0;
+  padding:0;
+}
+
+a:hover{
+  color:#e71d36;
+}
+
+.img{
+  padding: 0px 0px 0px 0px;
+  margin: -20px 0px 0px -20px;
+}
+
+.clr{
+  clear:both;
+}
+
+.sprite{
+  display: flex;
+  flex-flow: wrap;
+  justify-content: center;
+}
+
+.sprite-btn{
+  height: 51px;
+  width: 46px;
+  margin: 0px 4px 4px 0px;
+  box-shadow: 3px 3px 0px rgba(0,0,0,1);
+  transition: box-shadow 0.3s ease-in-out;
+  transition: all 0.3s ease-in-out;
+}
+
+.sprite-btn:hover {
+  transform: translateY(-5px);
+  transition: 0.1s;
+}
+
+.sprite-banner{
+  height: 36px;
+  width: 546px;
+  margin: 30px 0px 5px -4px;
+  box-shadow: 3px 3px 0px rgba(0,0,0,1);
+}
+
+.sprite-space{
+  height: 20px;
+}
+
+.make-it-slow {
+  box-shadow: 5px 5px 5px rgba(0,0,0,0.5);
+  transition: box-shadow 0.3s ease-in-out;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Transition to a bigger shadow on hover */
+.make-it-slow:hover {
+  box-shadow: 8px 8px 20px rgba(0,0,0,1);
+}
+
+/* Navigation Bar */
+
+.nav-btn{
+  display: inline-block;
+  background-color: #232c33;
+  color: #ffffff;
+  padding: 8px 0px;
+  text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black;
+  font-family: 'Cube';
+  font-size: 14px;
+  margin: 0px 1px;
+  width: 123px;
+  text-align: center;
+  float: left;
+  vertical-align: top;
+  transition: opacity 0.2s ease;
+}
+
+.nav-btn:hover{
+  color: #f6e27f;
+}
+
+.shutter-out-horizontal{
+  -webkit-transition: color 0.2s;
+  transition: color 0.2s;
+  position: relative;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.shutter-out-horizontal:before{
+    content: "";
+    position: absolute;
+    z-index: -1;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #232c33;
+    opacity: 1;
+    -webkit-transform: scaleX(0);
+    transform: scaleX(0);
+    -webkit-transform-origin: 50%;
+    transform-origin: 50%;
+    -webkit-transition-property: transform;
+    transition-property: transform;
+    -webkit-transition: 0.2s ease-out;
+    transition: 0.2s ease-out;
+}
+
+.shutter-out-horizontal:hover:before{
+    -webkit-transform: scaleX(1);
+    transform: scaleX(1);
+}
+
+/*End Navigation Bar*/
+
+.container{
+  width: 1000px;
+  margin: 6px auto;
+  padding: 0;
+}
+
+.inner-border{
+  border: 1px solid #000500;
+  padding: 0px;
+}
+
+.inner-content{
+  border: 1px solid #000500;
+  padding: 20px;
+}
+
+.bar-inner-content{
+  border: 1px solid #000500;
+  padding: 20px 0px;
+}
+
+.header{
+  background-color:#232c33;
+  color:#f7fff7;
+  border: 1px solid #232c33;
+  padding: 0px;
+  margin-top: 0px;
+  font-size: 24px;
+}
+
+.header h1{
+  font-family:'Nunito-Black';
+  text-decoration: underline;
+}
+
+.nav-bar{
+  color:#f7fff7;
+  padding: 0px;
+  margin: 0px 0px 10px 0px;
+  height: 30px;
+}
+
+.nav-bar ul{
+  padding:0;
+  list-style: none;
+}
+
+#img{
+  display: block;
+  margin: auto;
+  width: 50%;
+}
+
+.content{
+  background-color:#232c33;
+  color:#f7fff7;
+  border: 1px solid #232c33;
+  padding: 0px;
+  margin: 10px 200px 10px 200px;
+  height: 100%;
+}
+
+.large-content{
+  background-color:#232c33;
+  color:#f7fff7;
+  border: 1px solid #232c33;
+  padding: 0px;
+  margin: 10px 0px 10px 0px;
+}
+
+.left-bar{
+  float: left;
+  width:190px;
+  height: 100%;
+  background-color:#232c33;
+  border: 1px solid #232c33;
+}
+
+.right-bar{
+  float: right;
+  width:190px;
+  background-color:#232c33;
+  border: 1px solid #232c33;
+}
+
+.footer{
+  background-color:#232c33;
+  color:#f7fff7;
+  border: 1px solid #232c33;
+  padding: 0px;
+  margin: 10px 200px 10px 200px;
+}
+
+.large-footer{
+  background-color:#232c33;
+  color:#f7fff7;
+  border: 1px solid #232c33;
+  padding: 0px;
+  margin: 10px 0px 10px 0px;
+}
+
+.inner-footer{
+  border: 1px solid #000500;
+  padding: 5px;
+  text-align:center;
+}
+
+/*Steam Cards*/
+
+.steam-cards {
+    display: flex;
+    flex-flow: row wrap;
+    max-width: 930px;
+    margin: 0 auto;
+    justify-content: center;
+}
+
+.steam-item {
+    position: relative;
+    max-width: 150px;
+    width: 100%;
+    height: 100px;
+    background-color: #000000;
+    margin: 0px 15px 30px;
+    font-family: motiva-sans, sans-serif;
+    transition: 0.3s;
+    overflow: hidden;
+    border-radius: 5px;
+}
+
+.steam-item:hover {
+    transform: translateY(-3px);
+}
+
+.steam-item a {
+    color: #fff;
+    text-decoration: none;
+}
+
+.steam-item .image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    background-size: cover;
+    opacity: 0;
+    z-index: 1;
+    transition: 0.3s;
+    opacity: 0.8;
+}
+
+.steam-item:hover .image {
+    opacity: 1;
+}
+
+.steam-item .info {
+    position: relative;
+    padding: 15px 20px;
+    margin-bottom: 10px;
+    z-index: 5;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    overflow-wrap: break-word;
+    transition: 0.3s;
+}
+
+.steam-item .title {
+    font-weight: 900;
+    font-size: 12pt;
+    font-family: 'Bit';
+    margin: 0;
+    line-height: 15px;
+    transition: 0.3s;
+}
+
+.steam-item .date {
+    font-size: 12pt;
+    font-family: 'Bit';
+    font-weight: 900;
+    color: #665e7a;
+    transition: 0.3s;
+}
+
+.steam-item .button {
+    display: inline-block;
+    border: solid 1px #808080;
+    background-color: #252525;
+    font-family: 'Cube';
+    font-size: 14px;
+    letter-spacing: 1.8px;
+    padding: 12px 15px;
+    font-weight: 600;
+    transition: 0.3s;
+    margin-top: 15px;
+}
+
+.steam-item:hover .button {
+    background-color: #ffffff;
+    border: solid 1px #ffffff;
+    box-shadow: -5px 5px rgba(102, 94, 122, 0.92);
+    color: #000000;
+    cursor: pointer;
+}
+
+.steam-item:hover .title,
+.steam-item:hover .date {
+    text-shadow: -5px 7px 0px #000000, -10px 2px 20px #f6e27f;
+    color: #f6e27f;
+}
+
+.steam-item:nth-of-type(1) .image {
+    background: linear-gradient(to right,
+    rgba(0,0,0,0) 0%,
+    rgba(0,0,0,0) 50%,
+    rgba(0,0,0,0) 100%),
+    url('../img/Main-Icon.png');
+}
+
+.steam-item:nth-of-type(2) .image {
+    background: linear-gradient(to right,
+    rgba(0,0,0,0) 0%,
+    rgba(0,0,0,0) 50%,
+    rgba(0,0,0,0) 100%),
+    url("../img/Others-Icon.png");
+}
+
+.steam-item:nth-of-type(3) .image {
+    background: linear-gradient(to right,
+    rgba(0,0,0,0) 0%,
+    rgba(0,0,0,0) 50%,
+    rgba(0,0,0,0) 100%),
+    url("../img/Badniks-Icon.png");
+}
+
+.steam-item:nth-of-type(4) .image {
+    background: linear-gradient(to right,
+    rgba(0,0,0,0) 0%,
+    rgba(0,0,0,0) 50%,
+    rgba(0,0,0,0) 100%),
+    url("../img/Alternate-Universe-Icon.png");
+}
+
+.steam-item:nth-of-type(5) .image {
+    background: linear-gradient(to right,
+    rgba(0,0,0,0) 0%,
+    rgba(0,0,0,0) 50%,
+    rgba(0,0,0,0) 100%),
+    url("../img/Backgrounds-&-Items-Icon.png");
+}
+
+.steam-item:nth-of-type(6) .image {
+    background: linear-gradient(to right,
+    rgba(0,0,0,0) 0%,
+    rgba(0,0,0,0) 50%,
+    rgba(0,0,0,0) 100%),
+    url("../img/Pixel-Art-Icon.pn");
+}
+
+.steam-item:nth-of-type(7) .image {
+    background: linear-gradient(to right,
+    rgba(0,0,0,0) 0%,
+    rgba(0,0,0,0) 50%,
+    rgba(0,0,0,0) 100%),
+    url("https://steamstore-a.akamaihd.net/public/images/promo/steamawards2018/award-bah.jpg");
+}
+
+.steam-item:nth-of-type(8) .image {
+    background: linear-gradient(to right,
+    rgba(0,0,0,0) 0%,
+    rgba(0,0,0,0) 50%,
+    rgba(0,0,0,0) 100%),
+    url("https://steamstore-a.akamaihd.net/public/images/promo/steamawards2018/award-fwm.jpg");
+}
+
+/*Sprite Button*/
+
+button{
+  display: inline-block;
+  position: relative;
+  border: none;
+  line-height: 12px;
+  color: #fff;
+  font-size: 12pt;
+  font-family: 'Bit';
+  cursor: pointer;
+  margin: 10px;
+  width: 150px;
+  height: 100px;
+  background: linear-gradient(to right,
+  rgba(0,0,0,0.3) 0%,
+  rgba(0,0,0,0.7) 25%,
+  rgba(0,0,0,0.5) 75%),
+  url("https://steamstore-a.akamaihd.net/public/images/promo/steamawards2018/award-fwm.jpg");
+}
+button::before, button::after{
+  content:"";
+  width: 0;
+  height: 2px;
+  position: absolute;
+  transition: all 0.1s linear;
+  background: #fff;
+}
+span::before, span::after{
+  content:"";
+  width: 2px;
+  height:0;
+  position: absolute;
+  transition: all 0.1s linear;
+  background: #fff;
+}
+button:hover::before, button:hover::after{
+  width: 100%;
+}
+button:hover span::before, button:hover span::after{
+  height: 100%;
+}
+span{
+  display: block;
+  padding: 25px 40px;
+}
+.sprite-main::before, .sprite-main::after{
+  transition-delay: 0.1s;
+}
+.sprite-main span::before, .sprite-main span::after{
+  transition-delay: 0s;
+}
+.sprite-main::before{
+  right: 0;
+  top: 0;
+}
+.sprite-main::after{
+  left: 0;
+  bottom: 0;
+}
+.sprite-main span::before{
+  left: 0;
+  top: 0;
+}
+.sprite-main span::after{
+  right: 0;
+  bottom: 0;
+}
+.sprite-main:hover::before, .sprite-main:hover::after{
+  transition-delay: 0s;
+}
+.sprite-main:hover span::before, .sprite-main:hover span::after{
+  transition-delay: 0.1s;
+}
+
+/*Progress Bar*/
+
+.load-progress {
+  margin: auto;
+  padding:0;
+  width:90%;
+  height:50px;
+  overflow:hidden;
+  background:#f6e27f;
+  border-radius: 3px;
+  box-shadow: 5px 5px 5px rgba(0, 0, 0, 1)
+}
+
+.load-bar {
+	position:relative;
+  float:left;
+  min-width:1%;
+  height:100%;
+  background: #e71d36;
+}
+
+.load-percent {
+	position: absolute;
+  top:50%;
+  left:40px;
+  transform:translate(-50%,-50%);
+  margin:0;
+  font-family: 'Nunito-Black';
+  font-size:24px;
+  color:white;
+}
+
+/*Start Star Background CSS*/
+
+.one {
+  line-height: 20em;
+  text-align: center;
+  height: 250px;
+  width: 1000px;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+}
+.one #button {
+  width: 1000px;
+  height: 250px;
+  color: #f6f6f6;
+  font-family: 'Logo';
+  top: 50%;
+  left: 50%;
+  position: relative;
+  -webkit-transform: translate(-50%, -50%);
+  -moz-transform: translate(-50%, -50%);
+  -o-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  overflow: hidden;
+  -webkit-transition: all 0.4s cubic-bezier(0.55, 0, 0.1, 1);
+  -moz-transition: all 0.4s cubic-bezier(0.55, 0, 0.1, 1);
+  -o-transition: all 0.4s cubic-bezier(0.55, 0, 0.1, 1);
+  transition: all 0.4s cubic-bezier(0.55, 0, 0.1, 1);
+  box-shadow: 0px 0px 0px #fff;
+}
+.one #button:hover {
+  text-shadow: 8px 8px 0px #f6e27f;
+  box-shadow: 0px 0px 0px #fff, -0px -0px 0px #fff;
+}
+.one #button:hover .one {
+  opacity: 1;
+  transform: translate3d(0px, -250px, 0px);
+}
+.one #button:hover .two {
+  transform: translate3d(0px, -250px, 0px);
+}
+.one #button:hover .three { 
+  transform: translate3d(0px, -250px, 0px);
+}
+.one #button:hover .four {
+  transform: translate3d(0px, 0px, 0px);
+}
+.one #button .ring {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  background: transparent;
+  top: 0;
+  left: 0;
+  transform: translate3d(0px, 250px, 0px);
+}
+.one #button .one {
+  background-color: #e71d36;
+  -webkit-transition: all 0.2s cubic-bezier(0.55, 0, 0.1, 1);
+  -moz-transition: all 0.2s cubic-bezier(0.55, 0, 0.1, 1);
+  -o-transition: all 0.2s cubic-bezier(0.55, 0, 0.1, 1);
+  transition: all 0.2s cubic-bezier(0.55, 0, 0.1, 1);
+  z-index: -3;
+  z-index: -4;
+}
+.one #button .two {
+  background-color: #f6e27f;
+  -webkit-transition: all 0.3s cubic-bezier(0.55, 0, 0.1, 1);
+  -moz-transition: all 0.3s cubic-bezier(0.55, 0, 0.1, 1);
+  -o-transition: all 0.3s cubic-bezier(0.55, 0, 0.1, 1);
+  transition: all 0.3s cubic-bezier(0.55, 0, 0.1, 1);
+  z-index: -3;
+}
+.one #button .three {
+  background-color: #4258e4;
+  z-index: -2;
+  -webkit-transition: all 0.4s cubic-bezier(0.55, 0, 0.1, 1);
+  -moz-transition: all 0.4s cubic-bezier(0.55, 0, 0.1, 1);
+  -o-transition: all 0.4s cubic-bezier(0.55, 0, 0.1, 1);
+  transition: all 0.4s cubic-bezier(0.55, 0, 0.1, 1);
+  z-index: -3;
+}
+.one #button .four {
+  background-image: url('../img/SGXP_Logo_01.1.gif');
+  z-index: -1;
+  -webkit-transition: all 0.5s cubic-bezier(0.55, 0, 0.1, 1);
+  -moz-transition: all 0.5s cubic-bezier(0.55, 0, 0.1, 1);
+  -o-transition: all 0.5s cubic-bezier(0.55, 0, 0.1, 1);
+  transition: all 0.s cubic-bezier(0.55, 0, 0.1, 1);
+  z-index: -3;
+}
+
+#clip {
+  /*
+  Ensure background is added first
+  */
+  background: #fff;
+  -webkit-text-fill-color: transparent;
+  -webkit-background-clip: text;
+  font-size: 150px;
+}

@@ -1,0 +1,31 @@
+:root {
+  --border-color: #000500;
+  --page-color: #26294d;
+  --font-color: #c6ffe4;
+  --font-link-color: #ffcb6b;
+  --font-link-hover: #799cff;
+}
+
+body {
+  background-color: #242424;
+  background-attachment: fixed;
+  background-image:
+    /*boss*/ url("../static/img/themes/hpz/boss.gif"), /*sonic*/ url("../static/img/themes/hpz/sonic_run.gif"), /*floor 1*/ url("../static/img/themes/hpz/floor_01.png"), /*wall 1*/ url("../static/img/themes/hpz/wall_01.png"),
+    /*wall 2*/ url("../static/img/themes/hpz/wall_02.png"), /*wall 3*/ url("../static/img/themes/hpz/wall_03.png"), /*wall 4*/ url("../static/img/themes/hpz/wall_04.png"), /*wall 5*/ url("../static/img/themes/hpz/wall_05.png"),
+    /*wall 6*/ url("../static/img/themes/hpz/wall_06.png"), /*wall 7*/ url("../static/img/themes/hpz/wall_07.png"), /*wall 8*/ url("../static/img/themes/hpz/wall_08.png"), /*wall 9*/ url("../static/img/themes/hpz/wall_09.png"),
+    /*wall 10*/ url("../static/img/themes/hpz/wall_10.png");
+  background-repeat: repeat-x;
+  background-position:
+    /*boss*/ left -3500px bottom 120px, /*sonic*/ left -3000px bottom 100px, /*floor 1*/ left 0px bottom -300px, /*wall 1*/ left 0px bottom 100px, /*wall 2*/ left 0px bottom 256px, /*wall 3*/ left 0px bottom 303px,
+    /*wall 4*/ left 0px bottom 311px, /*wall 5*/ left 0px bottom 328px, /*wall 6*/ left 0px bottom 336px, /*wall 7*/ left 0px bottom 344px, /*wall 8*/ left 0px bottom 348px, /*wall 9*/ left 0px bottom 352px, /*wall 10*/ -500px 0;
+  animation: 200s para infinite linear;
+}
+
+@keyframes para {
+  100% {
+    background-position:
+      /*boss*/ left 86500px bottom 100px, /*sonic*/ left 87000px bottom 100px, /*floor 1*/ left -30000px bottom -300px, /*wall 1*/ left -20000px bottom 100px, /*wall 2*/ left -12000px bottom 256px,
+      /*wall 3*/ left -11000px bottom 303px, /*wall 4*/ left -10000px bottom 311px, /*wall 5*/ left -9000px bottom 328px, /*wall 6*/ left -8000px bottom 336px, /*wall 7*/ left -7000px bottom 344px, /*wall 8*/ left -6000px bottom 348px,
+      /*wall 9*/ left -5000px bottom 352px, /*wall 10*/ -3000px 0;
+  }
+}

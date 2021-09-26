@@ -1,0 +1,260 @@
+@font-face{
+  font-family: iconfont;
+  src: url('ca.ttf');
+}
+
+.updatesheeticons {
+    width: calc(100% - 0px);
+    padding: 10px 10px 10px 0px;
+    text-align: left;
+}
+
+.updatesheeticons .largeiconcontainer{
+    margin: 0px 0px 10px 10px;
+}
+
+.largeiconcontainer {
+    background-color: #575757;
+    border: 1px solid #5b5b5b;
+    box-shadow: 3px 3px 0px 0px #000000;
+    position: relative;
+    width: 140px;
+    margin: 0px;
+    display: inline-block;
+    vertical-align: bottom;
+    border-spacing: 0px;
+    transition: 0.1s;
+    transform: translateY(-1px);
+}
+
+.largeiconcontainer:hover {
+    transform: translateY(-6px);
+}
+
+.iconstar {
+  background-image: url('star.png'), url('star.png'), url('star.png'), url('star.png'), url('star.png'), url('star.png'), url('star.png');
+  background-position: 1px, 7px, 13px, 19px, 25px, 31px, 37px;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+  background-attachment: relative;
+  background-color: #242424;
+  border-top: 1px solid #000000;
+  border-bottom: 1px solid #000000;
+
+  color: #ffffff;
+
+  width: 134px;
+  height: 6px;
+  margin: 3px 3px 0px 3px;
+  overflow: hidden;
+}
+
+.iconnumber {
+    background-image: url('number.png');
+    background-position: right;
+    background-repeat: no-repeat;
+    background-attachment: relative;
+    background-color: #ff7640;
+    border-bottom: 1px solid #000000;
+  
+    color: #ffffff;
+  
+    width: 25px;
+    height: 6px;
+    margin: 0px 4px 0px 108px;
+    overflow: hidden;
+  }
+
+.iconheader {
+    background-color: #000000;
+    border-top: 1px solid #ffffff;
+    border-bottom: 1px solid #ffffff;
+  
+    color: #ffffff;
+  
+    width: 128px;
+    height: 25px;
+    padding: 0px 3px 2px 3px;
+    margin: 0px 3px 3px 3px;
+    overflow: hidden;
+}
+
+.iconheadertext {
+    /*text-shadow: 2px 2px #85ffb8;*/
+  
+    width: 128px;
+    height: 27px;
+    font-family: 'iconfont';
+    font-size: 8px;
+    letter-spacing: 0px;
+    display: table-cell;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 9px;
+}
+
+.iconfooter {
+    background-color: #000000;
+    border-top: 1px solid #ffffff;
+    border-bottom: 1px solid #ffffff;
+  
+    color: #ffffff;
+  
+    width: 128px;
+    height: 25px;
+    padding: 0px 3px 2px 3px;
+    margin: 0px 3px 3px 3px;
+    overflow: hidden;
+}
+
+.iconfootertext {
+    /*text-shadow: 2px 2px #85ffb8;*/
+  
+    width: 128px;
+    height: 27px;
+    font-family: 'iconfont';
+    font-size: 8px;
+    letter-spacing: 0px;
+    display: table-cell;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 9px;
+}
+
+.subimg {
+    -webkit-filter: drop-shadow(10px 10px 0px rgba(0,0,0,0.7));
+    filter:         drop-shadow(10px 10px 0px rgba(0,0,0,0.7));
+}
+
+.iconbody img {
+    vertical-align: middle;
+}
+
+.iconbody {
+    background-image: url('bg3.png');
+    border-left: solid 2px #000000;
+    border-top: solid 2px #000000;
+    border-right: solid 1px #000000;
+    border-bottom: solid 1px #000000;
+  
+    width: 131px;
+    height: 131px;
+    background-position: center;
+    background-repeat: no-repeat;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 120px;
+    margin-left: 3px;
+    margin-bottom: 3px;
+    overflow: hidden;
+    transition: 0.2s;
+}
+
+.iconbody:hover {
+    transform: scale(1.0);
+}
+
+.smalliconcontainer {
+    background-color: #575757;
+    border: 1px solid #5b5b5b;
+    box-shadow: 3px 3px 0px 0px #000000;
+    position: relative;
+    width: 80px;
+    margin: 0px;
+    display: inline-block;
+    vertical-align: bottom;
+    border-spacing: 0px;
+    margin: 0px 0px 10px 9px;
+    transition: 0.1s;
+    transform: translateY(-1px);
+}
+
+.smalliconcontainer:hover {
+    transform: translateY(-6px)
+}
+
+.smalliconstar {
+  background-image: url('star.png'), url('star.png'), url('star.png'), url('star.png'), url('star.png'), url('star.png'), url('star.png');
+  background-position: 1px, 7px, 13px, 19px, 25px, 31px, 37px;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+  background-attachment: relative;
+  background-color: #242424;
+  border-top: 1px solid #000000;
+  border-bottom: 1px solid #000000;
+
+  color: #ffffff;
+
+  width: 74px;
+  height: 6px;
+  margin: 3px 3px 0px 3px;
+  overflow: hidden;
+}
+
+.smalliconnumber {
+    background-image: url('number.png');
+    background-position: right;
+    background-repeat: no-repeat;
+    background-attachment: relative;
+    background-color: #ff7640;
+    border-bottom: 1px solid #000000;
+  
+    color: #ffffff;
+  
+    width: 25px;
+    height: 6px;
+    margin: 0px 4px 0px 48px;
+    overflow: hidden;
+  }
+
+.smalliconheader {
+    background-color: #000000;
+    border-top: 1px solid #ffffff;
+    border-bottom: 1px solid #ffffff;
+  
+    color: #ffffff;
+  
+    width: 68px;
+    height: 25px;
+    padding: 0px 3px 2px 3px;
+    margin: 0px 3px 3px 3px;
+    overflow: hidden;
+}
+
+.smalliconheadertext {
+    /*text-shadow: 2px 2px #85ffb8;*/
+  
+    width: 68px;
+    height: 27px;
+    font-family: 'iconfont';
+    font-size: 8px;
+    display: table-cell;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 9px;
+    letter-spacing: 0px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /*text-shadow: 1px 0px rgb(255, 0, 60, .5), -1px 0px rgb(0, 13, 255, .5);*/
+}
+
+.smalliconbody img {
+    /*vertical-align: middle;*/
+}
+
+.smalliconbody {
+    background-image: url('bg2.png');
+    border-left: solid 2px #000000;
+    border-top: solid 2px #000000;
+    border-right: solid 1px #000000;
+    border-bottom: solid 1px #000000;
+  
+    width: 71px;
+    height: 71px;
+    background-position: center;
+    background-repeat: no-repeat;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 120px;
+    margin-left: 3px;
+    margin-bottom: 3px;
+    overflow: hidden;
+}
