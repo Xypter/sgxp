@@ -1,4 +1,4 @@
-# SGXP: The Open Source Sprite Website
+# The SGXP: The Open Source Sprite Website
 
 ## Introduction
 The SGXP has evolved quite a bit since I first started the project in the summer of 2019. From a small webpage hardcoded in HTML with a small bit of CSS, to a fully functional site based in PHP, this site has grown at the same speed as my knowledge in web development. Along the way we have also amassed a small community of members pasionate about the medium of spriting; and though we started as an MFZ clone, we have managed to spread our wings and become something all on our own.
