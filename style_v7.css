@@ -1,0 +1,100 @@
+:root {
+  --bg-color: #1D1D20;
+  --page-color: #303036;
+  --font-color: #F2F6F7;
+  --radius: 4px;
+  --border-color: #303036;
+  --border-style: solid;
+  --border-width: 1px;
+  --box-shadow: 10px 10px 20px rgb(0, 0, 0, .7);
+  --gap: 10px;
+  --transition-speed: 200ms;
+  --filter-color: invert(96%) sepia(2%) saturate(7368%) hue-rotate(179deg) brightness(114%) contrast(93%);
+  --filter-hover: invert(100%) sepia(40%) saturate(3721%) hue-rotate(329deg) brightness(107%) contrast(97%);
+  --font-link-color: rgb(251,227,6);
+}
+
+body {
+  background-attachment: fixed;
+  background-color: black;
+  background-image:
+    /*rocks 5*/ 
+    url("../static/img/rocks5.png"), 
+    /*rocks 4*/ 
+    url("../static/img/rocks4.png"), 
+    /*rocks 3*/ 
+    url("../static/img/rocks3.png"), 
+    /*sonic*/ 
+    url("../static/img/supersonic.gif"), 
+    /*eggman*/ 
+    url("../static/img/eggmanboss.gif"),
+    /*rocks 2*/ 
+    url("../static/img/rocks2.png"), 
+    /*rocks 1*/ 
+    url("../static/img/rocks1.png"), 
+    /*world 7*/ 
+    url("../static/img/world7.png"), 
+    /*world 6*/ 
+    url("../static/img/world6.png"), 
+    /*world 5*/ 
+    url("../static/img/world5.png"), 
+    /*world 4*/ 
+    url("../static/img/world4.png"),
+    /*world 3*/ 
+    url("../static/img/world3.png"), 
+    /*world 2*/ 
+    url("../static/img/world2.png"), 
+    /*world 1*/ 
+    url("../static/img/world1.png"), 
+    /*stars 2*/ 
+    url("../static/img/stars2.gif"), 
+    /*stars 1*/ 
+    url("../static/img/stars1.gif");
+  background-repeat: repeat-x;
+  background-position:
+    /*rocks 5*/ left 0px bottom 0px, /*rocks 4*/ left 0px bottom 0px, /*rocks 3*/ left 0px bottom 50px, /*sonic*/ left -2200px bottom 100px, /*eggman*/ left -2000px bottom 50px, /*rocks 2*/ left 0px bottom 50px,
+    /*rocks 1*/ left 0px bottom 50px, /*world 7*/ left 0px bottom 200px, /*world 6*/ left 0px bottom 192px, /*world 5*/ left 0px bottom 184px, /*world 4*/ left 0px bottom 168px, /*world 3*/ left 0px bottom 144px,
+    /*world 2*/ left 0px bottom 96px, /*world 1*/ left 0px bottom 0px, /*stars 2*/ 0 0, /*stars 1*/ 0 0;
+  animation: 200s para infinite linear;
+}
+
+@keyframes para {
+  100% {
+    background-position:
+      /*rocks 5*/ left -8000px bottom 50px, /*rocks 4*/ left -7000px bottom 50px, /*rocks 3*/ left -6000px bottom 0px, /*sonic*/ left 80000px bottom 100px, /*eggman*/ left 80000px bottom 50px,
+      /*rocks 2*/ left -5000px bottom -50px, /*rocks 1*/ left -4000px bottom -100px, /*world 7*/ left 3000px bottom 200px, /*world 6*/ left 4000px bottom 192px, /*world 5*/ left 5000px bottom 184px, /*world 4*/ left 6000px bottom 168px,
+      /*world 3*/ left 7000px bottom 144px, /*world 2*/ left 8000px bottom 96px, /*world 1*/ left 10000px bottom 0px, /*stars 2*/ 2000px 0, /*stars 1*/ 800px 0;
+  }
+}
+
+.sexy-link:link {
+  text-decoration: none;
+  color: var(--bg-color);
+  background: var(--font-link-color);
+  padding: 1px 4px;
+  border-radius: 3px;
+  transition: ease-in-out .2s;
+}
+
+.sexy-link:visited {
+  color: var(--bg-color);
+  text-decoration: none;
+}
+
+.sexy-link:hover {
+  background: var(--font-color);
+}
+
+.other-header {
+  margin-top: 0px;
+  background-image: url('static/img/bg-tiles.png');
+  background-attachment: fixed;
+  box-shadow: var(--box-shadow);
+}
+
+@media (max-width: 800px) {
+  body {
+    background-color: var(--bg-color);
+    background-image: none;
+  }
+}
