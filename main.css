@@ -60,7 +60,7 @@ body {
   text-align: center;
   transition: ease-in-out .2s;
   cursor: default;
-  padding: 5px 0;
+  padding: 20px 0 0px 0;
 }
 
 .header-title:hover {
@@ -361,15 +361,18 @@ select {
 .sprite-container {
   display: flex;
   flex-flow: row wrap;
+  justify-content: center;
   margin: auto;
   max-width: 1200px;
 }
 
 .sprite-box {
-  flex: 1 0 0;
-  min-width: 200px;
-  height: 400px;
-  background: chartreuse;
+  flex: 1 1 1;
+  width: 232px;
+  height: 244px;
+  zoom: 50%;
+  align-content: flex-start;
+  background-image: url("static/img/spriteicon/icon_image.png");
   margin: 10px;
 }
 

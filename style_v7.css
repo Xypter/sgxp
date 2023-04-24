@@ -19,37 +19,37 @@ body {
   background-color: black;
   background-image:
     /*rocks 5*/ 
-    url("../static/img/rocks5.png"), 
+    url("../static/img/themes/ddz/rocks5.png"), 
     /*rocks 4*/ 
-    url("../static/img/rocks4.png"), 
+    url("../static/img/themes/ddz/rocks4.png"), 
     /*rocks 3*/ 
-    url("../static/img/rocks3.png"), 
+    url("../static/img/themes/ddz/rocks3.png"), 
     /*sonic*/ 
-    url("../static/img/supersonic.gif"), 
+    url("../static/img/themes/ddz/supersonic.gif"), 
     /*eggman*/ 
-    url("../static/img/eggmanboss.gif"),
+    url("../static/img/themes/ddz/eggmanboss.gif"),
     /*rocks 2*/ 
-    url("../static/img/rocks2.png"), 
+    url("../static/img/themes/ddz/rocks2.png"), 
     /*rocks 1*/ 
-    url("../static/img/rocks1.png"), 
+    url("../static/img/themes/ddz/rocks1.png"), 
     /*world 7*/ 
-    url("../static/img/world7.png"), 
+    url("../static/img/themes/ddz/world7.png"), 
     /*world 6*/ 
-    url("../static/img/world6.png"), 
+    url("../static/img/themes/ddz/world6.png"), 
     /*world 5*/ 
-    url("../static/img/world5.png"), 
+    url("../static/img/themes/ddz/world5.png"), 
     /*world 4*/ 
-    url("../static/img/world4.png"),
+    url("../static/img/themes/ddz/world4.png"),
     /*world 3*/ 
-    url("../static/img/world3.png"), 
+    url("../static/img/themes/ddz/world3.png"), 
     /*world 2*/ 
-    url("../static/img/world2.png"), 
+    url("../static/img/themes/ddz/world2.png"), 
     /*world 1*/ 
-    url("../static/img/world1.png"), 
+    url("../static/img/themes/ddz/world1.png"), 
     /*stars 2*/ 
-    url("../static/img/stars2.gif"), 
+    url("../static/img/themes/ddz/stars2.gif"), 
     /*stars 1*/ 
-    url("../static/img/stars1.gif");
+    url("../static/img/themes/ddz/stars1.gif");
   background-repeat: repeat-x;
   background-position:
     /*rocks 5*/ left 0px bottom 0px, /*rocks 4*/ left 0px bottom 0px, /*rocks 3*/ left 0px bottom 50px, /*sonic*/ left -2200px bottom 100px, /*eggman*/ left -2000px bottom 50px, /*rocks 2*/ left 0px bottom 50px,
@@ -87,7 +87,7 @@ body {
 
 .other-header {
   margin-top: 0px;
-  background-image: url('static/img/bg-tiles.png');
+  background-image: url('../static/img/themes/ddz/bg-tiles.png');
   background-attachment: fixed;
   box-shadow: var(--box-shadow);
 }
