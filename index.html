@@ -60,7 +60,7 @@
             <div class="news-user">Xypter</div>
             <div class="news-date">November 9 at 5:44 PM</div>
             <span class="news-content">
-              <a class="sexy-link" href="#"> What's gucci cuh</a> This is a test Post<br>This is an actual test of the font
+              <a class="sexy-link" href="#"> What's gucci cuh</a> This is a test Post<br>This is an actual test of the font: with a couple:of colons
             </span>
           </div>
         </div>
@@ -139,6 +139,14 @@
   <script src="app.js"></script>
   <script src="nav.js"></script>
   <script src="slogan.js"></script>
+  <script type="text/javascript">
+    fix_odd_viewport = () => {
+      document.body.style.width = "initial";
+      document.body.style.width = (document.body.clientWidth&~1)+"px";
+    }
+    addEventListener("resize", fix_odd_viewport);
+    fix_odd_viewport();
+  </script>
 
   
 

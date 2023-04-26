@@ -1,0 +1,79 @@
+:root {
+  --multiplication-factor: 2;
+  --number-shadow: #982808;
+}
+
+@font-face {
+  font-family: sprite;
+  src: url('PixelTiny.ttf')
+}
+
+.sprite-container {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: center;
+  margin: auto;
+  max-width: 1200px;
+}
+
+.sprite-box {  
+  width: calc(116px * var(--multiplication-factor));
+  height: calc(156px * var(--multiplication-factor));
+  background-image: url("static/img/spriteicon/icon_image.svg");
+  margin: .5rem;
+}
+
+.sprite-star-container {
+  display: flex;
+  margin-left: calc(6px * var(--multiplication-factor));
+  margin-top: calc(3px * var(--multiplication-factor));
+  margin-bottom: calc(-9px * var(--multiplication-factor));
+  width: calc(70px * var(--multiplication-factor));
+}
+
+.sprite-star {
+  background-image: url("static/img/spriteicon/star.svg");
+  height: calc(6px * var(--multiplication-factor));
+  width: calc(7px * var(--multiplication-factor));
+}
+
+.sprite-star:nth-child(n + 2) {
+  margin-left: calc(-1px * var(--multiplication-factor));
+}
+
+.sprite-number {
+  display: flex;
+  justify-content: right;
+  margin-right: calc(6px * var(--multiplication-factor));
+  margin-top: calc(4px * var(--multiplication-factor));
+}
+
+.sprite-number-text {
+  line-height: 0;
+  font-family: 'sprite', monospace;
+  font-size: calc(16px * var(--multiplication-factor));
+  text-shadow: calc(1px * var(--multiplication-factor)) 0px var(--number-shadow), 0px calc(1px * var(--multiplication-factor)) var(--number-shadow), calc(1px * var(--multiplication-factor)) calc(1px * var(--multiplication-factor)) var(--number-shadow);
+ 
+}
+
+.sprite-title {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: calc(4px * var(--multiplication-factor));
+  margin-left: calc(3px * var(--multiplication-factor));
+  margin-right: calc(3px * var(--multiplication-factor));
+  height: calc(16px * var(--multiplication-factor));
+  width: calc(110px * var(--multiplication-factor));
+}
+
+.sprite-title-text {
+  font-family: 'sprite', monospace;
+  font-size: calc(16px * var(--multiplication-factor));
+  line-height: calc(6px * var(--multiplication-factor));
+  text-align: center;
+
+  -webkit-text-size-adjust: none;
+
+  filter: contrast(100.00001%);
+}

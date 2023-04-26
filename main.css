@@ -28,10 +28,14 @@ h1, h2, h3, h4, h5, h6, p, a, ul, ol, li, small {
   font-size: 100%;
   background: transparent; }
 
+a:link {
+
+}
+
 body {
   margin: 0;
   color: var(--font-color);
-  font-family: 'Rubik', sans-serif;
+  font-family: 'Rubik', monospace;
   font-size: .9em;
   display: flex;
   flex-direction: column;
@@ -354,30 +358,6 @@ select {
   height: 40px;
   width: 40px;
   border-radius: 50%;
-}
-
-/*Sprite Page CSS*/
-
-.sprite-container {
-  display: flex;
-  flex-flow: row wrap;
-  justify-content: center;
-  margin: auto;
-  max-width: 1200px;
-}
-
-.sprite-box {
-  flex: 1 1 1;
-  width: 232px;
-  height: 244px;
-  zoom: 50%;
-  align-content: flex-start;
-  background-image: url("static/img/spriteicon/icon_image.png");
-  margin: 10px;
-}
-
-.sprite-content {
-
 }
 
 /*Media Queries*/
