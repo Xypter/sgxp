@@ -1,6 +1,7 @@
 :root {
   --multiplication-factor: 2;
   --number-shadow: #982808;
+  --text-shadow: #4b4b54;
 }
 
 @font-face {
@@ -18,7 +19,7 @@
 
 .sprite-box {  
   width: calc(116px * var(--multiplication-factor));
-  height: calc(156px * var(--multiplication-factor));
+  height: calc(160px * var(--multiplication-factor));
   background-image: url("static/img/spriteicon/icon_image.svg");
   margin: .5rem;
 }
@@ -44,16 +45,32 @@
 .sprite-number {
   display: flex;
   justify-content: right;
+  line-height: 0;
   margin-right: calc(6px * var(--multiplication-factor));
   margin-top: calc(4px * var(--multiplication-factor));
 }
 
 .sprite-number-text {
-  line-height: 0;
   font-family: 'sprite', monospace;
   font-size: calc(16px * var(--multiplication-factor));
   text-shadow: calc(1px * var(--multiplication-factor)) 0px var(--number-shadow), 0px calc(1px * var(--multiplication-factor)) var(--number-shadow), calc(1px * var(--multiplication-factor)) calc(1px * var(--multiplication-factor)) var(--number-shadow);
+
+  -webkit-text-size-adjust: none;
+
+  filter: contrast(100.00001%);
  
+}
+
+.sprite-text {
+  font-family: 'sprite', monospace;
+  font-size: calc(16px * var(--multiplication-factor));
+  line-height: calc(7px * var(--multiplication-factor));
+  text-align: center;
+  text-shadow: calc(1px * var(--multiplication-factor)) 0px var(--text-shadow);
+
+  -webkit-text-size-adjust: none;
+
+  filter: contrast(100.00001%);
 }
 
 .sprite-title {
@@ -67,13 +84,43 @@
   width: calc(110px * var(--multiplication-factor));
 }
 
-.sprite-title-text {
-  font-family: 'sprite', monospace;
-  font-size: calc(16px * var(--multiplication-factor));
-  line-height: calc(6px * var(--multiplication-factor));
-  text-align: center;
+.sprite-image {
+  display: flex;
+  justify-content: center;
+  image-rendering: pixelated;
+  filter: drop-shadow(calc(10px * var(--multiplication-factor)) calc(10px * var(--multiplication-factor)) 0px rgba(0,0,0,0.7));
+  height: calc(71px * var(--multiplication-factor));
+  width: calc(103px * var(--multiplication-factor));  
+  margin-top: calc(4px * var(--multiplication-factor));
+  margin-left: calc(7px * var(--multiplication-factor));
+  margin-right: calc(6px * var(--multiplication-factor));
+}
 
-  -webkit-text-size-adjust: none;
+.sprite-image > img {
+  height: inherit;
+  width:min-content;
+}
 
-  filter: contrast(100.00001%);
+.sprite-author {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: calc(3px * var(--multiplication-factor));
+  margin-right: calc(3px * var(--multiplication-factor));
+  height: calc(9px * var(--multiplication-factor));
+  width: calc(110px * var(--multiplication-factor));
+}
+
+.sprite-stats {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-top: calc(6px * var(--multiplication-factor));
+  margin-left: calc(24px * var(--multiplication-factor));
+  margin-right: calc(3px * var(--multiplication-factor));
+  width: calc(110px * var(--multiplication-factor));
+}
+
+.sprite-stats:nth-child(n + 4) {
+  height: calc(3px * var(--multiplication-factor));
 }
