@@ -1,5 +1,5 @@
-function GetRandomMsg() {
-  var myMessageArray = [
+export default function GetRandomMsg() {
+  let myMessageArray = [
     "Now you've reached a remarkable period in earth's history, known as the Cretaceous. It is a very different world. The Himalayas do not yet exist, and the Atlantic is only half as wide. There is no grass, only conifer forests and fern prairies. This is a world ruled by bans.",
     "WORDS UP THESE MIXED ARE",
     "Does what Nintendon't, SON!",
@@ -185,7 +185,7 @@ function GetRandomMsg() {
     "If you want to blame anyone, Blame Blur",
     "You're welcome for this button, I accept chickens or goats for payment - Laguna"
   ];
-  var randomMsg = myMessageArray[Math.floor(Math.random() * myMessageArray.length)];
+  let randomMsg = myMessageArray[Math.floor(Math.random() * myMessageArray.length)];
   document.getElementById("message").innerHTML=randomMsg;
   return randomMsg;
 }

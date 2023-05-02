@@ -1,17 +1,17 @@
 @font-face {
   font-family: Rubik;
-  src: url('Rubik-VariableFont_wght.ttf')
+  src: url('./fonts/Rubik-VariableFont_wght.ttf')
 }
 
 @font-face {
   font-family: logo;
-  src: url('04B_19__.TTF')
+  src: url('./fonts/04B_19__.TTF')
   /*14px increments, or 1em*/
 }
 
 @font-face {
   font-family: comic;
-  src: url('animeace2_reg.ttf')
+  src: url('./fonts/animeace2_reg.ttf')
 }
 
 html {
@@ -27,10 +27,6 @@ h1, h2, h3, h4, h5, h6, p, a, ul, ol, li, small {
   outline: 0;
   font-size: 100%;
   background: transparent; }
-
-a:link {
-
-}
 
 body {
   margin: 0;

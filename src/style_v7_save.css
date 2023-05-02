@@ -1,36 +1,36 @@
 background-image:
     /*rocks 5*/ 
-    url("../static/img/rocks5.png"), 
+    url("src/img/rocks5.png"), 
     /*rocks 4*/ 
-    url("../static/img/rocks4.png"), 
+    url("src/img/rocks4.png"), 
     /*rocks 3*/ 
-    url("../static/img/rocks3.png"), 
+    url("src/img/rocks3.png"), 
     /*sonic*/ 
-    url("../static/img/supersonic.gif"), 
+    url("src/img/supersonic.gif"), 
     /*eggman*/ 
-    url("../static/img/eggmanboss.gif"),
+    url("src/img/eggmanboss.gif"),
     /*rocks 2*/ 
-    url("../static/img/rocks2.png"), 
+    url("src/img/rocks2.png"), 
     /*rocks 1*/ 
-    url("../static/img/rocks1.png"), 
+    url("src/img/rocks1.png"), 
     /*world 7*/ 
-    url("../static/img/world7.png"), 
+    url("src/img/world7.png"), 
     /*world 6*/ 
-    url("../static/img/world6.png"), 
+    url("src/img/world6.png"), 
     /*world 5*/ 
-    url("../static/img/world5.png"), 
+    url("src/img/world5.png"), 
     /*world 4*/ 
-    url("../static/img/world4.png"),
+    url("src/img/world4.png"),
     /*world 3*/ 
-    url("../static/img/world3.png"), 
+    url("src/img/world3.png"), 
     /*world 2*/ 
-    url("../static/img/world2.png"), 
+    url("src/img/world2.png"), 
     /*world 1*/ 
-    url("../static/img/world1.png"), 
+    url("src/img/world1.png"), 
     /*stars 2*/ 
-    url("../static/img/stars2.gif"), 
+    url("src/img/stars2.gif"), 
     /*stars 1*/ 
-    url("../static/img/stars1.gif");
+    url("src/img/stars1.gif");
   background-repeat: repeat-x;
   background-position:
     /*rocks 5*/ left 0px bottom 0px, 
