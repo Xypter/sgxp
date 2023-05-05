@@ -1,5 +1,6 @@
 import './main.css';
 import './style_v7.css';
+import GetRandomMsg from './slogan';
 
 export default function Header() {
     return (
@@ -7,9 +8,7 @@ export default function Header() {
   <div className="other-header">
     <div className="header-title">SGXP</div>
     <div className="slogan">
-      <div onclick="GetRandomMsg()" className="inner-slogan">
-        <div className="unselectable-text" id="message" />
-      </div>
+      <GetRandomMsg />
     </div>
   </div>
   <nav className="navbar" id="navbar">
