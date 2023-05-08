@@ -14,6 +14,11 @@
   src: url('./fonts/animeace2_reg.ttf')
 }
 
+@font-face {
+  font-family: main-pixel;
+  src: url('./fonts/undefined-medium.ttf');
+}
+
 html {
   scrollbar-width: thin;
   height: 100%;
@@ -35,6 +40,7 @@ body {
   font-size: .9em;
   display: flex;
   flex-direction: column;
+  cursor: url('./img/Sonic_Cursor.png'), auto;
 }
 
 .container {
@@ -61,18 +67,19 @@ body {
   transition: ease-in-out .2s;
   cursor: default;
   padding: 20px 0 0px 0;
+  text-shadow: 5px 5px 15px #000000;
 }
 
 .header-title:hover {
   text-shadow: 
-  10px 0px 0px rgb(251,227,6), 
-  20px 0px 0px rgb(238,127,14), 
-  30px 0px 0px rgb(37,89,164), 
-  40px 0px 0px rgb(233,62,44), 
-  -10px 0px 0px rgb(251,227,6), 
-  -20px 0px 0px rgb(238,127,14), 
-  -30px 0px 0px rgb(37,89,164), 
-  -40px 0px 0px rgb(233,62,44);
+  2px 2px 0px rgb(251,227,6), 
+  4px 4px 0px rgb(238,127,14), 
+  6px 6px 0px rgb(37,89,164), 
+  8px 8px 0px rgb(233,62,44),
+  10px 10px 0px rgb(251,227,6), 
+  12px 12px 0px rgb(238,127,14), 
+  14px 14px 0px rgb(37,89,164), 
+  16px 16px 0px rgb(233,62,44)
 }
 
 .slogan {
@@ -80,7 +87,7 @@ body {
   padding: 0 15px;
   max-width: 1200px;
   margin: 0px auto 20px auto;
-  text-shadow: 2px 2px 1px rgb(0,0,0);
+  text-shadow: 3px 3px 3px rgb(0,0,0);
 }
 
 .unselectable-text {

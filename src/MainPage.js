@@ -1,15 +1,19 @@
 import './main.css';
 import './style_v7.css';
 import GetRandomMsg from './slogan';
+import HeaderTitle from './HeaderTitle'
+import usericon from '../src/img/a3a4b140dda3d8543d30ae2dee8bf565.png'
 
 export default function Header() {
     return (
 <body>
   <div className="other-header">
-    <div className="header-title">SGXP</div>
+    <HeaderTitle />
     <div className="slogan">
       <GetRandomMsg />
     </div>
+    
+
   </div>
   <nav className="navbar" id="navbar">
     <div className="topnav">
@@ -54,7 +58,7 @@ export function Content () {
         <div className="main-content-box">
           <div className="news">
             <div className="news-img">
-              <img src="static\img\a3a4b140dda3d8543d30ae2dee8bf565.png" alt="" />
+              <img src={usericon} alt="" />
             </div>
             <div className="news-user">Xypter</div>
             <div className="news-date">November 9 at 5:44 PM</div>
@@ -72,7 +76,7 @@ export function Content () {
         <div className="main-content-box">
           <div className="news">
             <div className="news-img">
-              <img src="static\img\a3a4b140dda3d8543d30ae2dee8bf565.png" alt="" />
+              <img src={usericon} alt="" />
             </div>
             <div className="news-user">Xypter</div>
             <div className="news-date">November 9 at 5:44 PM</div>
@@ -94,7 +98,7 @@ export function Content () {
         <div className="main-content-box">
           <div className="news">
             <div className="news-img">
-              <img src="static\img\a3a4b140dda3d8543d30ae2dee8bf565.png" alt="" />
+              <img src={usericon} alt="" />
             </div>
             <div className="news-user">Xypter</div>
             <div className="news-date">November 9 at 5:44 PM</div>
@@ -116,7 +120,7 @@ export function Content () {
         <div className="main-content-box">
           <div className="news">
             <div className="news-img">
-              <img src="static\img\a3a4b140dda3d8543d30ae2dee8bf565.png" alt="" />
+              <img src={usericon} alt="" />
             </div>
             <div className="news-user">Xypter</div>
             <div className="news-date">November 9 at 5:44 PM</div>
@@ -138,51 +142,7 @@ export function Content () {
         <div className="main-content-box">
           <div className="news">
             <div className="news-img">
-              <img src="static\img\a3a4b140dda3d8543d30ae2dee8bf565.png" alt="" />
-            </div>
-            <div className="news-user">Xypter</div>
-            <div className="news-date">November 9 at 5:44 PM</div>
-            <span className="news-content">
-              <a className="sexy-link" href="#">
-                {" "}
-                What's gucci cuh
-              </a>{" "}
-              Main Content Lorem ipsum dolor sit amet consectetur, adipisicing elit.
-              Nihil vero at veniam itaque ipsa consectetur. Accusantium quisquam
-              sapiente cum debitis hic ex ea nobis eius quod, corporis fugit nemo
-              quam! Lorem ipsum dolor sit amet consectetur adipisicing elit.
-              Sapiente id esse non iure, sequi temporibus voluptatem aperiam sit
-              velit fugit necessitatibus autem at optio sint quo, repellendus
-              perspiciatis provident natus?
-            </span>
-          </div>
-        </div>
-        <div className="main-content-box">
-          <div className="news">
-            <div className="news-img">
-              <img src="static\img\a3a4b140dda3d8543d30ae2dee8bf565.png" alt="" />
-            </div>
-            <div className="news-user">Xypter</div>
-            <div className="news-date">November 9 at 5:44 PM</div>
-            <span className="news-content">
-              <a className="sexy-link" href="#">
-                {" "}
-                What's gucci cuh
-              </a>{" "}
-              Main Content Lorem ipsum dolor sit amet consectetur, adipisicing elit.
-              Nihil vero at veniam itaque ipsa consectetur. Accusantium quisquam
-              sapiente cum debitis hic ex ea nobis eius quod, corporis fugit nemo
-              quam! Lorem ipsum dolor sit amet consectetur adipisicing elit.
-              Sapiente id esse non iure, sequi temporibus voluptatem aperiam sit
-              velit fugit necessitatibus autem at optio sint quo, repellendus
-              perspiciatis provident natus?
-            </span>
-          </div>
-        </div>
-        <div className="main-content-box">
-          <div className="news">
-            <div className="news-img">
-              <img src="static\img\a3a4b140dda3d8543d30ae2dee8bf565.png" alt="" />
+              <img src={usericon} alt="" />
             </div>
             <div className="news-user">Xypter</div>
             <div className="news-date">November 9 at 5:44 PM</div>
