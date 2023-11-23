@@ -18,38 +18,22 @@ body {
   background-attachment: fixed;
   background-color: black;
   background-image:
-    /*rocks 5*/ 
-    url("../src/img/themes/ddz/rocks5.png"), 
-    /*rocks 4*/ 
-    url("../src/img/themes/ddz/rocks4.png"), 
-    /*rocks 3*/ 
-    url("../src/img/themes/ddz/rocks3.png"), 
-    /*sonic*/ 
-    url("../src/img/themes/ddz/supersonic.gif"), 
-    /*eggman*/ 
-    url("../src/img/themes/ddz/eggmanboss.gif"),
-    /*rocks 2*/ 
-    url("../src/img/themes/ddz/rocks2.png"), 
-    /*rocks 1*/ 
-    url("../src/img/themes/ddz/rocks1.png"), 
-    /*world 7*/ 
-    url("../src/img/themes/ddz/world7.png"), 
-    /*world 6*/ 
-    url("../src/img/themes/ddz/world6.png"), 
-    /*world 5*/ 
-    url("../src/img/themes/ddz/world5.png"), 
-    /*world 4*/ 
-    url("../src/img/themes/ddz/world4.png"),
-    /*world 3*/ 
-    url("../src/img/themes/ddz/world3.png"), 
-    /*world 2*/ 
-    url("../src/img/themes/ddz/world2.png"), 
-    /*world 1*/ 
-    url("../src/img/themes/ddz/world1.png"), 
-    /*stars 2*/ 
-    url("../src/img/themes/ddz/stars2.gif"), 
-    /*stars 1*/ 
-    url("../src/img/themes/ddz/stars1.gif");
+    /*rocks 5*/ url("/src/css/themes/ddz/rocks5.png"), 
+    /*rocks 4*/ url("/src/css/themes/ddz/rocks4.png"), 
+    /*rocks 3*/ url("/src/css/themes/ddz/rocks3.png"), 
+    /*sonic*/ url("/src/css/themes/ddz/supersonic.gif"), 
+    /*eggman*/ url("/src/css/themes/ddz/eggmanboss.gif"),
+    /*rocks 2*/ url("/src/css/themes/ddz/rocks2.png"), 
+    /*rocks 1*/ url("/src/css/themes/ddz/rocks1.png"), 
+    /*world 7*/ url("/src/css/themes/ddz/world7.png"), 
+    /*world 6*/ url("/src/css/themes/ddz/world6.png"), 
+    /*world 5*/ url("/src/css/themes/ddz/world5.png"), 
+    /*world 4*/ url("/src/css/themes/ddz/world4.png"),
+    /*world 3*/ url("/src/css/themes/ddz/world3.png"), 
+    /*world 2*/ url("/src/css/themes/ddz/world2.png"), 
+    /*world 1*/ url("/src/css/themes/ddz/world1.png"), 
+    /*stars 2*/ url("/src/css/themes/ddz/stars2.gif"), 
+    /*stars 1*/ url("/src/css/themes/ddz/stars1.gif");
   background-repeat: repeat-x;
   background-position:
     /*rocks 5*/ left 0px bottom 0px, 
@@ -114,7 +98,7 @@ body {
 .other-header {
   margin-top: 0px;
   margin-bottom: 0px;
-  background-image: url('../src/img/themes/ddz/bg-tiles.svg');
+  background-image: url("/src/css/themes/ddz/bg-tiles.svg");
   background-size: calc(32px * 1);
   box-shadow: var(--box-shadow);
 }
