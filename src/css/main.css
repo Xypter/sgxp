@@ -231,22 +231,29 @@ select {
   background: transparent;
   font-family: "nav";
   font-size: 16px;
-  text-align: right;
+
+  text-shadow:
+  calc(-1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 #84340c,
+  calc( 0px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 #84340c,
+  calc( 1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 #84340c,
+  calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 #84340c,
+  calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 #84340c,
+  calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 #84340c,
+  calc(-1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 #84340c,
+  calc(-1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 #84340c;
 }
 
 select::-ms-expand {
   float: right;
   display: none;
-  font-family: "Cube";
+  font-family: "nav";
 }
 
 .select {
   float: right;
   position: relative;
-  display: flex;
-  width: 16em;
+  display: inline-block;
   line-height: 3;
-  background: var(--page-color);
   overflow: hidden;
 }
 
@@ -255,19 +262,20 @@ select {
   padding: 0 0.5em;
   color: var(--font-color);
   cursor: pointer;
+  font-family: "nav";
 }
 
 .select::after {
   background: var(--page-color);
   cursor: pointer;
   pointer-events: none;
-  -webkit-transition: 0.25s all ease;
-  -o-transition: 0.25s all ease;
-  transition: 0.25s all ease;
+  -webkit-transition: 1s all ease;
+  -o-transition: 1s all ease;
+  transition: 1s all ease;
 }
 
 .select:hover::after {
-  color: var(--font-link-color);
+  color: #84340c;
 }
 
 .content {
