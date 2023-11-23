@@ -1,12 +1,12 @@
 :root {
-  --multiplication-factor: 2;
+  --multiplication-factor: 1;
   --number-shadow: #002806;
   --text-shadow: #4b4b54;
 }
 
 @font-face {
   font-family: sprite;
-  src: url('fonts/PixelTiny.ttf')
+  src: url('fonts/smallest_pixel-7.ttf')
 }
 
 .sprite-container {
@@ -14,13 +14,14 @@
   flex-flow: row wrap;
   justify-content: flex-start;
   margin: auto;
+  padding: 0px 200px
 }
 
 .sprite-box {  
   width: calc(117px * var(--multiplication-factor));
   height: calc(188px * var(--multiplication-factor));
   background-image: url("img/spriteicon/icon_image.svg");
-  margin: 10px;
+  margin: 20px 10px;
   user-select: none;
   transition: transform 1s;
   text-decoration: none;
@@ -55,22 +56,22 @@
   justify-content: right;
   line-height: 0;
   margin-right: calc(6px * var(--multiplication-factor));
-  margin-top: calc(4px * var(--multiplication-factor));
+  margin-top: calc(5px * var(--multiplication-factor));
 }
 
 .sprite-number-text {
   font-family: 'sprite', monospace;
-  font-size: calc(16px * var(--multiplication-factor));
+  font-size: calc(10px * var(--multiplication-factor));
   text-shadow: calc(1px * var(--multiplication-factor)) 0px var(--number-shadow), 0px calc(1px * var(--multiplication-factor)) var(--number-shadow), calc(1px * var(--multiplication-factor)) calc(1px * var(--multiplication-factor)) var(--number-shadow);
 }
 
 .sprite-text {
   font-family: 'sprite', monospace;
   user-select: none;
-  font-size: calc(16px * var(--multiplication-factor));
+  font-size: calc(10px * var(--multiplication-factor));
   line-height: calc(7px * var(--multiplication-factor));
   text-align: center;
-  text-shadow: calc(1px * var(--multiplication-factor)) 0px var(--text-shadow);
+  
 }
 
 .sprite-title {
