@@ -187,7 +187,7 @@ body {
 }
 
 .nav li a:hover {
-  background-color: rgba(0,0,0,0.7);
+  background-color: rgba(244, 188, 84, .8);
   height: calc(16px * var(--multiply-factor));
 }
 

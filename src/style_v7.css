@@ -52,18 +52,44 @@ body {
     url("../src/img/themes/ddz/stars1.gif");
   background-repeat: repeat-x;
   background-position:
-    /*rocks 5*/ left 0px bottom 0px, /*rocks 4*/ left 0px bottom 0px, /*rocks 3*/ left 0px bottom 50px, /*sonic*/ left -2200px bottom 100px, /*eggman*/ left -2000px bottom 50px, /*rocks 2*/ left 0px bottom 50px,
-    /*rocks 1*/ left 0px bottom 50px, /*world 7*/ left 0px bottom 200px, /*world 6*/ left 0px bottom 192px, /*world 5*/ left 0px bottom 184px, /*world 4*/ left 0px bottom 168px, /*world 3*/ left 0px bottom 144px,
-    /*world 2*/ left 0px bottom 96px, /*world 1*/ left 0px bottom 0px, /*stars 2*/ 0 0, /*stars 1*/ 0 0;
+    /*rocks 5*/ left 0px bottom 0px, 
+    /*rocks 4*/ left 0px bottom 0px, 
+    /*rocks 3*/ left 0px bottom 50px, 
+    /*sonic*/ left -2200px bottom 100px, 
+    /*eggman*/ left -2000px bottom 50px, 
+    /*rocks 2*/ left 0px bottom 50px,
+    /*rocks 1*/ left 0px bottom 50px, 
+    /*world 7*/ left 0px bottom 200px, 
+    /*world 6*/ left 0px bottom 192px, 
+    /*world 5*/ left 0px bottom 184px, 
+    /*world 4*/ left 0px bottom 168px, 
+    /*world 3*/ left 0px bottom 144px,
+    /*world 2*/ left 0px bottom 96px, 
+    /*world 1*/ left 0px bottom 0px, 
+    /*stars 2*/ 0 0, 
+    /*stars 1*/ 0 0;
   animation: 200s para infinite linear;
 }
 
 @keyframes para {
   100% {
     background-position:
-      /*rocks 5*/ left -8000px bottom 50px, /*rocks 4*/ left -7000px bottom 50px, /*rocks 3*/ left -6000px bottom 0px, /*sonic*/ left 80000px bottom 100px, /*eggman*/ left 80000px bottom 50px,
-      /*rocks 2*/ left -5000px bottom -50px, /*rocks 1*/ left -4000px bottom -100px, /*world 7*/ left 3000px bottom 200px, /*world 6*/ left 4000px bottom 192px, /*world 5*/ left 5000px bottom 184px, /*world 4*/ left 6000px bottom 168px,
-      /*world 3*/ left 7000px bottom 144px, /*world 2*/ left 8000px bottom 96px, /*world 1*/ left 10000px bottom 0px, /*stars 2*/ 2000px 0, /*stars 1*/ 800px 0;
+      /*rocks 5*/ left -8000px bottom 50px, 
+      /*rocks 4*/ left -7000px bottom 50px, 
+      /*rocks 3*/ left -6000px bottom 0px, 
+      /*sonic*/ left 80000px bottom 100px, 
+      /*eggman*/ left 80000px bottom 50px,
+      /*rocks 2*/ left -5000px bottom -50px, 
+      /*rocks 1*/ left -4000px bottom -100px, 
+      /*world 7*/ left 3000px bottom 200px, 
+      /*world 6*/ left 4000px bottom 192px, 
+      /*world 5*/ left 5000px bottom 184px, 
+      /*world 4*/ left 6000px bottom 168px,
+      /*world 3*/ left 7000px bottom 144px, 
+      /*world 2*/ left 8000px bottom 96px, 
+      /*world 1*/ left 10000px bottom 0px, 
+      /*stars 2*/ 2000px 0, 
+      /*stars 1*/ 800px 0;
   }
 }
 
