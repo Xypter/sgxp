@@ -14,7 +14,7 @@
   flex-flow: row wrap;
   justify-content: flex-start;
   margin: auto;
-  padding: 0px 200px
+  padding: 0px 300px;
 }
 
 .sprite-box {  
@@ -79,10 +79,11 @@
   justify-content: center;
   align-items: center;
   margin-top: calc(4px * var(--multiplication-factor));
-  margin-left: calc(3px * var(--multiplication-factor));
-  margin-right: calc(3px * var(--multiplication-factor));
+  margin-left: calc(5px * var(--multiplication-factor));
+  margin-right: calc(10px * var(--multiplication-factor));
   height: calc(16px * var(--multiplication-factor));
-  width: calc(110px * var(--multiplication-factor));
+  width: calc(108px * var(--multiplication-factor));
+  overflow-wrap: anywhere;
 }
 
 .sprite-image {
@@ -112,6 +113,7 @@
   margin-right: calc(12px * var(--multiplication-factor));
   height: calc(25.5px * var(--multiplication-factor));
   width: calc(93px * var(--multiplication-factor));
+  overflow-wrap: anywhere;
 }
 
 .sprite-stats {
