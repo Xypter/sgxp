@@ -126,7 +126,16 @@ body {
   background-size: cover;
   -webkit-background-clip: text;
   transition: ease-in-out .2s;
-  text-shadow: 5px 5px 0px rgba(0,0,0,0.5);
+
+  text-shadow: 
+  calc(-1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 0px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc(-1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc(-1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color);
 }
 
 .navlogo:hover {
@@ -145,20 +154,16 @@ body {
   font-family: 'nav';
   font-size: calc(16px * var(--multiply-factor));
   line-height: calc(12px * var(--multiply-factor));
-  box-shadow: 
-  0px 5px 0px #487890 inset,
-  0px 8px 0px #487890 inset
-  ;
   
   text-shadow:
-  calc(-1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 #84340c,
-  calc( 0px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 #84340c,
-  calc( 1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 #84340c,
-  calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 #84340c,
-  calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 #84340c,
-  calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 #84340c,
-  calc(-1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 #84340c,
-  calc(-1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 #84340c;
+  calc(-1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 0px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc(-1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc(-1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color);
 }
 
 .nav ul {
@@ -166,17 +171,11 @@ body {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background: red;
+  background: var(--page-color);
   background-size: calc(16px * var(--multiply-factor));
-  box-shadow: 0px 4px 0px #487890 inset;
 }
 
 .active {
-}
-
-.nav {
-  box-shadow: 
-  5px 5px 0px #487890 inset;
 }
 
 .nav li {
@@ -236,32 +235,21 @@ select {
   text-align: right;
   padding-right: 20px;
 
-  text-shadow:
-  calc(-1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 #84340c,
-  calc( 0px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 #84340c,
-  calc( 1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 #84340c,
-  calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 #84340c,
-  calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 #84340c,
-  calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 #84340c,
-  calc(-1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 #84340c,
-  calc(-1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 #84340c;
+  text-shadow: 
+  calc(-1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 0px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc(-1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc(-1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color);
 }
 
 select option {
-  background: rgba(0, 0, 0, 0.3);
-  font-family:Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif ;
-  font-size: 16px;
-  padding-top: 50px;
-  
-  text-shadow:
-  calc(-1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 #84340c,
-  calc( 0px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 #84340c,
-  calc( 1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 #84340c,
-  calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 #84340c,
-  calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 #84340c,
-  calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 #84340c,
-  calc(-1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 #84340c,
-  calc(-1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 #84340c;
+  background: var(--page-color);
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 700;
 }
 
 select::-ms-expand {
@@ -273,7 +261,6 @@ select::-ms-expand {
   float: right;
   display: inline-block;
   line-height: 3;
-  overflow: hidden;
 }
 
 select {
@@ -293,6 +280,12 @@ select {
 .select:hover::after {
   color: #84340c;
   margin-top: 100px;
+}
+
+.select:hover {
+  background-color: var(--font-link-color);
+  height: calc(48px * var(--multiply-factor));
+  width: auto;
 }
 
 .content {

@@ -4,7 +4,7 @@
   "info": {
     "singularName": "sprite",
     "pluralName": "sprites",
-    "displayName": "Sprites",
+    "displayName": "Sprite Library",
     "description": ""
   },
   "options": {
@@ -12,36 +12,36 @@
   },
   "pluginOptions": {},
   "attributes": {
-    "Author": {
-      "type": "string",
-      "required": true,
-      "maxLength": 36
-    },
-    "Title": {
+    "title": {
       "type": "string",
       "required": true,
       "maxLength": 42
     },
-    "Submitter": {
+    "author": {
+      "type": "string",
+      "required": true,
+      "maxLength": 34
+    },
+    "submitter": {
       "type": "string",
       "required": true,
       "maxLength": 17
     },
-    "spriteiconimage": {
+    "iconimage": {
       "type": "media",
-      "multiple": true,
+      "multiple": false,
       "required": true,
       "allowedTypes": [
         "images"
       ]
     },
-    "spritesheet": {
+    "sheet": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
       "allowedTypes": [
         "images"
-      ],
-      "type": "media",
-      "multiple": true,
-      "required": true
+      ]
     }
   }
 }

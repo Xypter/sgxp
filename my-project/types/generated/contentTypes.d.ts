@@ -367,30 +367,30 @@ export interface ApiSpriteSprite extends Schema.CollectionType {
   info: {
     singularName: 'sprite';
     pluralName: 'sprites';
-    displayName: 'Sprites';
+    displayName: 'Sprite Library';
     description: '';
   };
   options: {
     draftAndPublish: true;
   };
   attributes: {
-    Author: Attribute.String &
-      Attribute.Required &
-      Attribute.SetMinMaxLength<{
-        maxLength: 36;
-      }>;
-    Title: Attribute.String &
+    title: Attribute.String &
       Attribute.Required &
       Attribute.SetMinMaxLength<{
         maxLength: 42;
       }>;
-    Submitter: Attribute.String &
+    author: Attribute.String &
+      Attribute.Required &
+      Attribute.SetMinMaxLength<{
+        maxLength: 34;
+      }>;
+    submitter: Attribute.String &
       Attribute.Required &
       Attribute.SetMinMaxLength<{
         maxLength: 17;
       }>;
-    spriteiconimage: Attribute.Media & Attribute.Required;
-    spritesheet: Attribute.Media & Attribute.Required;
+    iconimage: Attribute.Media & Attribute.Required;
+    sheet: Attribute.Media & Attribute.Required;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
