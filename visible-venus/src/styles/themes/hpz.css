@@ -1,0 +1,62 @@
+:root {
+  --border-color: #000500;
+  --page-color: #26294d;
+  --font-color: #c6ffe4;
+  --font-link-color: #ffcb6b;
+  --font-link-hover: #799cff;
+}
+
+body {
+  transform: translateZ(0);
+  background-color: #242424;
+  background-attachment: fixed;
+  background-image:
+    /*boss*/ url("/src/css/themes/hpz/boss.gif"), 
+    /*sonic*/ url("/src/css/themes/hpz/sonic_run.gif"), 
+    /*floor 1*/ url("/src/css/themes/hpz/floor_01.png"), 
+    /*wall 1*/ url("/src/css/themes/hpz/wall_01.png"),
+    /*wall 2*/ url("/src/css/themes/hpz/wall_02.png"), 
+    /*wall 3*/ url("/src/css/themes/hpz/wall_03.png"), 
+    /*wall 4*/ url("/src/css/themes/hpz/wall_04.png"), 
+    /*wall 5*/ url("/src/css/themes/hpz/wall_05.png"),
+    /*wall 6*/ url("/src/css/themes/hpz/wall_06.png"), 
+    /*wall 7*/ url("/src/css/themes/hpz/wall_07.png"), 
+    /*wall 8*/ url("/src/css/themes/hpz/wall_08.png"), 
+    /*wall 9*/ url("/src/css/themes/hpz/wall_09.png"),
+    /*wall 10*/ url("/src/css/themes/hpz/wall_10.png");
+  background-repeat: repeat-x;
+  background-position:
+    /*boss*/ left -3500px bottom 120px, 
+    /*sonic*/ left -3000px bottom 100px, 
+    /*floor 1*/ left 0px bottom -300px, 
+    /*wall 1*/ left 0px bottom 100px, 
+    /*wall 2*/ left 0px bottom 256px, 
+    /*wall 3*/ left 0px bottom 303px,
+    /*wall 4*/ left 0px bottom 311px, 
+    /*wall 5*/ left 0px bottom 328px, 
+    /*wall 6*/ left 0px bottom 336px, 
+    /*wall 7*/ left 0px bottom 344px, 
+    /*wall 8*/ left 0px bottom 348px, 
+    /*wall 9*/ left 0px bottom 352px, 
+    /*wall 10*/ -1500px 0;
+  animation: 200s para infinite linear;
+}
+
+@keyframes para {
+  100% {
+    background-position:
+      /*boss*/ left 86500px bottom 100px, 
+      /*sonic*/ left 87000px bottom 100px, 
+      /*floor 1*/ left -15000px bottom -300px, 
+      /*wall 1*/ left -6000px bottom 100px, 
+      /*wall 2*/ left -4000px bottom 256px,
+      /*wall 3*/ left -3500px bottom 303px, 
+      /*wall 4*/ left -3000px bottom 311px, 
+      /*wall 5*/ left -2500px bottom 328px, 
+      /*wall 6*/ left -2000px bottom 336px, 
+      /*wall 7*/ left -1500px bottom 344px, 
+      /*wall 8*/ left -1000px bottom 348px,
+      /*wall 9*/ left -500px bottom 352px, 
+      /*wall 10*/ -2000px 0;
+  }
+}

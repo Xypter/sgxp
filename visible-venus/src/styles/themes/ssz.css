@@ -1,0 +1,128 @@
+:root {
+  --border-color: #000500;
+  --page-color: #1f1f3f;
+  --font-color: #f1f1ff;
+  --font-link-color: #fdf075;
+  --font-link-hover: #ff3b55;
+}
+
+body {
+  transform: translateZ(0);
+  background-color: #2448fc;
+  background-attachment: fixed;
+  background-image:
+    /*tornado 2*/ url("/src/css//themes/ssz/tornado_02.gif"), 
+    /*tornado 1*/ url("/src/css//themes/ssz/tornado_01.gif"), 
+    /*mecha 2*/ url("/src/css//themes/ssz/mecha_02.gif"), 
+    /*mecha 1*/ url("/src/css//themes/ssz/mecha_01.gif"),
+    /*death egg*/ url("/src/css//themes/ssz/deathegg.png"), 
+    /*cloud 1*/ url("/src/css//themes/ssz/cloud_01.png"), 
+    /*cloud 2*/ url("/src/css//themes/ssz/cloud_02.png"), 
+    /*cloud 3*/ url("/src/css//themes/ssz/cloud_03.png"),
+    /*cloud 4*/ url("/src/css//themes/ssz/cloud_04.png"), 
+    /*cloud 5*/ url("/src/css//themes/ssz/cloud_05.png"), 
+    /*cloud 6*/ url("/src/css//themes/ssz/cloud_06.png"), 
+    /*cloud 7*/ url("/src/css//themes/ssz/cloud_07.png"),
+    /*cloud 8*/ url("/src/css//themes/ssz/cloud_08.png"), 
+    /*cloud 9*/ url("/src/css//themes/ssz/cloud_09.png"), 
+    /*cloud 10*/ url("/src/css//themes/ssz/cloud_10.png"), 
+    /*cloud 11*/ url("/src/css//themes/ssz/cloud_11.png"),
+    /*cloud 12*/ url("/src/css//themes/ssz/cloud_12.png"), 
+    /*cloud 13*/ url("/src/css//themes/ssz/cloud_13.png"), 
+    /*cloud 14*/ url("/src/css//themes/ssz/cloud_14.png"), 
+    /*cloud 15*/ url("/src/css//themes/ssz/cloud_15.png"),
+    /*cloud 16*/ url("/src/css//themes/ssz/cloud_16.png"), 
+    /*cloud 17*/ url("/src/css//themes/ssz/cloud_17.png"), 
+    /*cloud 18*/ url("/src/css//themes/ssz/cloud_18.png"), 
+    /*cloud 19*/ url("/src/css//themes/ssz/cloud_19.png"),
+    /*cloud 20*/ url("/src/css//themes/ssz/cloud_20.png"), 
+    /*cloud 1*/ url("/src/css//themes/ssz/cloud_01.png"), 
+    /*cloud 22*/ url("/src/css//themes/ssz/cloud_22.png"), 
+    /*cloud 23*/ url("/src/css//themes/ssz/cloud_23.png"),
+    /*cloud 24*/ url("/src/css//themes/ssz/cloud_24.png"), 
+    /*cloud 25*/ url("/src/css//themes/ssz/cloud_25.png"), 
+    /*cloud 26*/ url("/src/css//themes/ssz/cloud_26.png"), 
+    /*cloud 27*/ url("/src/css//themes/ssz/cloud_27.png"),
+    /*cloud 28*/ url("/src/css//themes/ssz/cloud_28.png"), 
+    /*cloud 29*/ url("/src/css//themes/ssz/cloud_29.png"), 
+    /*cloud 30*/ url("/src/css//themes/ssz/cloud_30.png");
+  background-repeat: repeat-x;
+  background-position:
+    /*tornado 2*/ left -7000px bottom 500px, 
+    /*tornado 1*/ right -3000px bottom 250px, 
+    /*mecha 2*/ left -7500px bottom 500px, 
+    /*mecha 1*/ right -4000px bottom 250px, 
+    /*death egg*/ left -100px bottom 500px,
+    /*cloud 1*/ left 0px bottom 0px, 
+    /*cloud 2*/ left 0px bottom 64px, 
+    /*cloud 3*/ left 0px bottom 96px, 
+    /*cloud 4*/ left 0px bottom 120px, 
+    /*cloud 5*/ left 0px bottom 136px, 
+    /*cloud 6*/ left 0px bottom 144px,
+    /*cloud 7*/ left 0px bottom 152px, 
+    /*cloud 8*/ left 0px bottom 160px, 
+    /*cloud 9*/ left 0px bottom 192px, 
+    /*cloud 10*/ left 0px bottom 200px, 
+    /*cloud 11*/ left 0px bottom 240px, 
+    /*cloud 12*/ left 0px bottom 248px,
+    /*cloud 13*/ left 0px bottom 256px, 
+    /*cloud 14*/ left 0px bottom 272px, 
+    /*cloud 15*/ left 0px bottom 312px, 
+    /*cloud 16*/ left 0px bottom 320px, 
+    /*cloud 17*/ left 0px bottom 336px, 
+    /*cloud 18*/ left 0px bottom 352px,
+    /*cloud 19*/ left 0px bottom 360px, 
+    /*cloud 20*/ left 0px bottom 384px, 
+    /*cloud 1*/ left 0px top 0px, 
+    /*cloud 22*/ left 0px top 64px, 
+    /*cloud 23*/ left 0px top 96px, 
+    /*cloud 24*/ left 0px top 120px, 
+    /*cloud 25*/ left 0px top 136px,
+    /*cloud 26*/ left 0px top 144px, 
+    /*cloud 27*/ left 0px top 152px, 
+    /*cloud 28*/ left 0px top 160px, 
+    /*cloud 29*/ left 0px top 192px, 
+    /*cloud 30*/ left 0px top 200px;
+  animation: 200s para infinite linear;
+}
+
+@keyframes para {
+  100% {
+    background-position:
+      /*tornado 2*/ left 73000px bottom 500px, 
+      /*tornado 1*/ right 77000px bottom 250px, 
+      /*mecha 2*/ left 72500px bottom 500px, 
+      /*mecha 1*/ right 76000px bottom 250px, 
+      /*death egg*/ left 1000px bottom 300px,
+      /*cloud 1*/ left 10000px bottom 0px, 
+      /*cloud 2*/ left 8000px bottom 64px, 
+      /*cloud 3*/ left 6000px bottom 96px, 
+      /*cloud 4*/ left 2500px bottom 120px, 
+      /*cloud 5*/ left 2000px bottom 136px, 
+      /*cloud 6*/ left 1500px bottom 144px,
+      /*cloud 7*/ left 1000px bottom 152px, 
+      /*cloud 8*/ left 750px bottom 160px, 
+      /*cloud 9*/ left 500px bottom 192px, 
+      /*cloud 10*/ left 250px bottom 200px, 
+      /*cloud 11*/ left -1000px bottom 240px, 
+      /*cloud 12*/ left 900px bottom 248px,
+      /*cloud 13*/ left -800px bottom 256px, 
+      /*cloud 14*/ left 600px bottom 272px, 
+      /*cloud 15*/ left -500px bottom 312px, 
+      /*cloud 16*/ left 800px bottom 320px, 
+      /*cloud 17*/ left -200px bottom 336px, 
+      /*cloud 18*/ left 200px bottom 352px,
+      /*cloud 19*/ left 1000px bottom 360px, 
+      /*cloud 20*/ left 500px bottom 384px, 
+      /*cloud 1*/ left 10000px top 0px, 
+      /*cloud 22*/ left 8000px top 64px, 
+      /*cloud 23*/ left 6000px top 96px, 
+      /*cloud 24*/ left 2500px top 120px,
+      /*cloud 25*/ left 2000px top 136px, 
+      /*cloud 26*/ left 1500px top 144px, 
+      /*cloud 27*/ left 1000px top 152px, 
+      /*cloud 28*/ left 750px top 160px, 
+      /*cloud 29*/ left 500px top 192px, 
+      /*cloud 30*/ left 250px top 200px;
+  }
+}

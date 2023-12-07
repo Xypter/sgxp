@@ -1,0 +1,62 @@
+---
+import "../styles/main.css";
+import "../styles/sprite_icon.css";
+
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Javascript Sandbox</title>
+  <link rel="stylesheet" type="text/css"  href="" id="themeStylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="sprite_icon.css">
+</head>
+<body>
+  
+  <!--<div class="other-header">
+    <div class="header-title">SGXP</div>
+    <div class="slogan">
+      <div onclick="GetRandomMsg()" class="inner-slogan">
+        <div class="unselectable-text" id="message"></div>
+      </div>
+    </div>
+  </div>-->
+  <nav class="nav">
+    <ul>
+      <li><a class="navlogo" href="#">SGXP</a></li>
+      <li><a class="navlink" href="#">News</a></li>
+      <li><a class="navlink active" href="#">Sprites</a></li>
+      <li><a class="navlink" href="#">Comics</a></li>
+      <li><a class="navlink" href="#">Forum</a></li>
+      <li class="navlink dropdown">
+        <a href="javascript:void(0)" class="dropbtn">Extras</a>
+        <div class="navlink dropdown-content">
+          <a href="#">Rave</a>
+          <a href="#">Metal</a>
+        </div>
+      </li>
+      <div class="select">
+        <select name="themeSelect" id="themeSelect">
+          <option value="sbn">BATTLE NETWORK</option>
+          <option value="style_v7">DOOMSDAY ZONE</option>
+          <option value="hpz">HIDDEN PALACE ZONE</option>
+          <option value="mfz">MFZ</option>
+          <option value="ssz">SKY SANCTUARY ZONE</option> 
+        </select>
+      </div>
+    </ul>
+  </nav>
+
+  <div class="sprite-page-container">
+    <img class="sprite-index" src="/src/img/spriteicon/sprite index.png" alt="">
+    <div id="hello" class="sprite-container"></div>
+  </div>
+  <script src="js/index2.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/fetch.js"></script>
+</body>
+</html>
