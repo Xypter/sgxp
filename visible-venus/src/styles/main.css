@@ -36,11 +36,11 @@ html {
   min-height: 100%;
   overflow-x: hidden;
   scroll-behavior: smooth;
-  cursor: url('/src/img/Sonic_Cursor.png'), pointer;
+  cursor: url('/img/Sonic_Cursor.png'), pointer;
 }
 
 a:hover {
-  cursor: url('/src/img/Sonic_Cursor_Spin.gif'), progress;
+  cursor: url('/img/Sonic_Cursor_Spin.gif'), progress;
   animation-name: cursor;
   animation-duration: 1.5s;
   animation-timing-function: linear;
@@ -49,67 +49,67 @@ a:hover {
 
 @keyframes cursor {
   0% {
-    cursor: url(/src/img/cursor/Sonic_Cursor_Spin-export1.png), auto;
+    cursor: url(/img/cursor/Sonic_Cursor_Spin-export1.png), auto;
   }
   5% {
-    cursor: url(/src/img/cursor/Sonic_Cursor_Spin-export2.png), auto;
+    cursor: url(/img/cursor/Sonic_Cursor_Spin-export2.png), auto;
   }
   10% {
-    cursor: url(/src/img/cursor/Sonic_Cursor_Spin-export3.png), auto;
+    cursor: url(/img/cursor/Sonic_Cursor_Spin-export3.png), auto;
   }
   15% {
-    cursor: url(/src/img/cursor/Sonic_Cursor_Spin-export4.png), auto;
+    cursor: url(/img/cursor/Sonic_Cursor_Spin-export4.png), auto;
   }
   20% {
-    cursor: url(/src/img/cursor/Sonic_Cursor_Spin-export5.png), auto;
+    cursor: url(/img/cursor/Sonic_Cursor_Spin-export5.png), auto;
   }
   25% {
-    cursor: url(/src/img/cursor/Sonic_Cursor_Spin-export6.png), auto;
+    cursor: url(/img/cursor/Sonic_Cursor_Spin-export6.png), auto;
   }
   30% {
-    cursor: url(/src/img/cursor/Sonic_Cursor_Spin-export7.png), auto;
+    cursor: url(/img/cursor/Sonic_Cursor_Spin-export7.png), auto;
   }
   35% {
-    cursor: url(/src/img/cursor/Sonic_Cursor_Spin-export8.png), auto;
+    cursor: url(/img/cursor/Sonic_Cursor_Spin-export8.png), auto;
   }
   40% {
-    cursor: url(/src/img/cursor/Sonic_Cursor_Spin-export9.png), auto;
+    cursor: url(/img/cursor/Sonic_Cursor_Spin-export9.png), auto;
   }
   45% {
-    cursor: url(/src/img/cursor/Sonic_Cursor_Spin-export10.png), auto;
+    cursor: url(/img/cursor/Sonic_Cursor_Spin-export10.png), auto;
   }
   50% {
-    cursor: url(/src/img/cursor/Sonic_Cursor_Spin-export11.png), auto;
+    cursor: url(/img/cursor/Sonic_Cursor_Spin-export11.png), auto;
   }
   55% {
-    cursor: url(/src/img/cursor/Sonic_Cursor_Spin-export12.png), auto;
+    cursor: url(/img/cursor/Sonic_Cursor_Spin-export12.png), auto;
   }
   60% {
-    cursor: url(/src/img/cursor/Sonic_Cursor_Spin-export13.png), auto;
+    cursor: url(/img/cursor/Sonic_Cursor_Spin-export13.png), auto;
   }
   65% {
-    cursor: url(/src/img/cursor/Sonic_Cursor_Spin-export14.png), auto;
+    cursor: url(/img/cursor/Sonic_Cursor_Spin-export14.png), auto;
   }
   70% {
-    cursor: url(/src/img/cursor/Sonic_Cursor_Spin-export15.png), auto;
+    cursor: url(/img/cursor/Sonic_Cursor_Spin-export15.png), auto;
   }
   75% {
-    cursor: url(/src/img/cursor/Sonic_Cursor_Spin-export16.png), auto;
+    cursor: url(/img/cursor/Sonic_Cursor_Spin-export16.png), auto;
   }
   80% {
-    cursor: url(/src/img/cursor/Sonic_Cursor_Spin-export17.png), auto;
+    cursor: url(/img/cursor/Sonic_Cursor_Spin-export17.png), auto;
   }
   85% {
-    cursor: url(/src/img/cursor/Sonic_Cursor_Spin-export18.png), auto;
+    cursor: url(/img/cursor/Sonic_Cursor_Spin-export18.png), auto;
   }
   90% {
-    cursor: url(/src/img/cursor/Sonic_Cursor_Spin-export19.png), auto;
+    cursor: url(/img/cursor/Sonic_Cursor_Spin-export19.png), auto;
   }
   95% {
-    cursor: url(/src/img/cursor/Sonic_Cursor_Spin-export20.png), auto;
+    cursor: url(/img/cursor/Sonic_Cursor_Spin-export20.png), auto;
   }
   95% {
-    cursor: url(/src/img/cursor/Sonic_Cursor_Spin-export21.png), auto;
+    cursor: url(/img/cursor/Sonic_Cursor_Spin-export21.png), auto;
   }
 }
 
@@ -196,7 +196,7 @@ body {
   line-height: calc(16px * var(--multiply-factor));
   color: var(--font-color);
   text-decoration: none;
-  background: url('/src/css/themes/ddz/bg-tiles.png');
+  background: url('/css/themes/ddz/bg-tiles.png');
   background-size: cover;
   -webkit-background-clip: text;
   transition: ease-in-out .2s;
@@ -273,7 +273,7 @@ body {
 .nav .dropdown-content {
   display: none;
   position: absolute;
-  background-image: url('/src/css/themes/ddz/bg-tiles.png');
+  background-image: url('/css/themes/ddz/bg-tiles.png');
   background-size: calc(16px * var(--multiply-factor));
   box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
   z-index: 1;
@@ -321,7 +321,7 @@ select option {
 }
 
 select option:hover {
-  cursor: url('/src/img/Sonic_Cursor_Spin.gif'), progress;
+  cursor: url('/img/Sonic_Cursor_Spin.gif'), progress;
   animation-name: cursor;
   animation-duration: 1.5s;
   animation-timing-function: linear;
@@ -341,7 +341,7 @@ select::-ms-expand {
 
 select {
   color: var(--font-color);
-  cursor: url('/src/img/Sonic_Cursor_Spin.gif'), progress;
+  cursor: url('/img/Sonic_Cursor_Spin.gif'), progress;
   animation-name: cursor;
   animation-duration: 1.5s;
   animation-timing-function: linear;

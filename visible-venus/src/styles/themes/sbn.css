@@ -12,10 +12,10 @@ body {
   background-color: #242424;
   background-attachment: fixed;
   background-image:
-    /*boss*/ url("/src/css/themes/sbn/bg_tiles2.png");
+    /*bg tiles*/ url("./sbn/bg_tiles2.png");
   background-repeat: repeat;
   background-position:
-    /*wall 1*/ left 0px bottom 0px;
+    /*bg tiles*/ left 0px bottom 0px;
   animation: 200s para infinite linear;
 }
 
