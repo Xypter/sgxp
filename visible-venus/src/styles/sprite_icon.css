@@ -6,7 +6,7 @@
 
 @font-face {
   font-family: sprite;
-  src: url('/src/css/fonts/smallest_pixel-7.ttf')
+  src: url('/src/styles/fonts/smallest_pixel-7.ttf')
 }
 
 .sprite-page-container {
