@@ -1,3 +1,5 @@
+[![Netlify Status](https://api.netlify.com/api/v1/badges/480a65df-80e3-479d-b92a-381bdbd0b3fd/deploy-status)](https://app.netlify.com/sites/elaborate-cheesecake-6313f2/deploys)
+
 # The SGXP: The Open Source Sprite Website
 
 ## Introduction
