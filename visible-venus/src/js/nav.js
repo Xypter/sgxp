@@ -4,7 +4,7 @@ const themeStylesheet = document.getElementById("themeStylesheet");
 themeSelect.value = localStorage.theme
 
 function setTheme(theme) {
-  themeStylesheet.setAttribute("href","../src/styles/themes/" + theme + ".css");
+  themeStylesheet.setAttribute("href","/src/styles/themes/" + theme + ".css");
 }
 
 // this just needs to run once on pageload...
