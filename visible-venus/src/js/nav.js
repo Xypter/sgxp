@@ -1,4 +1,3 @@
-<script>
 const themeSelect = document.getElementById("themeSelect");
 const themeStylesheet = document.getElementById("themeStylesheet");
 
@@ -20,4 +19,3 @@ themeSelect.addEventListener("change", function() {
   setTheme(this.value);
   localStorage.theme = this.value;
 });
-</script>
