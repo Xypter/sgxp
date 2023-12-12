@@ -1,0 +1,47 @@
+:root {
+    --multiply-factor: 4;
+    --bg-color: #000000;
+}
+
+@font-face {
+    font-family: 'sprite';
+    src: url('smallest_pixel-7.ttf');
+}
+
+body {
+    color: white;
+    font-family: 'sprite';
+    font-size: 64px;
+    background-image: url('bgtiles.png');
+    background-repeat: repeat;
+    background-position:
+      /*bg tiles*/ left 0px bottom 0px;
+    animation: 250s para infinite linear;
+
+    text-shadow: 
+    calc(-1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 var(--bg-color),
+    calc( 0px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 var(--bg-color),
+    calc( 1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 var(--bg-color),
+    calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
+    calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+    calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+    calc(-1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+    calc(-1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
+    calc(1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 10px #000;
+}
+
+.container {
+    display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 500px;
+}
+
+@keyframes para {
+    100% {
+      background-position:
+        /*wall 1*/ left -6000px bottom -6000px;
+    }
+  }
+
+  
