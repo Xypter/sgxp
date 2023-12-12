@@ -34,7 +34,22 @@ body {
     display: flex;
   justify-content: center;
   align-items: center;
-  height: 500px;
+  height: 700px;
+  text-align: center;
+}
+
+a {
+  display: inline-block;
+  color: inherit; /* blue colors for links too */
+  text-decoration: inherit; /* no underline */
+  text-shadow: 
+  5px 5px 10px white;
+  transition: .2s;
+}
+
+a:hover {
+    transition: .2s;
+   transform: scale(1.2);
 }
 
 @keyframes para {
