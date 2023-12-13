@@ -196,7 +196,7 @@ body {
   line-height: calc(16px * var(--multiply-factor));
   color: var(--font-color);
   text-decoration: none;
-  background: url('../styles/themes/ddz/bg-tiles.png');
+  background: url('../themes/ddz/bg-tiles.png');
   background-size: cover;
   background-clip: text;
   transition: ease-in-out .2s;
@@ -273,7 +273,7 @@ body {
 .nav .dropdown-content {
   display: none;
   position: absolute;
-  background-image: url('../styles/themes/ddz/bg-tiles.png');
+  background-image: url('../themes/ddz/bg-tiles.png');
   background-size: calc(16px * var(--multiply-factor));
   box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
   z-index: 1;
