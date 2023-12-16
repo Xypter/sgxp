@@ -2,6 +2,7 @@
 export const prerender = true;
 import "../styles/main.css";
 import "../styles/sprite_icon.css";
+const { title } = Astro.props;
 ---
 
 <!DOCTYPE html>
@@ -12,14 +13,14 @@ import "../styles/sprite_icon.css";
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Javascript Sandbox</title>
-  <link rel="preload" href="./themes/hpz.css" as="style" />
-  <link rel="preload" href="./themes/mfz.css" as="style" />
-  <link rel="preload" href="./themes/sbn.css" as="style" />
-  <link rel="preload" href="./themes/ssz.css" as="style" />
-  <link rel="preload" href="./themes/style_v7.css" as="style" />
-  <link rel="preload" href="./src/styles/main.css" as="style" />
-  <link rel="preload" href="./src/styles/sprite_icon.css" as="style" />
+  <title>{title}</title>
+  <link rel="preload" href="/themes/hpz.css" as="style" />
+  <link rel="preload" href="/themes/mfz.css" as="style" />
+  <link rel="preload" href="/themes/sbn.css" as="style" />
+  <link rel="preload" href="/themes/ssz.css" as="style" />
+  <link rel="preload" href="/themes/style_v7.css" as="style" />
+  <link rel="preload" href="/src/styles/main.css" as="style" />
+  <link rel="preload" href="/src/styles/sprite_icon.css" as="style" />
   <link rel="stylesheet" type="text/css"  href="" id="themeStylesheet">
 </head>
 <body>
@@ -35,8 +36,8 @@ import "../styles/sprite_icon.css";
   <nav class="nav">
     <ul>
       <li><a class="navlogo" href="#">SGXP</a></li>
-      <li><a class="navlink" href="#">News</a></li>
-      <li><a class="navlink active" href="#">Sprites</a></li>
+      <li><a class="navlink" href="/">News</a></li>
+      <li><a class="navlink" href="/sprites/">Sprites</a></li>
       <li><a class="navlink" href="#">Comics</a></li>
       <li><a class="navlink" href="#">Forum</a></li>
       <li class="navlink dropdown">
@@ -58,9 +59,6 @@ import "../styles/sprite_icon.css";
     </ul>
   </nav>
 
-  <div class="sprite-page-container">
-    <img class="sprite-index" src="./img/spriteicon/sprite index.png" alt="">
-    <div id="hello" class="sprite-container"></div>
-  </div>
+  <slot>You're not supposed to see this LMAO</slot>
 </body>
 </html>

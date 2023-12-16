@@ -1,5 +1,7 @@
 :root {
   --multiply-factor: 1;
+  --gap: 10px;
+  --radius: 0px;
 }
 
 @font-face {
@@ -27,6 +29,11 @@
   font-family: nav;
   src: url('./fonts/BN6FontTinyExt.ttf');
   /*10px increments*/
+}
+
+@font-face {
+  font-family: 'title';
+  src: url('./fonts/Gamer.ttf');
 }
   
 
@@ -419,6 +426,26 @@ select {
   0% { opacity: 0; transform: translateX(50px);}
   50% { opacity: 0; transform: translateX(50px);}
   100% { opacity: 1; transform: translateX(0); }
+}
+
+.news-banner {
+  position:fixed;
+  top: 508px;
+  left: -50px;
+  font-family: 'title';
+  font-size: 240px;
+  text-align: center;
+  transform: rotate(270deg);
+
+  text-shadow:
+  calc(-5px * var(--multiply-factor)) calc(-5px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 0px * var(--multiply-factor)) calc(-5px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 5px * var(--multiply-factor)) calc(-5px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 5px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 5px * var(--multiply-factor)) calc( 5px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 0px * var(--multiply-factor)) calc( 5px * var(--multiply-factor)) 0 var(--bg-color),
+  calc(-5px * var(--multiply-factor)) calc( 5px * var(--multiply-factor)) 0 var(--bg-color),
+  calc(-5px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color);
 }
 
 .main-content {
