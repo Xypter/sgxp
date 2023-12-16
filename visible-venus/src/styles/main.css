@@ -429,10 +429,11 @@ select {
 }
 
 .news-banner {
+  display: inline-block;
   position:absolute;
   text-align:right;
   font-family: 'title';
-  font-size: 16px;
+  font-size: 160px;
   text-align: center;
   line-height: 0px;
 
