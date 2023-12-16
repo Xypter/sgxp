@@ -429,13 +429,12 @@ select {
 }
 
 .news-banner {
-  position:fixed;
-  top: 508px;
-  left: -50px;
+  position:absolute;
+  text-align:right;
   font-family: 'title';
-  font-size: 240px;
+  font-size: 16px;
   text-align: center;
-  transform: rotate(270deg);
+  line-height: 0px;
 
   text-shadow:
   calc(-5px * var(--multiply-factor)) calc(-5px * var(--multiply-factor)) 0 var(--bg-color),
