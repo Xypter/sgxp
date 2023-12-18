@@ -4,10 +4,12 @@
   --page-color: #004058;
   --font-color: #f0f0f0;
   --font-link-color: #9cffc1;
-  --font-link-hover: #799cff;
+  --font-link-hover: #004058;
+  --font-link-color: #9cffc1;
 }
 
 body {
+  image-rendering: pixelated;
   transform: translateZ(0);
   background-color: #242424;
   background-attachment: fixed;

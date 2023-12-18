@@ -1,9 +1,11 @@
 :root {
+  --bg-color: #24486C;
   --border-color: #000500;
-  --page-color: #26294d;
+  --page-color: #24486C;
   --font-color: #c6ffe4;
   --font-link-color: #ffcb6b;
   --font-link-hover: #799cff;
+  --font-link-color: #ffcb6b;
 }
 
 body {

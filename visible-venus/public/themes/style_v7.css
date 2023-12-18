@@ -7,12 +7,11 @@
   --border-width: 1px;
   --box-shadow: 10px 10px 20px rgb(0, 0, 0, .7);
   --transition-speed: 200ms;
-  --filter-color: invert(96%) sepia(2%) saturate(7368%) hue-rotate(179deg) brightness(114%) contrast(93%);
-  --filter-hover: invert(100%) sepia(40%) saturate(3721%) hue-rotate(329deg) brightness(107%) contrast(97%);
   --font-link-color: rgba(244, 188, 84, 1);
 }
 
 body {
+  image-rendering: pixelated;
   transform: translateZ(0);
   background-attachment: fixed;
   background-color: black;
@@ -74,24 +73,6 @@ body {
       /*stars 2*/ 2000px 0, 
       /*stars 1*/ 800px 0;
   }
-}
-
-.sexy-link:link {
-  text-decoration: none;
-  color: var(--bg-color);
-  background: var(--font-link-color);
-  padding: 1px 4px;
-  border-radius: 3px;
-  transition: ease-in-out .2s;
-}
-
-.sexy-link:visited {
-  color: var(--bg-color);
-  text-decoration: none;
-}
-
-.sexy-link:hover {
-  background: var(--font-color);
 }
 
 .other-header {
