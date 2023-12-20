@@ -1,6 +1,6 @@
 :root {
   --multiply-factor: 1;
-  --gap: 10px;
+  --gap: 15px;
   --radius: 0px;
 }
 
@@ -156,6 +156,14 @@ body {
   padding: 20px;
 }
 
+.other-header {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  background-image: url("./ddz/bg-tiles.svg");
+  background-size: calc(32px * 1);
+  box-shadow: var(--box-shadow);
+}
+
 .header-title {
   font-family: logo;
   font-size: 14px;
@@ -210,6 +218,7 @@ body {
   background-size: cover;
   background-clip: text;
   transition: ease-in-out .2s;
+  transform: scaleZ(5);
 
   text-shadow: 
   calc(-1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 var(--bg-color),
@@ -223,6 +232,7 @@ body {
 }
 
 .navlogo:hover {
+  background: none;
   text-shadow: 
   1px 1px 0px rgb(251,227,6), 
   2px 2px 0px rgb(238,127,14), 
@@ -231,7 +241,7 @@ body {
   5px 5px 0px rgb(251,227,6), 
   6px 6px 0px rgb(238,127,14), 
   7px 7px 0px rgb(37,89,164), 
-  8px 8px 0px rgb(233,62,44)
+  8px 8px 0px rgb(233,62,44);
 }
 
 .navlink {
@@ -261,6 +271,13 @@ body {
 
 .nav li {
   float: left;
+}
+
+.nav a {
+  background: none;
+  color: none;
+  transition: ease-in-out .2s;
+  height: calc(16px * var(--multiply-factor));
 }
 
 .nav li a, .dropbtn {
@@ -425,6 +442,14 @@ select {
   transform:scaleZ(5);
 }
 
+.sidebar-box a {
+  background: none;
+}
+
+.dsc {
+  image-rendering: pixelated;
+}
+
 @keyframes fadein-right {
   0% { opacity: 0; transform: translateX(50px);}
   50% { opacity: 0; transform: translateX(50px);}
@@ -438,10 +463,10 @@ select {
   font-size: 160px;
   text-align: center;
   line-height: 0px;
-  transform: rotate(270deg);
+  transform: scaleZ(5) rotate(270deg);
   top: 582px;
   left: 45px;
-  transform-origin: 50%  50%;
+  transform-origin: 50%  53%;
   
 
   text-shadow:
@@ -463,8 +488,7 @@ select {
   background: var(--page-color);
   padding: 20px;
   border-radius: var(--radius);
-  border-width: var(--border-width);
-  border-style: var(--border-style);
+  border-top: 15px var(--border-style);
   border-color: var(--border-color);
   animation: fadein-left .7s;
   margin-bottom: var(--gap);
@@ -486,15 +510,14 @@ select {
 .footer {
   grid-area: foot;
   background: var(--page-color);
-  box-shadow: var(--box-shadow);
   border-radius: var(--radius);
   border-width: var(--border-width);
   border-style: var(--border-style);
   border-color: var(--border-color);
-  text-align: center;
   margin-top: -10px;
   padding: 20px;
   z-index: 3;
+  transform:scaleZ(5);
 }
 
 .news {
@@ -503,13 +526,19 @@ select {
 
 .news-date {
   padding-bottom: 8px;
-  padding-top: 6px;
-  opacity: .6;
+  padding-top: 2px;
+  opacity: 1;
+  
+  text-shadow:
+  calc( 2px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 2px * var(--multiply-factor)) calc( 2px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 0px * var(--multiply-factor)) calc( 2px * var(--multiply-factor)) 0 var(--bg-color);
 }
 
 .news-user {
   font-family: 'nav';
   font-size: 32px;
+  padding-top: 2px;
 
   text-shadow:
   calc( 2px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
@@ -519,20 +548,25 @@ select {
 
 .news-content {
   display: block;
-  margin: 0 auto;
+  margin: 0 auto auto auto;
   text-shadow:
-  calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
-  calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
-  calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color);
+  calc( 2px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 2px * var(--multiply-factor)) calc( 2px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 0px * var(--multiply-factor)) calc( 2px * var(--multiply-factor)) 0 var(--bg-color);
 }
 
-.news-img > img {
+.news-img {
+  padding: 10px;
+}
+
+.news-img img {
   image-rendering:auto;
   margin: 0px 10px 0px 0px;
   float: left;
-  display: block;
-  height: 40px;
-  width: 40px;
+  height: 75px;
+  width: 75px;
+  box-shadow: 
+  calc( 4px * var(--multiply-factor)) calc( 4px * var(--multiply-factor)) 0 var(--bg-color);
 
 }
 
@@ -593,7 +627,7 @@ select {
 
 }
 
-.sexy-link:link {
+a {
   text-decoration: none;
   color: var(--bg-color);
   background: var(--font-link-color);
@@ -604,11 +638,11 @@ select {
   text-shadow: none;
 }
 
-.sexy-link:visited {
+a:visited {
   color: var(--bg-color);
   text-decoration: none;
 }
 
-.sexy-link:hover {
+a:hover {
   background: var(--font-color);
 }

@@ -4,7 +4,7 @@
   --font-color: #F2F6F7;
   --border-color: #27272a;
   --border-style: solid;
-  --border-width: 1px;
+  --border-width: 0px;
   --box-shadow: 10px 10px 20px rgb(0, 0, 0, .7);
   --transition-speed: 200ms;
   --font-link-color: rgba(244, 188, 84, 1);
@@ -73,14 +73,6 @@ body {
       /*stars 2*/ 2000px 0, 
       /*stars 1*/ 800px 0;
   }
-}
-
-.other-header {
-  margin-top: 0px;
-  margin-bottom: 0px;
-  background-image: url("./ddz/bg-tiles.svg");
-  background-size: calc(32px * 1);
-  box-shadow: var(--box-shadow);
 }
 
 @media (max-width: 800px) {

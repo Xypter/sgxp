@@ -1,11 +1,10 @@
 :root {
-  --bg-color: #1aa3a1;
+  --bg-color: #001e1e;
   --border-color: #000500;
-  --page-color: #004058;
+  --page-color: #004e6b;
   --font-color: #f0f0f0;
   --font-link-color: #9cffc1;
   --font-link-hover: #004058;
-  --font-link-color: #9cffc1;
 }
 
 body {

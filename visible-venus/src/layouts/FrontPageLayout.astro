@@ -10,6 +10,7 @@ const { title } = Astro.props;
   
 <head>
   <script src="/src/js/nav.js"></script>
+  <script src="/src/js/slogan.js"></script>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,7 +27,7 @@ const { title } = Astro.props;
 <body>
   
   <!--<div class="other-header">
-    <div class="header-title">SGXP</div>
+    <div class="header-title"></div>
     <div class="slogan">
       <div onclick="GetRandomMsg()" class="inner-slogan">
         <div class="unselectable-text" id="message"></div>
@@ -41,7 +42,7 @@ const { title } = Astro.props;
       <li><a class="navlink" href="#">Comics</a></li>
       <li><a class="navlink" href="#">Forum</a></li>
       <li class="navlink dropdown">
-        <a href="javascript:void(0)" class="dropbtn">Extras</a>
+        <a href="javascript:void(0)" class="navlink dropbtn">Extras</a>
         <div class="navlink dropdown-content">
           <a href="#">Rave</a>
           <a href="#">Metal</a>

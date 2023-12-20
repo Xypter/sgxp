@@ -36,7 +36,7 @@
 .sprite-box {  
   width: calc(117px * var(--multiplication-factor));
   height: calc(188px * var(--multiplication-factor));
-  background-image: url("img/spriteicon/icon_image.svg");
+  background-image: url("/img/spriteicon/icon_image.svg");
   margin: 20px 10px;
   user-select: none;
   transition: transform 1s;
@@ -49,6 +49,15 @@
   transform: rotateY(180deg);
 }
 
+.sprite-page-container a {
+  padding: 0;
+}
+
+.sprite-page-container a:hover {
+  padding: 0;
+  background-image: url("/img/spriteicon/icon_image.svg");
+}
+
 .sprite-star-container {
   display: flex;
   margin-left: calc(6px * var(--multiplication-factor));
@@ -58,7 +67,7 @@
 }
 
 .sprite-star {
-  background-image: url("img/spriteicon/star.svg");
+  background-image: url("/img/spriteicon/star.svg");
   height: calc(6px * var(--multiplication-factor));
   width: calc(7px * var(--multiplication-factor));
 }
@@ -80,6 +89,7 @@
   font-family: 'sprite', monospace;
   font-size: calc(10px * var(--multiplication-factor));
   text-shadow: calc(1px * var(--multiplication-factor)) 0px var(--number-shadow), 0px calc(1px * var(--multiplication-factor)) var(--number-shadow), calc(1px * var(--multiplication-factor)) calc(1px * var(--multiplication-factor)) var(--number-shadow);
+  transform: scaleZ(5);
 }
 
 .sprite-text {
@@ -88,9 +98,7 @@
   font-size: calc(10px * var(--multiplication-factor));
   line-height: calc(7px * var(--multiplication-factor));
   text-align: center;
-  transform: scale(1);
-  -webkit-transform: scale(1);
-  -o-transform: scale(1);
+  transform: scaleZ(5);
 }
 
 .sprite-title {
