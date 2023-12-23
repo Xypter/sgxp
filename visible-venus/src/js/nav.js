@@ -11,8 +11,8 @@ function setTheme(theme) {
 if (localStorage.theme) {
   setTheme(localStorage.theme);
   } else {
-  setTheme("sbn")
-  themeSelect.value = "sbn"
+  setTheme("snow")
+  themeSelect.value = "snow"
   }
 
 themeSelect.addEventListener("change", function() {

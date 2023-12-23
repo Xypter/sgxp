@@ -1,10 +1,9 @@
 :root {
+  --page-bg: #000000;
   --bg-color: #1D1D20;
   --page-color: #393e43;
   --font-color: #F2F6F7;
   --border-color: #27272a;
-  --border-style: solid;
-  --border-width: 0px;
   --box-shadow: 10px 10px 20px rgb(0, 0, 0, .7);
   --transition-speed: 200ms;
   --font-link-color: rgba(244, 188, 84, 1);
@@ -14,7 +13,7 @@ body {
   image-rendering: pixelated;
   transform: translateZ(0);
   background-attachment: fixed;
-  background-color: black;
+  background-color: var(--page-bg);
   background-image:
     /*rocks 5*/ url("./ddz/rocks5.png"), 
     /*rocks 4*/ url("./ddz/rocks4.png"), 

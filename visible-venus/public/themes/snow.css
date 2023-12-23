@@ -1,0 +1,36 @@
+:root {
+  --page-bg: #203f78;
+  --bg-color: #1D1D20;
+  --page-color: #203f78;
+  --font-color: #c0daee;
+  --border-color: #27272a;
+  --border-style: solid;
+  --border-width: 0px;
+  --box-shadow: 10px 10px 20px rgb(0, 0, 0, .7);
+  --transition-speed: 200ms;
+  --font-link-color: rgb(255, 252, 173);
+}
+
+body {
+  background-color: var(--page-bg);
+  background-attachment: fixed;
+  background-image: 
+  url("./snow/snow_pattern.gif"),
+  url("./snow/snow_pattern.gif"),
+  url("./snow/Snowy-BG.gif");
+
+  background-position:
+    /*rocks 5*/ left 0px bottom 0px, 
+    /*rocks 5*/ left 200px bottom 100px, 
+    /*rocks 4*/ left 0px bottom 0px;
+  animation: 200s para infinite linear;
+}
+
+@keyframes para {
+  100% {
+    background-position:
+      /*rocks 5*/ left -5000px bottom -7000px, 
+      /*rocks 5*/ left -2000px bottom -6000px, 
+      /*rocks 4*/ left 0px bottom 0px;
+  }
+}
