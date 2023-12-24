@@ -1,0 +1,28 @@
+---
+export const prerender = true;
+import "../styles/banner.css";
+const { title } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
+  <script src="/src/js/megabanner.js"></script>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title}</title>
+  <link rel="icon" type="image/gif" href="/img/SGXPkanDos.gif" />
+</head>
+
+<div class="big-container">
+  <div id="container">
+  <a class="zoom-1" id="zoom-in" href="#">Zoom In</a>
+  <a class="zoom-2" id="zoom-out" href="#">Zoom Out</a>
+  <slot>Huh, you aren't supposed to see this. Where is Xypter right now!</slot>
+</div>
+</div>
+
+</html>

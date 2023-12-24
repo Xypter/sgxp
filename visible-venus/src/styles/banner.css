@@ -1,0 +1,118 @@
+:root {
+    --button-color: #006aff;
+}
+
+@font-face {
+    font-family: 'button';
+    src: url('/src/styles/fonts/BN6FontSmExt.ttf');
+}
+
+html {
+height:100%;
+}
+
+body {
+background: #2d2d2d;
+margin: 0px 0px;
+padding: 0;
+height:100%;
+overflow:hidden;
+}
+
+#container
+{
+    width:1280px;
+    height:800px;
+    position:relative;
+    margin:20px 0 0 0;
+}
+
+#container #img
+{
+    position:absolute;
+    left:0;
+    top:0;
+    z-index:1;
+}
+
+img {
+cursor:move;
+margin: -78px 0px 0px 0px;
+image-rendering: pixelated;
+}
+
+.zoom-1{
+position: absolute;
+z-index: 5;
+    
+padding: 20px 20px;
+margin: 0px 0px 0px 20px;
+background: var(--button-color);
+opacity: .7;
+border: none;
+border-radius: 3px;
+color: white;
+    border: none;
+cursor: pointer;
+white-space:nowrap;
+transition: ease-in-out .1s;
+text-decoration: none;
+
+transform: translateX(-3px) translateY(-3px);
+border-bottom: 3px solid color-mix(in srgb, var(--button-color) 40%, black);
+border-right: 3px solid color-mix(in srgb, var(--button-color) 40%, black);
+
+font-family: 'button';
+}
+
+.zoom-2{
+position: absolute;
+z-index: 5;
+    
+padding: 20px 20px;
+margin: 0px 0px 0px 130px;
+background: var(--button-color);
+opacity: .7;
+border: none;
+border-radius: 3px;
+color: white;
+    border: none;
+cursor: pointer;
+white-space:nowrap;
+transition: ease-in-out .1s;
+text-decoration: none;
+
+transform: translateX(-3px) translateY(-3px);
+border-bottom: 3px solid color-mix(in srgb, var(--button-color) 40%, black);
+border-right: 3px solid color-mix(in srgb, var(--button-color) 40%, black);
+
+font-family: 'button';
+}
+
+.zoom-1:hover {
+background: color-mix(in srgb, var(--button-color) 60%, black);
+opacity: 1;
+}
+
+.zoom-1:active {
+background: color-mix(in srgb, var(--button-color) 60%, black);
+opacity: 1;
+transform: translateY(0px);
+transform: translateX(0px);
+border-bottom: 0px solid color-mix(in srgb, var(--button-color) 40%, black);
+border-right: 0px solid color-mix(in srgb, var(--button-color) 40%, black);
+}
+
+.zoom-2:hover {
+background: color-mix(in srgb, var(--button-color) 60%, black);
+opacity: 1;
+}
+
+.zoom-2:active {
+background: color-mix(in srgb, var(--button-color) 60%, black);
+opacity: 1;
+transform: translateY(0px);
+transform: translateX(0px);
+border-bottom: 0px solid color-mix(in srgb, var(--button-color) 40%, black);
+border-right: 0px solid color-mix(in srgb, var(--button-color) 40%, black);
+}

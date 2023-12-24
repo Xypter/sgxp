@@ -222,9 +222,6 @@ body {
   line-height: calc(16px * var(--multiply-factor));
   color: var(--font-color);
   text-decoration: none;
-  background: url('../themes/ddz/bg-tiles.png');
-  background-size: cover;
-  background-clip: text;
   transition: ease-in-out .2s;
   transform: scaleZ(5);
 
@@ -240,7 +237,6 @@ body {
 }
 
 .navlogo:hover {
-  background: none;
   text-shadow: 
   1px 1px 0px rgb(251,227,6), 
   2px 2px 0px rgb(238,127,14), 
@@ -250,6 +246,10 @@ body {
   6px 6px 0px rgb(238,127,14), 
   7px 7px 0px rgb(37,89,164), 
   8px 8px 0px rgb(233,62,44);
+}
+
+.navlogo a:hover {
+  background: none;
 }
 
 .navlink {
