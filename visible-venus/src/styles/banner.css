@@ -7,16 +7,12 @@
     src: url('/src/styles/fonts/BN6FontSmExt.ttf');
 }
 
-html {
-height:100%;
-}
-
 body {
 background: #2d2d2d;
 margin: 0px 0px;
 padding: 0;
 height:100%;
-overflow:hidden;
+overflow: hidden;
 }
 
 #container
@@ -42,7 +38,7 @@ image-rendering: pixelated;
 }
 
 .zoom-1{
-position: absolute;
+position: fixed;
 z-index: 5;
     
 padding: 20px 20px;
@@ -66,7 +62,7 @@ font-family: 'button';
 }
 
 .zoom-2{
-position: absolute;
+position: fixed;
 z-index: 5;
     
 padding: 20px 20px;
