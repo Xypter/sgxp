@@ -526,7 +526,7 @@ select {
 .main-content-title {
   display: block;
   background: color-mix(in srgb, var(--page-color) 60%, black);
-  padding: 0px 0px 3px 27px;
+  padding: 0px 0px 3px 10px;
   animation: fadein-left .7s;
   text-rendering:geometricPrecision;
   transform:scaleZ(5);
@@ -542,7 +542,7 @@ select {
 
 .main-content-box {
   background: var(--page-color);
-  padding: 20px 20px 20px 20px;
+  padding: 10px;
   min-height: 75px;
   animation: fadein-left .7s;
   margin-bottom: var(--gap);
@@ -555,8 +555,8 @@ select {
   border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 60%, black);
 }
 
-/*.main-content-box:nth-child(n+1) {
-  margin-bottom: -1px;
+/*.main-content-box:nth-last-child(-n+1) {
+  margin-bottom: -500px;
 }*/
 
 @keyframes fadein-left {
@@ -570,10 +570,10 @@ select {
   background: var(--page-color);
   border-radius: var(--radius);
   border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 60%, black);
-  margin-top: -10px;
   padding: 10px;
   z-index: 3;
   transform:scaleZ(5);
+  height: 37px;
 
   text-shadow:
   calc( 2px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
@@ -609,7 +609,7 @@ select {
 
 .news-content {
   display: block;
-  margin: 0 auto auto auto;
+  margin: 5px auto auto auto;
   padding-bottom: 0px;
   text-shadow:
   calc( 2px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
@@ -619,7 +619,7 @@ select {
 
 .news-img img {
   image-rendering:auto;
-  margin: 0px 10px 0px 0px;
+  margin: -1px 10px 0px 0px;
   float: left;
   height: 75px;
   width: 75px;

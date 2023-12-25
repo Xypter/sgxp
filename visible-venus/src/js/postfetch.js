@@ -1,8 +1,19 @@
-import { formatDistance, subDays, format, parseISO } from "date-fns";
-
-
+import { format, parseISO } from "date-fns";
 
 function getSprites() {
+
+                
+    `function random() {
+      const result = format(parseISO(post.attributes.publishedAt), 'eeee do MMM, yyyy')
+      return result;
+    };
+
+    random()`
+
+    
+
+
+
     const div = document.getElementById('posts')
     fetch('https://api.sgxp.me/api/posts?populate=*')
     .then(res => res.json())
@@ -15,23 +26,10 @@ function getSprites() {
           <div class="news">
             <div class="news-img"><img src="https://api.sgxp.me${post.attributes.avatar.data.attributes.url}" alt=""></div>
             <div class="news-user">${post.attributes.createdBy.username}</div>
-            <div class="news-date">`
-            
-            function random(number) {
-              const result = Math.floor(Math.random() * number);
-              return result;
-            }
-
-            console.log(random(5));
-
-            
-            
-            
-            
-            `</div>
-            <span class="news-content">
+            <div class="news-date">${format(parseISO(post.attributes.publishedAt), "LLLL do yyyy 'at' h:m aa")}</div>
+            <div class="news-content">
             ${post.attributes.content[0].children[0].text}
-            </span>
+            </div>
           </div>
         </div>
 
@@ -40,4 +38,4 @@ function getSprites() {
     })
   }
 
-getSprites()
+getSprites();
