@@ -2,7 +2,8 @@
 import FrontPageLayout from "../layouts/FrontPageLayout.astro";
 ---
 
-<FrontPageLayout title="Updates">   
+<FrontPageLayout title="Updates">  
+  <script src="/src/js/postfetch.js"></script> 
     <div class="container">
         <div class="header"><img src="/img/Xmas_Banner.png" alt=""></div>
         <div class="sidebar">
@@ -44,6 +45,7 @@ import FrontPageLayout from "../layouts/FrontPageLayout.astro";
           </div>
         </div>
         <div class="main-content">
+          <div id="posts"></div>
           <div class="main-content-title">h</div>
           <div class="main-content-box">
             <div class="news">
@@ -51,7 +53,6 @@ import FrontPageLayout from "../layouts/FrontPageLayout.astro";
               <div class="news-user">Xypter</div>
               <div class="news-date">November 9 at 5:44 PM</div>
               <span class="news-content">
-                <a class="sexy-link" href="#"> What's gucci cuh</a> s
               </span>
             </div>
           </div>
@@ -119,4 +120,4 @@ import FrontPageLayout from "../layouts/FrontPageLayout.astro";
         <div class="footer">All material seen on The SGXP is © 2021 to their respective owners. All rights reserved. Sonic, Knuckles, Tails, etc © Sega
           All staff avatars and sub-characters are © their respective owners. </div>
       </div>
-</FrontPageLayout>
+</FrontPageLayout>../../lib/strapi.ts

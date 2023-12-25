@@ -1,6 +1,6 @@
 function getSprites() {
     const div = document.getElementById('hello')
-    fetch('http://localhost:1337/api/sprites?populate=*')
+    fetch('http://localhost:1337/api/posts?populate=*')
     .then(res => res.json())
     .then(data => {
       data.data.forEach(sprite => {
@@ -50,4 +50,4 @@ function getSprites() {
     })
   }
 
-getSprites();
+console.log(getSprites())
