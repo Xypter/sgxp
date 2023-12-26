@@ -32,7 +32,7 @@ function getSprites() {
             <div class="news-user">${post.attributes.createdBy.username}</div>
             <div class="news-date">${format(parseISO(post.attributes.publishedAt), "LLLL do yyyy 'at' h:m aa")}</div>
             <div class="news-content">
-            ${post.attributes.contentbest}
+            ${post.attributes.content}
             </div>
           </div>
         </div>
