@@ -1,4 +1,8 @@
 import { format, parseISO } from "date-fns";
+import markdownit from 'markdown-it';
+import { marked } from 'marked';
+
+const md = markdownit();
 
 function getSprites() {
 
@@ -28,7 +32,7 @@ function getSprites() {
             <div class="news-user">${post.attributes.createdBy.username}</div>
             <div class="news-date">${format(parseISO(post.attributes.publishedAt), "LLLL do yyyy 'at' h:m aa")}</div>
             <div class="news-content">
-            ${post.attributes.content[0].children[0].text}
+            ${post.attributes.contentbest}
             </div>
           </div>
         </div>

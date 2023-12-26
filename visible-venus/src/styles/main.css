@@ -417,7 +417,6 @@ select {
 }
 
 .header {
-  background: url('https://sgxp.me/img/banners/fall_2021/fall_2021_banner_02.png');
   grid-area: head;
   min-height: 250px;
   min-width: 1200px;
@@ -615,6 +614,11 @@ select {
   calc( 2px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
   calc( 2px * var(--multiply-factor)) calc( 2px * var(--multiply-factor)) 0 var(--bg-color),
   calc( 0px * var(--multiply-factor)) calc( 2px * var(--multiply-factor)) 0 var(--bg-color);
+}
+
+.news-content li {
+  list-style-position: inside;
+  list-style-type: "➖ ";
 }
 
 .news-img img {

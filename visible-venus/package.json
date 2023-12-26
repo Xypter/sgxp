@@ -10,10 +10,19 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@_sh/strapi-plugin-ckeditor": "^2.0.4",
     "astro": "^4.0.2",
     "date-fns": "^3.0.6",
+    "dompurify": "^3.0.6",
     "jquery": "^3.7.1",
     "jquery-ui": "^1.13.2",
+    "jsdom": "^23.0.1",
+    "markdown-it": "^14.0.0",
+    "marked": "^11.1.0",
+    "sanitize-html": "^2.11.0",
     "text-to-svg": "^3.1.5"
+  },
+  "devDependencies": {
+    "@types/sanitize-html": "^2.9.5"
   }
 }
