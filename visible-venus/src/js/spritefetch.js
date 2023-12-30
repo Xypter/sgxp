@@ -1,6 +1,6 @@
 function getSprites() {
     const div = document.getElementById('hello')
-    fetch('https://api.sgxp.me/api/sprites?populate=*')
+    fetch('https://api.sgxp.me/api/sprites?[populate]=*')
     .then(res => res.json())
     .then(data => {
       data.data.forEach(sprite => {
@@ -29,7 +29,7 @@ function getSprites() {
         <img src="https://api.sgxp.me${sprite.attributes.iconimage.data.attributes.url}" alt="">
       </div>
       <div class="sprite-author">
-        <div class="sprite-text">${sprite.attributes.author}</div>
+        <div class="sprite-text">${sprite.attributes.author.data.attributes.name}</div>
       </div>
       <div class="sprite-stats">
         <div class="sprite-text">Customs</div>
