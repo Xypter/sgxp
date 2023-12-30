@@ -8,7 +8,7 @@
 
 @font-face {
   font-family: Rubik;
-  src: url('./fonts/BN6FontTinyExt.ttf');
+  src: url('./fonts/Squarewave-Bold.ttf');
   font-weight: normal;
   font-style: normal;
 }
@@ -449,9 +449,9 @@ select {
   text-align: center;
 
   text-shadow:
-  calc( 2px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
-  calc( 2px * var(--multiply-factor)) calc( 2px * var(--multiply-factor)) 0 var(--bg-color),
-  calc( 0px * var(--multiply-factor)) calc( 2px * var(--multiply-factor)) 0 var(--bg-color);
+  calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color);
 }
 
 .sidebar-box {
@@ -465,6 +465,10 @@ select {
   animation: fadein-right .7s;
   margin-bottom: var(--gap);
   transform:scaleZ(5);
+  text-shadow:
+  calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color);
 }
 
 .side-bar-img {
@@ -534,9 +538,9 @@ select {
   line-height: 20px;
 
   text-shadow:
-  calc( 2px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
-  calc( 2px * var(--multiply-factor)) calc( 2px * var(--multiply-factor)) 0 var(--bg-color),
-  calc( 0px * var(--multiply-factor)) calc( 2px * var(--multiply-factor)) 0 var(--bg-color);
+  calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color);
 }
 
 .main-content-box {
@@ -590,13 +594,13 @@ select {
   opacity: 1;
   
   text-shadow:
-  calc( 2px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
-  calc( 2px * var(--multiply-factor)) calc( 2px * var(--multiply-factor)) 0 var(--bg-color),
-  calc( 0px * var(--multiply-factor)) calc( 2px * var(--multiply-factor)) 0 var(--bg-color);
+  calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color);
 }
 
 .news-user {
-  font-family: 'nav';
+  font-family: 'Rubik';
   font-size: 32px;
   padding-top: 0px;
 
@@ -611,9 +615,9 @@ select {
   margin: 5px auto auto auto;
   padding-bottom: 0px;
   text-shadow:
-  calc( 2px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
-  calc( 2px * var(--multiply-factor)) calc( 2px * var(--multiply-factor)) 0 var(--bg-color),
-  calc( 0px * var(--multiply-factor)) calc( 2px * var(--multiply-factor)) 0 var(--bg-color);
+  calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color);
 }
 
 .news-content li {
@@ -693,8 +697,8 @@ a {
   text-decoration: none;
   color: var(--bg-color);
   background: var(--font-link-color);
-  padding: 0px 7px 4px 5px;
-  margin: 0px;
+  padding: 0px 5px 2px 5px;
+  margin: 0px 1px 0px 0px;
   border-radius: 1px;
   transition: ease-in-out .2s;
   text-shadow: none;

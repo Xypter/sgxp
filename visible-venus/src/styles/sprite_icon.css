@@ -1,7 +1,8 @@
 :root {
-  --multiplication-factor: 1;
+  --multiplication-factor: 2;
   --number-shadow: #002806;
   --text-shadow: #4b4b54;
+  --font-size: 10px;
 }
 
 @font-face {
@@ -25,12 +26,18 @@
   justify-content: flex-start;
   margin: 0px auto;
   padding: 0px 50px;
-  background-color: #f8b818;
+  background-color: var(--page-color);
   box-shadow: 10px 10px 0px rgba(0,0,0,0.7);
-  border-top: 2px solid #f8f880;
-  border-right: 2px solid #f8f880;
-  border-left: 2px solid #e08818;
-  border-bottom: 2px solid #e08818;
+  border-top: 2px solid color-mix(in srgb, var(--page-color) 60%, white);
+  border-right: 2px solid color-mix(in srgb, var(--page-color) 60%, white);
+  border-left: 2px solid color-mix(in srgb, var(--page-color) 60%, black);
+  border-bottom: 2px solid color-mix(in srgb, var(--page-color) 60%, black);
+  min-height: 200px;
+  transition: .5s;
+}
+
+.sprite-container:empty {
+  min-height: 800px;
 }
 
 .sprite-box {  
@@ -39,23 +46,31 @@
   background-image: url("/img/spriteicon/icon_image.svg");
   margin: 20px 10px;
   user-select: none;
-  transition: transform 1s;
+  transition: transform ease-in-out .2s;
   text-decoration: none;
   color: inherit;
+  border-radius: 4px;
   box-shadow: 10px 10px 0px rgba(0,0,0,0.7);
+  animation: fadein-top .7s;
 }
 
 .sprite-box:hover {
-  transform: rotateY(180deg);
+  transform: translateY(-5px);
+  animation: fadein-top .7s;
 }
 
 .sprite-page-container a {
+  color: white;
   padding: 0;
 }
 
 .sprite-page-container a:hover {
   padding: 0;
   background-image: url("/img/spriteicon/icon_image.svg");
+}
+
+.sprite-page-container a:visited {
+  color: white;
 }
 
 .sprite-star-container {
@@ -87,7 +102,7 @@
 
 .sprite-number-text {
   font-family: 'sprite', monospace;
-  font-size: calc(10px * var(--multiplication-factor));
+  font-size: calc(var(--font-size) * var(--multiplication-factor));
   text-shadow: calc(1px * var(--multiplication-factor)) 0px var(--number-shadow), 0px calc(1px * var(--multiplication-factor)) var(--number-shadow), calc(1px * var(--multiplication-factor)) calc(1px * var(--multiplication-factor)) var(--number-shadow);
   transform: scaleZ(5);
 }
@@ -95,7 +110,7 @@
 .sprite-text {
   font-family: 'sprite', monospace;
   user-select: none;
-  font-size: calc(10px * var(--multiplication-factor));
+  font-size: calc(var(--font-size) * var(--multiplication-factor));
   line-height: calc(7px * var(--multiplication-factor));
   text-align: center;
   transform: scaleZ(5);
@@ -148,12 +163,18 @@
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
-  margin-top: calc(5px * var(--multiplication-factor));
+  margin-top: calc(4px * var(--multiplication-factor));
   margin-left: calc(24px * var(--multiplication-factor));
   margin-right: calc(3px * var(--multiplication-factor));
   width: calc(110px * var(--multiplication-factor));
 }
 
-.sprite-stats:nth-child(n + 2) {
-  height: calc(4px * var(--multiplication-factor));
+.sprite-stats:nth-child(n+2) {
+  height: calc(5px * var(--multiplication-factor));
+}
+
+@keyframes fadein-top {
+  0% { opacity: 0; transform: translateY(-50px);}
+  50% { opacity: 0; transform: translateY(-50px);}
+  100% { opacity: 1; transform: translateY(0); }
 }
