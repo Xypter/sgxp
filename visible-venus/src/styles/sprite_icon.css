@@ -2,12 +2,38 @@
   --multiplication-factor: 1;
   --number-shadow: #002806;
   --text-shadow: #4b4b54;
-  --font-size: 10px;
+  --font-size: 16px;
 }
 
 @font-face {
   font-family: sprite;
-  src: url('/src/styles/fonts/smallest_pixel-7.ttf')
+  src: url('/src/styles/fonts/PixelTiny.ttf');
+  font-weight: normal;
+  font-style: normal; 
+}
+
+body {
+  filter: contrast(100.00001%);
+  line-height: 1;
+
+  text-size-adjust: none;
+  -webkit-text-size-adjust: none;
+
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: grayscale;
+  font-smooth: never;
+}
+
+@media
+  (resolution: 1dppx),
+  (resolution: 2dppx),
+  (resolution: 3dppx),
+  (resolution: 4dppx)
+{
+  body {
+    -moz-osx-font-smoothing: grayscale;
+    font-smooth: never;
+  }
 }
 
 .sprite-page-container {
@@ -24,14 +50,10 @@
   display: flex;
   flex-flow: row wrap;
   justify-content: flex-start;
-  margin: 0px auto;
+  margin: 30px auto;
   padding: 0px 50px;
   background-color: var(--page-color);
   box-shadow: 10px 10px 0px rgba(0,0,0,0.7);
-  border-top: 2px solid color-mix(in srgb, var(--page-color) 60%, white);
-  border-right: 2px solid color-mix(in srgb, var(--page-color) 60%, white);
-  border-left: 2px solid color-mix(in srgb, var(--page-color) 60%, black);
-  border-bottom: 2px solid color-mix(in srgb, var(--page-color) 60%, black);
   min-height: 200px;
   transition: .5s;
 }
@@ -43,7 +65,7 @@
 .sprite-box {  
   width: calc(117px * var(--multiplication-factor));
   height: calc(188px * var(--multiplication-factor));
-  background-image: url("/img/spriteicon/icon_image.svg");
+  background-image: url("/img/spriteicon/icon_image.png");
   margin: 20px 10px;
   user-select: none;
   transition: transform ease-in-out .2s;
@@ -66,7 +88,7 @@
 
 .sprite-page-container a:hover {
   padding: 0;
-  background-image: url("/img/spriteicon/icon_image.svg");
+  background-image: url("/img/spriteicon/icon_image.png");
 }
 
 .sprite-page-container a:visited {
@@ -97,7 +119,7 @@
   justify-content: right;
   line-height: 0;
   margin-right: calc(6px * var(--multiplication-factor));
-  margin-top: calc(5px * var(--multiplication-factor));
+  margin-top: calc(3px * var(--multiplication-factor));
 }
 
 .sprite-number-text {
@@ -154,6 +176,7 @@
   margin-top: calc(1px * var(--multiplication-factor));
   margin-left: calc(13px * var(--multiplication-factor));
   margin-right: calc(12px * var(--multiplication-factor));
+  margin-bottom: calc(0spx * var(--multiplication-factor));
   height: calc(25.5px * var(--multiplication-factor));
   width: calc(93px * var(--multiplication-factor));
   overflow-wrap: anywhere;

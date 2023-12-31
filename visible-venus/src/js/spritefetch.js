@@ -1,3 +1,15 @@
+function formatBytes(bytes, decimals = 2) {
+  if (!+bytes) return '0 Bytes'
+
+  const k = 1024
+  const dm = decimals < 0 ? 0 : decimals
+  const sizes = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
+
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
+}
+
 function getSprites() {
     const div = document.getElementById('hello')
     fetch('https://api.sgxp.me/api/sprites?[populate]=*')
@@ -41,7 +53,7 @@ function getSprites() {
         <div class="sprite-text"></div>
       </div>
       <div class="sprite-stats">
-        <div class="sprite-text">${sprite.attributes.spritesheet.data.attributes.size}KB</div>
+        <div class="sprite-text">${formatBytes(sprite.attributes.spritesheet.data.attributes.size, 2)}</div>
       </div>
     </a>
 

@@ -3,9 +3,18 @@ import FrontPageLayout from "../layouts/FrontPageLayout.astro";
 ---
 
 <FrontPageLayout title="Sprites">
+
+  <script type="text/javascript">
+    fix_odd_viewport = () => {
+      document.body.style.width = "initial";
+      document.body.style.width = (document.body.clientWidth&~1)+"px";
+    }
+    addEventListener("resize", fix_odd_viewport);
+    fix_odd_viewport();
+  </script>
+
   <script src="/src/js/spritefetch.js"></script>
     <div class="sprite-page-container">
-        <img class="sprite-index" src="/img/spriteicon/sprite index.png" alt="">
         <div id="hello" class="sprite-container">
 
             
