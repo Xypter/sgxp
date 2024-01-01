@@ -1,0 +1,36 @@
+---
+import fetchApi from '../../../lib/strapi';
+import type Sheet from '../../interfaces/sheet';
+
+const { slug } = Astro.params;
+
+let sheet: Sheet;
+
+try {
+  sheet = await fetchApi<Sheet>({
+    endpoint: 'sprites',
+    wrappedByKey: 'data',
+    wrappedByList: true,
+    query: {
+      'filters[slug][$eq]': slug || '',
+    },
+  });
+} catch (error) {
+  return Astro.redirect('/404');
+}
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>{sheet.attributes.title}</title>
+  </head>
+
+  <body>
+    <main>
+
+      <h1>{sheet.attributes.title}</h1>
+
+    </main>
+  </body>
+</html>

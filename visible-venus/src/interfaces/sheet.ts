@@ -1,10 +1,10 @@
-export default interface Article {
+export default interface Sheet {
     id: number;
     attributes: {
       title: string;
-      content: string;
       createdAt: string;
       updatedAt: string;
       publishedAt: string;
+      slug: string;
     };
   }
