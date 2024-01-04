@@ -5,9 +5,4 @@ import netlify from "@astrojs/netlify/functions";
 export default defineConfig({
   output: "server",
   adapter: netlify(),
-  vite: {
-    ssr: {
-      noExternal: ['path-to-regexp'],
-    },
-  },
 });
