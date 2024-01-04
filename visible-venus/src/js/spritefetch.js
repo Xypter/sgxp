@@ -28,7 +28,7 @@ function getSprites() {
       data.data.forEach(sprite => {
         div.innerHTML += `
 
-    <a href="/sprites/${sprite.id}" class="sprite-box">
+    <a href="../sheets/${sprite.id}" class="sprite-box">
       <div class="sprite-star-container">
         <div class="sprite-star"></div>
         <div class="sprite-star"></div>
