@@ -14,6 +14,7 @@
 
 body {
   transform: translateZ(0);
+  text-rendering: geometricPrecision;
 }
 
 .sprite-page-container {
