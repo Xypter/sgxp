@@ -13,71 +13,39 @@
 }
 
 body {
-  filter: contrast(100.00001%);
-  line-height: 1;
-
-  text-size-adjust: none;
-  -webkit-text-size-adjust: none;
-
-  -webkit-font-smoothing: none;
-  -moz-osx-font-smoothing: grayscale;
-  font-smooth: never;
-}
-
-@media
-  (resolution: 1dppx),
-  (resolution: 2dppx),
-  (resolution: 3dppx),
-  (resolution: 4dppx)
-{
-  body {
-    -moz-osx-font-smoothing: grayscale;
-    font-smooth: never;
-  }
+  transform: translateZ(0);
 }
 
 .sprite-page-container {
-  margin: auto 300px 100px 300px;
-  max-width: 1400px;
-}
-
-.sprite-index {
-  margin: 10px 0px -8px 0px;
-  padding: 0px;
+  margin: 20px 105px;
 }
 
 .sprite-container {
   display: flex;
   flex-flow: row wrap;
   justify-content: flex-start;
-  margin: 30px auto;
-  padding: 0px 50px;
+  padding: 10px;
   background-color: var(--page-color);
   box-shadow: 10px 10px 0px rgba(0,0,0,0.7);
   min-height: 200px;
-  transition: .5s;
-}
-
-.sprite-container:empty {
-  min-height: 800px;
+  transition: 1s;
 }
 
 .sprite-box {  
   width: calc(117px * var(--multiplication-factor));
   height: calc(188px * var(--multiplication-factor));
-  background-image: url("/img/spriteicon/icon_image.png");
-  margin: 20px 10px;
+  background-image: url("/img/spriteicon/icon_image.svg");
+  margin: 10px;
   user-select: none;
   transition: transform ease-in-out .2s;
   text-decoration: none;
-  color: inherit;
   border-radius: 4px;
   box-shadow: 10px 10px 0px rgba(0,0,0,0.7);
   animation: fadein-top .7s;
 }
 
 .sprite-box:hover {
-  transform: translateY(-5px);
+  transform: translateY(calc(-5px * var(--multiplication-factor)));
   animation: fadein-top .7s;
 }
 
@@ -88,7 +56,7 @@ body {
 
 .sprite-page-container a:hover {
   padding: 0;
-  background-image: url("/img/spriteicon/icon_image.png");
+  background-image: url("/img/spriteicon/icon_image.svg");
 }
 
 .sprite-page-container a:visited {
@@ -114,19 +82,15 @@ body {
 }
 
 .sprite-number {
+  font-family: 'sprite', monospace;
+  font-size: calc(var(--font-size) * var(--multiplication-factor));
   user-select: none;
   display: flex;
   justify-content: right;
   line-height: 0;
   margin-right: calc(6px * var(--multiplication-factor));
   margin-top: calc(3px * var(--multiplication-factor));
-}
-
-.sprite-number-text {
-  font-family: 'sprite', monospace;
-  font-size: calc(var(--font-size) * var(--multiplication-factor));
   text-shadow: calc(1px * var(--multiplication-factor)) 0px var(--number-shadow), 0px calc(1px * var(--multiplication-factor)) var(--number-shadow), calc(1px * var(--multiplication-factor)) calc(1px * var(--multiplication-factor)) var(--number-shadow);
-  transform: scaleZ(5);
 }
 
 .sprite-text {
@@ -135,7 +99,6 @@ body {
   font-size: calc(var(--font-size) * var(--multiplication-factor));
   line-height: calc(7px * var(--multiplication-factor));
   text-align: center;
-  transform: scaleZ(5);
 }
 
 .sprite-title {
@@ -158,7 +121,7 @@ body {
   pointer-events: none;
   height: calc(71px * var(--multiplication-factor));
   width: calc(103px * var(--multiplication-factor));  
-  margin-top: calc(2px * var(--multiplication-factor));
+  margin-top: calc(5px * var(--multiplication-factor));
   margin-left: calc(7px * var(--multiplication-factor));
   margin-right: calc(6px * var(--multiplication-factor));
   object-fit: cover;
@@ -167,17 +130,18 @@ body {
 
 .sprite-image > img {
   filter: drop-shadow(calc(10px * var(--multiplication-factor)) calc(10px * var(--multiplication-factor)) 0px rgba(0,0,0,0.7));
+  transform: scale(calc(1 * var(--multiplication-factor)));
 }
 
 .sprite-author {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: calc(1px * var(--multiplication-factor));
+  margin-top: calc(-2px * var(--multiplication-factor));
   margin-left: calc(13px * var(--multiplication-factor));
   margin-right: calc(12px * var(--multiplication-factor));
   margin-bottom: calc(0spx * var(--multiplication-factor));
-  height: calc(25.5px * var(--multiplication-factor));
+  height: calc(26px * var(--multiplication-factor));
   width: calc(93px * var(--multiplication-factor));
   overflow-wrap: anywhere;
 }

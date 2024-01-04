@@ -223,7 +223,6 @@ body {
   color: var(--font-color);
   text-decoration: none;
   transition: ease-in-out .2s;
-  transform: scaleZ(5);
 
   text-shadow: 
   calc(-1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 var(--bg-color),
@@ -307,7 +306,6 @@ body {
 
 .nav .dropdown-content {
   display: none;
-  position: absolute;
   background-image: url('../themes/ddz/bg-tiles.png');
   background-size: calc(16px * var(--multiply-factor));
   box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
@@ -464,7 +462,6 @@ select {
   text-align: center;
   animation: fadein-right .7s;
   margin-bottom: var(--gap);
-  transform:scaleZ(5);
   text-shadow:
   calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
   calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),

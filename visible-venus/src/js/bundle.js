@@ -16859,4 +16859,11 @@ module.exports = require('./build/src/index.js');
 },{"buffer":3,"fs":2}],10:[function(require,module,exports){
 const TextToSVG = require('text-to-svg');
 const textToSVG = TextToSVG.loadSync();
+
+const attributes = {fill: 'red', stroke: 'black'};
+const options = {x: 0, y: 0, fontSize: 72, anchor: 'top', attributes: attributes};
+
+const svg = textToSVG.getSVG('hello', options);
+
+console.log(svg);
 },{"text-to-svg":8}]},{},[10]);
