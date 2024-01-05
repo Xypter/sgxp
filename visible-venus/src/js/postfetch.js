@@ -2,18 +2,6 @@ import { format, parseISO } from "date-fns";
 
 function getSprites() {
 
-                
-    `function random() {
-      const result = format(parseISO(post.attributes.publishedAt), 'eeee do MMM, yyyy')
-      return result;
-    };
-
-    random()`
-
-    
-
-
-
     const div = document.getElementById('posts')
     fetch('https://api.sgxp.me/api/posts?[populate][author][populate]=avatar')
     .then(res => res.json())

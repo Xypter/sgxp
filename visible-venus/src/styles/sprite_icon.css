@@ -18,7 +18,75 @@ body {
 }
 
 .sprite-page-container {
-  margin: 20px 105px;
+  display: grid;
+  grid-gap: var(--gap);
+  grid-template-columns: 200px 1fr;
+  grid-template-rows: auto;
+  grid-template-areas:
+  "categories sprites";
+  max-width: 1200px;
+  min-height: 100%;
+  height: auto;
+  margin: auto;
+  padding: 20px;
+}
+
+.categories-container-group {
+  grid-area: categories;
+  min-width: max-content;
+}
+
+.categories-container-title {
+  display: block;
+  background: color-mix(in srgb, var(--page-color) 60%, black);
+  padding: 0px 0px 3px 10px;
+  text-rendering:geometricPrecision;
+  transform:scaleZ(5);
+  font-family: 'main-content-title';
+  font-size: 16px;
+  line-height: 20px;
+
+  text-shadow:
+  calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color);
+
+  border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+}
+
+.categories-container-main {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: flex-start;
+  padding: 10px;
+  background-color: var(--page-color);
+  box-shadow: 10px 10px 0px rgba(0,0,0,0.7);
+
+  border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+}
+
+.sprite-container-group {
+  grid-area: sprites;
+}
+
+.sprite-container-title {
+  display: block;
+  background: color-mix(in srgb, var(--page-color) 60%, black);
+  padding: 0px 0px 3px 10px;
+  text-rendering:geometricPrecision;
+  transform:scaleZ(5);
+  font-family: 'main-content-title';
+  font-size: 16px;
+  line-height: 20px;
+
+  text-shadow:
+  calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color);
+
+  border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
 }
 
 .sprite-container {
@@ -28,8 +96,10 @@ body {
   padding: 10px;
   background-color: var(--page-color);
   box-shadow: 10px 10px 0px rgba(0,0,0,0.7);
-  min-height: 200px;
-  transition: 1s;
+
+  border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
 }
 
 .sprite-box {  

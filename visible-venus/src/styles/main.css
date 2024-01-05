@@ -3,7 +3,7 @@
   --gap: 15px;
   --radius: 0px;
   --border-style: solid;
-  --border-width: 0px;
+  --border-width: 1px;
 }
 
 @font-face {
@@ -450,22 +450,25 @@ select {
   calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
   calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
   calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color);
+
+  border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
 }
 
 .sidebar-box {
   background: var(--page-color);
   padding: 20px;
-  border-radius: var(--radius);
-  border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 60%, black);
-  border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 60%, black);
-  border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 60%, black);
   text-align: center;
   animation: fadein-right .7s;
   margin-bottom: var(--gap);
+
   text-shadow:
   calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
   calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
   calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color);
+
+  border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
 }
 
 .side-bar-img {
@@ -538,6 +541,8 @@ select {
   calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
   calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
   calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color);
+
+  border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
 }
 
 .main-content-box {
@@ -550,9 +555,10 @@ select {
   transform:scaleZ(5);
   line-height: 16px;
 
-  border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 60%, black);
-  border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 60%, black);
-  border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 60%, black);
+  border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+
 }
 
 /*.main-content-box:nth-last-child(-n+1) {
@@ -696,7 +702,7 @@ a {
   background: var(--font-link-color);
   padding: 0px 5px 2px 5px;
   margin: 0px 1px 0px 0px;
-  border-radius: 1px;
+  border-radius: 2px;
   transition: ease-in-out .2s;
   text-shadow: none;
 }
@@ -707,5 +713,5 @@ a:visited {
 }
 
 a:hover {
-  background: var(--font-color);
+  background: color-mix(in srgb, var(--font-link-color) 30%, white);
 }
