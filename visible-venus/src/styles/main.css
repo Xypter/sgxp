@@ -223,6 +223,7 @@ body {
   color: var(--font-color);
   text-decoration: none;
   transition: ease-in-out .2s;
+  padding: 16px;
 
   text-shadow: 
   calc(-1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 var(--bg-color),
@@ -265,6 +266,10 @@ body {
   calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
   calc(-1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
   calc(-1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color);
+}
+
+.nav {
+  border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
 }
 
 .nav ul {
