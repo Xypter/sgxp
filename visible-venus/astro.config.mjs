@@ -8,6 +8,6 @@ export default defineConfig({
     edgeMiddleware: true,
   }),
   redirects: {
-    '/*': '/index.html',
+    '/*': '/',
   },
 });
