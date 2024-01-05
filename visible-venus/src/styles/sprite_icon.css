@@ -69,6 +69,7 @@ body {
 
 .sprite-container-group {
   grid-area: sprites;
+  min-width: 1000px;
 }
 
 .sprite-container-title {
