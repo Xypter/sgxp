@@ -77,7 +77,6 @@ body {
   background: color-mix(in srgb, var(--page-color) 60%, black);
   padding: 0px 0px 3px 10px;
   text-rendering:geometricPrecision;
-  transform:scaleZ(5);
   font-family: 'main-content-title';
   font-size: 16px;
   line-height: 20px;
@@ -236,4 +235,82 @@ body {
   0% { opacity: 0; transform: translateY(-50px);}
   50% { opacity: 0; transform: translateY(-50px);}
   100% { opacity: 1; transform: translateY(0); }
+}
+
+/*the container must be positioned relative:*/
+.custom-select-container{
+  background: var(--page-color);
+  box-shadow: 10px 10px 0px rgba(0,0,0,0.7);
+
+  border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+}
+
+.custom-select {
+  display: inline-block;
+  position: relative;
+  font-family: 'nav';
+  width: 125px;
+  padding: 20px 20px 0px 20px;
+}
+
+.select-selected:hover {
+  background-color: color-mix(in srgb, var(--page-color) 90%, black);
+}
+
+.custom-select select {
+  display: none; /*hide original SELECT element:*/
+}
+
+.select-selected {
+  background-color: color-mix(in srgb, var(--page-color) 60%, black);
+}
+
+/*style the arrow inside the select element:*/
+.select-selected:after {
+  position: absolute;
+  top: 14px;
+  right: 10px;
+  width: 0;
+  height: 0;
+  border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+}
+
+/*point the arrow upwards when the select box is open (active):*/
+.select-selected.select-arrow-active:after {
+  border-color: transparent transparent #fff transparent;
+  top: 7px;
+}
+
+/*style the items (options), including the selected item:*/
+.select-items div,.select-selected {
+  color: var(--font-color);
+  padding: 2px 12px 4px 12px;
+  border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  cursor: pointer;
+  user-select: none;
+}
+
+.select-items div,.select-selected:nth-child(-n+1) {
+  border-top: none;
+}
+
+/*style items (options):*/
+.select-items {
+  position: absolute;
+  background-color: color-mix(in srgb, var(--page-color) 60%, black);
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 99;
+  margin: 0px 20px 0px 20px;
+}
+
+/*hide the items when the select box is closed:*/
+.select-hide {
+  display: none;
+}
+
+.select-items div:hover, .same-as-selected {
+  background-color: color-mix(in srgb, var(--page-color) 90%, black);
 }
