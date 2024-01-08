@@ -2,7 +2,7 @@
 import fetchApi from '../../../lib/strapi';
 import type Sheet from '../../interfaces/sheet';
 
-const { slug } = Astro.params;
+const { id } = Astro.params;
 
 let sheet: Sheet;
 
@@ -12,7 +12,7 @@ try {
     wrappedByKey: 'data',
     wrappedByList: true,
     query: {
-      'filters[slug][$eq]': slug || '',
+      'filters[id][$eq]': id || '',
     },
   });
 } catch (error) {
