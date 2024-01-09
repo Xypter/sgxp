@@ -52,53 +52,53 @@ function getSprites() {
     .then(data => {
       data.data.forEach(sprite => {
         fetch(`https://analytics.sgxp.me/api/websites/c78c6fb7-bd5f-4715-8af5-f794ad7b3584/stats?startAt=1672578061000&endAt=${todaysDate}&url=/sprites/${sprite.id}`, {
-    headers: {Authorization: `Bearer ${umamiKey}`}
-  })
-  .then(res => res.json())
-  .then(data => {
-    let views = data.pageviews.value
+          headers: {Authorization: `Bearer ${umamiKey}`}
+        })
+        .then(res => res.json())
+        .then(data => {
+          let views = data.pageviews.value
 
-    div.innerHTML += `
+          div.innerHTML += `
 
-    <a href="/sprites/${sprite.id}" class="sprite-box">
-      <div class="sprite-star-container">
-        <div class="sprite-star"></div>
-        <div class="sprite-star"></div>
-        <div class="sprite-star"></div>
-        <div class="sprite-star"></div>
-        <div class="sprite-star"></div>
-        <div class="sprite-star"></div>
-        <div class="sprite-star"></div>
-        <div class="sprite-star"></div>
-        <div class="sprite-star"></div>
-        <div class="sprite-star"></div>
-      </div>
-      <div class="sprite-number">${count(sprite.id)}</div>
-      <div class="sprite-title">
-        <div id="author" class="sprite-text">${sprite.attributes.title}</div>
-      </div>
-      <div class="sprite-image">
-        <img src="https://api.sgxp.me${sprite.attributes.iconimage.data.attributes.url}" alt="">
-      </div>
-      <div class="sprite-author">
-        <div class="sprite-text">${sprite.attributes.author.data.attributes.name}</div>
-      </div>
-      <div class="sprite-stats">
-        <div class="sprite-text">Customs</div>
-      </div>
-      <div class="sprite-stats">
-        <div class="sprite-text">${sprite.attributes.createdBy.username}</div>
-      </div>
-      <div class="sprite-stats">
-        <div class="sprite-text">${views}</div>
-      </div>
-      <div class="sprite-stats">
-        <div class="sprite-text">${formatBytes(sprite.attributes.spritesheet.data.attributes.size, 2)}</div>
-      </div>
-    </a>
+          <a href="/sprites/${sprite.id}" class="sprite-box">
+            <div class="sprite-star-container">
+              <div class="sprite-star"></div>
+              <div class="sprite-star"></div>
+              <div class="sprite-star"></div>
+              <div class="sprite-star"></div>
+              <div class="sprite-star"></div>
+              <div class="sprite-star"></div>
+              <div class="sprite-star"></div>
+              <div class="sprite-star"></div>
+              <div class="sprite-star"></div>
+              <div class="sprite-star"></div>
+            </div>
+            <div class="sprite-number">${count(sprite.id)}</div>
+            <div class="sprite-title">
+              <div id="author" class="sprite-text">${sprite.attributes.title}</div>
+            </div>
+            <div class="sprite-image">
+              <img src="https://api.sgxp.me${sprite.attributes.iconimage.data.attributes.url}" alt="">
+            </div>
+            <div class="sprite-author">
+              <div class="sprite-text">${sprite.attributes.author.data.attributes.name}</div>
+            </div>
+            <div class="sprite-stats">
+              <div class="sprite-text">Customs</div>
+            </div>
+            <div class="sprite-stats">
+              <div class="sprite-text">${sprite.attributes.createdBy.username}</div>
+            </div>
+            <div class="sprite-stats">
+              <div class="sprite-text">${views}</div>
+            </div>
+            <div class="sprite-stats">
+              <div class="sprite-text">${formatBytes(sprite.attributes.spritesheet.data.attributes.size, 2)}</div>
+            </div>
+          </a>
 
-        `
-  })
+              `
+        })
         
       })
     })
