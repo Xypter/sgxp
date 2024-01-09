@@ -61,6 +61,7 @@ body {
   padding: 10px;
   background-color: var(--page-color);
   box-shadow: 10px 10px 0px rgba(0,0,0,0.7);
+  margin-bottom: var(--gap);
 
   border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
   border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
