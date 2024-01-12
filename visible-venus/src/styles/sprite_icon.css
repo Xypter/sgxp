@@ -114,6 +114,7 @@ body {
   border-radius: 4px;
   box-shadow: 10px 10px 0px rgba(0,0,0,0.7);
   animation: fadein-top .7s;
+  transform: translateY(calc(-.1px * var(--multiplication-factor))); /*forced hardware acceleration*/
 }
 
 .sprite-box:hover {

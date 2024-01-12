@@ -1,7 +1,7 @@
 const umamiKey = import.meta.env.PUBLIC_UMAMI_TOKEN;
 const todaysDate = Date.now();
 const localhost = "http://localhost:1337/api/sprites?populate=*"
-const apiUrl = "https://api.sgxp.me/api/sprites?[populate]=*"
+const apiUrl = "https://api.sgxp.me/api/sprites?populate=*&sort=publishedAt"
 
 function count(number) {
   if (number <= 9) {
@@ -18,34 +18,14 @@ function formatBytes(bytes, decimals = 2) {
 
   const k = 1024
   const dm = decimals < 0 ? 0 : decimals
-  const sizes = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
 
   const i = Math.floor(Math.log(bytes) / Math.log(k))
 
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
 }
 
-
-// function getStats() {
-//   fetch(`https://analytics.sgxp.me/api/websites/c78c6fb7-bd5f-4715-8af5-f794ad7b3584/stats?startAt=1672578061000&endAt=${todaysDate}&url=/sprites`, {
-//   headers: {Authorization: `Bearer ${umamiKey}`}
-// })
-//    .then(res => res.json())
-//    .then(data => console.log(data.pageviews.value))
-// }
-
-// getStats()
-
-
 function getSprites() {
-  fetch(`https://analytics.sgxp.me/api/websites/c78c6fb7-bd5f-4715-8af5-f794ad7b3584/stats?startAt=1672578061000&endAt=${todaysDate}&url=/sprites`, {
-    headers: {Authorization: `Bearer ${umamiKey}`}
-  })
-  .then(res => res.json())
-  .then(data => {
-    let views = data.pageviews.value
-  })
-
     const div = document.getElementById('hello')
     fetch(apiUrl)
     .then(res => res.json())
@@ -84,7 +64,7 @@ function getSprites() {
               <div class="sprite-text">${sprite.attributes.author.data.attributes.name}</div>
             </div>
             <div class="sprite-stats">
-              <div class="sprite-text">Customs</div>
+              <div class="sprite-text">${sprite.attributes.game.data.attributes.name}</div>
             </div>
             <div class="sprite-stats">
               <div class="sprite-text">${sprite.attributes.createdBy.username}</div>
@@ -93,7 +73,7 @@ function getSprites() {
               <div class="sprite-text">${views}</div>
             </div>
             <div class="sprite-stats">
-              <div class="sprite-text">${formatBytes(sprite.attributes.spritesheet.data.attributes.size, 2)}</div>
+              <div class="sprite-text">${formatBytes(sprite.attributes.spritesheet.data.attributes.size*1000, 2)}</div>
             </div>
           </a>
 
