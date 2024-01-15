@@ -23,7 +23,7 @@ interface Props {
       endpoint = endpoint.slice(1);
     }
   
-    const url = new URL(`${import.meta.env.STRAPI_URL}/api/${endpoint}`);
+    const url = new URL(`https://api.sgxp.me/api/${endpoint}`);
   
     if (query) {
       Object.entries(query).forEach(([key, value]) => {

@@ -10,7 +10,6 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@_sh/strapi-plugin-ckeditor": "^2.0.4",
     "@astrojs/netlify": "^4.1.0",
     "astro": "^4.1.0",
     "date-fns": "^3.0.6",

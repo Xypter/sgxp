@@ -3,9 +3,9 @@ const todaysDate = Date.now();
 const localhost = "http://localhost:1337/api/sprites?populate=*"
 const apiUrl = "https://api.sgxp.me/api/sprites?populate=*&sort=title"
 
-async function getSprites() {
+function getSprites() {
   const div = document.getElementById('hello')
-  await fetch(apiUrl)
+  fetch(apiUrl)
   .then(res => res.json())
   .then(data => {
     data.data.forEach(sprite => {

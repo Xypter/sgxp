@@ -6,5 +6,12 @@ export default interface Sheet {
       updatedAt: string;
       publishedAt: string;
       slug: string;
+      spritesheet: {
+        data: {
+          attributes: {
+            url: string;
+          }
+        }
+      }
     };
   }
