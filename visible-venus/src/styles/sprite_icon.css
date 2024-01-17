@@ -101,6 +101,8 @@ body {
   border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
   border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
   border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+
+  min-height: 630px;
 }
 
 .sprite-box {  
