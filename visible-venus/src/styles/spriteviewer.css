@@ -1,0 +1,65 @@
+:root {
+    --multiplication-factor: 11;
+}
+
+body {
+    margin: 0;
+    background-color: #2a2a2a;
+}
+
+.container {
+    display: grid;
+    grid-gap: var(--gap);
+    grid-template-columns:calc(117px * var(--multiplication-factor)) 1fr;
+    grid-template-rows: 1fr;
+    grid-template-areas:
+    "image comments";
+}
+
+.image-container-group {
+    grid-area: image;
+    
+}
+
+.image-container {
+    background-color: red;
+    object-fit: cover;
+    overflow: hidden;
+    min-height: 100vh;
+}
+
+.image-card {
+    display: flex;
+    position: fixed;
+    margin-top: calc(-18px * var(--multiplication-factor));
+    background-image: url("/img/spriteicon/icon_image.svg");
+    width: calc(117px * var(--multiplication-factor));
+    height: calc(188px * var(--multiplication-factor));
+    overflow-y: hidden;
+}
+
+.image-panel {
+    display: flex;
+    justify-content: start;
+    align-items: start;
+    height: calc(71px * var(--multiplication-factor));
+    width: calc(103px * var(--multiplication-factor)); 
+    object-fit: cover;
+    overflow: hidden;
+
+    margin: 
+    calc(27px * var(--multiplication-factor))
+    calc(5px * var(--multiplication-factor))
+    calc(5px * var(--multiplication-factor))
+    calc(7px * var(--multiplication-factor));
+}
+
+.zoom-img {
+    image-rendering: pixelated;
+    filter: drop-shadow(calc(5px * var(--multiplication-factor)) calc(5px * var(--multiplication-factor)) 0px rgba(0,0,0,0.7));
+    cursor: grab;
+}
+
+.zoom-img:active {
+    cursor: grabbing;
+}
