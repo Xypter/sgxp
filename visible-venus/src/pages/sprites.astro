@@ -6,7 +6,6 @@ import FrontPageLayout from "../layouts/FrontPageLayout.astro";
 <FrontPageLayout title="Sprites">
 
   <script src="/src/js/spritefetch.js"></script>
-  <script src="/src/js/spriteselect.js"></script>
     <div class="sprite-page-container">
       <div class="categories-container-group">
         <div class="categories-container-title">Author</div>
@@ -21,14 +20,14 @@ import FrontPageLayout from "../layouts/FrontPageLayout.astro";
 
         <div class="custom-select-container">
           <div class="custom-select">
-            <select>
-              <option value="">Sort by</option>
-              <option value="newest">Newest</option>
-              <option value="oldest">Oldest</option>
-              <option value="mostviewed">Most Viewed</option>
-            </select>
+              <select class="sprite-select">
+                  <option value="">Sort by</option>
+                  <option value="createdAt:ASC">Newest</option>
+                  <option value="createdAt:DESC">Oldest</option>
+                  <option value="views:DESC">Most Viewed</option>
+              </select>
           </div>
-        </div>
+      </div>
         
 
         <div id="hello" class="sprite-container">

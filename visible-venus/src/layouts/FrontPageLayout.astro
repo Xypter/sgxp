@@ -7,7 +7,6 @@ const { title } = Astro.props;
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script src="/src/js/zoomer.js"></script>
   <script async 
   defer
   src="https://analytics.sgxp.me/script.js" 
@@ -53,16 +52,18 @@ const { title } = Astro.props;
           <a href="#">Metal</a>
         </div>
       </li>-->
-      <div class="select">
-        <select name="themeSelect" id="themeSelect">
-          <option value="snow">CHRISTMAS</option>
-          <option value="cozy">FIRESIDE</option>
-          <option value="sbn">BATTLE NETWORK</option>
-          <option value="style_v7">DOOMSDAY ZONE</option>
-          <option value="hpz">HIDDEN PALACE ZONE</option>
-          <option value="mfz">MFZ</option>
-          <option value="ssz">SKY SANCTUARY ZONE</option> 
-        </select>
+      <div class="select-container">
+        <div class="select-container-next">
+          <select name="themeSelect" id="themeSelect">
+            <option value="snow">CHRISTMAS</option>
+            <option value="cozy">FIRESIDE</option>
+            <option value="sbn">BATTLE NETWORK</option>
+            <option value="style_v7">DOOMSDAY ZONE</option>
+            <option value="hpz">HIDDEN PALACE ZONE</option>
+            <option value="mfz">MFZ</option>
+            <option value="ssz">SKY SANCTUARY ZONE</option> 
+          </select>
+        </div>
       </div>
       
     </ul>

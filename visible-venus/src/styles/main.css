@@ -327,7 +327,7 @@ body {
   background-color: #f1f1f1;
 }
 
-select {
+.select-container-next select {
   -webkit-appearance: none;
   -moz-appearance: none;
   -ms-appearance: none;
@@ -352,13 +352,13 @@ select {
   calc(-1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color);
 }
 
-select option {
+.select-container-next select option {
   background: var(--page-color);
   font-family: 'Courier New', Courier, monospace;
   font-weight: 700;
 }
 
-select option:hover {
+.select-container-next select option:hover {
   cursor: url('/img/Sonic_Cursor_Spin.gif'), progress;
   animation-name: cursor;
   animation-duration: 1.5s;
@@ -366,17 +366,17 @@ select option:hover {
   animation-iteration-count: infinite;
 }
 
-select::-ms-expand {
+.select-container-next select::-ms-expand {
   float: right;
   display: none;
 }
 
-.select {
+.select-container-next {
   float: right;
   line-height: 3;
 }
 
-select {
+.select-container-next select {
   color: var(--font-color);
   cursor: url('/img/Sonic_Cursor_Spin.gif'), progress;
   animation-name: cursor;
@@ -385,7 +385,7 @@ select {
   animation-iteration-count: infinite;
 }
 
-.select::after {
+.select-container-next::after {
   background: var(--page-color);
   cursor: pointer;
   pointer-events: none;
@@ -394,12 +394,12 @@ select {
   transition: 1s all ease;
 }
 
-.select:hover::after {
+.select-container-next:hover::after {
   color: #84340c;
   margin-top: 100px;
 }
 
-.select:hover {
+.select-container-next:hover {
   background-color: var(--font-link-color);
   height: calc(48px * var(--multiply-factor));
   width: auto;

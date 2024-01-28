@@ -22,7 +22,6 @@ body {
 }
 
 .image-container {
-    background-color: red;
     object-fit: cover;
     overflow: hidden;
     min-height: 100vh;
