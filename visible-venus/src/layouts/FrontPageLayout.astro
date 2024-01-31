@@ -52,21 +52,23 @@ const { title } = Astro.props;
           <a href="#">Metal</a>
         </div>
       </li>-->
-      <div class="select-container">
-        <div class="select-container-next">
-          <select name="themeSelect" id="themeSelect">
-            <option value="snow">CHRISTMAS</option>
-            <option value="cozy">FIRESIDE</option>
-            <option value="sbn">BATTLE NETWORK</option>
-            <option value="style_v7">DOOMSDAY ZONE</option>
-            <option value="hpz">HIDDEN PALACE ZONE</option>
-            <option value="mfz">MFZ</option>
-            <option value="ssz">SKY SANCTUARY ZONE</option> 
-          </select>
-        </div>
-      </div>
+      
       
     </ul>
+    <div class="theme-select-container">
+      <div class="theme-select">
+        <select name="themeSelect" id="themeSelect">
+          <option value="">Themes</option>
+          <option value="snow">CHRISTMAS</option>
+          <option value="cozy">FIRESIDE</option>
+          <option value="sbn">BATTLE NETWORK</option>
+          <option value="style_v7">DOOMSDAY ZONE</option>
+          <option value="hpz">HIDDEN PALACE ZONE</option>
+          <option value="mfz">MFZ</option>
+          <option value="ssz">SKY SANCTUARY ZONE</option> 
+        </select>
+      </div>
+    </div>
   </nav>
 
   <slot>You're not supposed to see this LMAO</slot>

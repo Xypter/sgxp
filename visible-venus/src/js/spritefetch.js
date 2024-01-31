@@ -1,9 +1,15 @@
+// Reusable Variables
 const umamiKey = import.meta.env.PUBLIC_UMAMI_TOKEN;
 const todaysDate = Date.now();
 const localhost = "http://localhost:1337/api/sprites?populate=*"
-const apiUrl = "https://api.sgxp.me/api/sprites?populate=*&sort=createdAt:desc"
-const apiUrlDefault = `${apiUrl}&sort=createdAt:desc`
+let currentPage = 1;
 
+// Now, currentPage is accessible outside the script
+console.log(currentPage);
+
+const apiUrl = `https://api.sgxp.me/api/sprites?populate=*&pagination[pageSize]=2`
+
+// Sprite Card special number maker
 function count(number) {
   if (number <= 9) {
     return '00' + number
@@ -14,6 +20,7 @@ function count(number) {
   }
 }
 
+// Sprite Card size labeler for sprite sheets
 function formatBytes(bytes, decimals = 2) {
   if (!+bytes) return '0 Bytes'
 
@@ -26,72 +33,7 @@ function formatBytes(bytes, decimals = 2) {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
 }
 
-function getSprites() {
-  const div = document.getElementById('hello');
-  fetch(apiUrl)
-      .then(res => res.json())
-      .then(data => {
-          const spritePromises = data.data.map(sprite => {
-              return fetch(`https://analytics.sgxp.me/api/websites/c78c6fb7-bd5f-4715-8af5-f794ad7b3584/stats?startAt=1672578061000&endAt=${todaysDate}&url=/sprites/${sprite.id}`, {
-                  headers: { Authorization: `Bearer ${umamiKey}` }
-              })
-                  .then(res => res.json())
-                  .then(data => {
-                      let views = data.pageviews.value;
-
-                      return `
-                      <a href="/sprites/${sprite.id}" class="sprite-box">
-                      <div class="sprite-star-container">
-                        <div class="sprite-star"></div>
-                        <div class="sprite-star"></div>
-                        <div class="sprite-star"></div>
-                        <div class="sprite-star"></div>
-                        <div class="sprite-star"></div>
-                        <div class="sprite-star"></div>
-                        <div class="sprite-star"></div>
-                        <div class="sprite-star"></div>
-                        <div class="sprite-star"></div>
-                        <div class="sprite-star"></div>
-                      </div>
-                      <div class="sprite-number">${count(sprite.id)}</div>
-                      <div class="sprite-title">
-                        <div id="author" class="sprite-text">${sprite.attributes.title}</div>
-                      </div>
-                      <div class="sprite-image">
-                        <img src="https://api.sgxp.me${sprite.attributes.iconimage.data.attributes.url}" alt="">
-                      </div>
-                      <div class="sprite-author">
-                        <div class="sprite-text">${sprite.attributes.author.data.attributes.name}</div>
-                      </div>
-                      <div class="sprite-stats">
-                        <div class="sprite-text">${sprite.attributes.game.data.attributes.name}</div>
-                      </div>
-                      <div class="sprite-stats">
-                        <div class="sprite-text">${sprite.attributes.createdBy.username}</div>
-                      </div>
-                      <div class="sprite-stats">
-                        <div class="sprite-text">${views}</div>
-                      </div>
-                      <div class="sprite-stats">
-                        <div class="sprite-text">${formatBytes(sprite.attributes.spritesheet.data.attributes.size*1000, 2)}</div>
-                      </div>
-                    </a>
-                      `;
-                  });
-          });
-
-          // Use Promise.all to wait for all fetches to complete
-          Promise.all(spritePromises)
-              .then(spriteHtmlArray => {
-                  // Combine the HTML strings and append to the div
-                  div.innerHTML += spriteHtmlArray.join('');
-              })
-              .catch(error => {
-                  console.error('Error fetching sprite data:', error);
-              });
-      });
-}
-
+// Sorter function
 document.addEventListener('DOMContentLoaded', function () {
   const x = document.getElementsByClassName("custom-select");
   const l = x.length;
@@ -124,6 +66,7 @@ document.addEventListener('DOMContentLoaded', function () {
                           yy[m].removeAttribute("class");
                       }
                       this.setAttribute("class", "same-as-selected");
+                      this.setAttribute("value", selElmnt.options[selElmnt.selectedIndex].value);
                       break;
                   }
               }
@@ -164,29 +107,85 @@ document.addEventListener('DOMContentLoaded', function () {
   document.addEventListener("click", closeAllSelect);
 });
 
+// Sprite Card fetch request 
 document.addEventListener('DOMContentLoaded', function () {
-  const selectElement = document.querySelector('.select-container-next select');
+  const selectContainer = document.querySelector('.select-items');
   const div = document.getElementById('hello');
+  const decrementButton = document.getElementById('decrementButton');
+  const incrementButton = document.getElementById('incrementButton');
+  const pageNumberElement = document.getElementById('pageNumber');
 
-  selectElement.addEventListener('change', function () {
-    const selectedValue = this.value;
-    clearAndFetchSprites(selectedValue);
+  let currentPage = parseInt(pageNumberElement.innerText, 10);
+  let sortBy = ''; // Initialize sortBy outside the functions
+  let isFetchingInProgress = false;
+  let pageCount = 1; // Initialize pageCount
+
+  // Attach click event listener to each option
+  selectContainer.addEventListener('click', function (event) {
+    if (event.target.tagName === 'DIV') {
+      sortBy = event.target.getAttribute('value'); // Update sortBy value
+      clearAndFetchSprites(sortBy);
+    }
   });
 
-  function clearAndFetchSprites(sortBy) {
+  // Add click event listener to the decrement button
+  decrementButton.addEventListener('click', function () {
+    if (!isFetchingInProgress && currentPage > 1) {
+      isFetchingInProgress = true;
+      updatePageNumber(-1); // Decrease page number by 1
+    }
+  });
+
+  // Add click event listener to the increment button
+  incrementButton.addEventListener('click', function () {
+    if (!isFetchingInProgress && currentPage < pageCount) {
+      isFetchingInProgress = true;
+      updatePageNumber(1); // Increase page number by 1
+    }
+  });
+
+  // Function to update the page number
+  function updatePageNumber(change) {
     // Clear existing data
     div.innerHTML = '';
 
+    // Update the page number based on the change
+    currentPage += change;
+
+    // Ensure the page number is within the valid range
+    currentPage = Math.min(Math.max(currentPage, 1), pageCount);
+
+    // Update the page number element
+    pageNumberElement.innerText = currentPage;
+
+    // Disable the decrement button when on the first page
+    decrementButton.disabled = currentPage === 1;
+
+    // Fetch and sort sprites with the updated page number and the current sortBy
+    fetchAndSortSprites(sortBy).finally(() => {
+      isFetchingInProgress = false;
+    });
+  }
+
+  function clearAndFetchSprites(newSortBy) {
+    // Clear existing data
+    div.innerHTML = '';
+
+    // Reset the page number to 1 when a new sortBy is called
+    currentPage = 1;
+    pageNumberElement.innerText = currentPage;
+
     // Fetch new data with sorting based on the selected option
-    fetchAndSortSprites(sortBy);
+    return fetchAndSortSprites(newSortBy);
   }
 
   function fetchAndSortSprites(sortBy) {
-
     // Append sorting query parameter based on the selected option
-    const urlWithSorting = sortBy ? `${apiUrl}&_sort=${sortBy}` : apiUrl;
+    const urlWithSorting = sortBy ? `${apiUrl}&sort=${sortBy}&pagination[page]=${currentPage}` : `${apiUrl}&sort=createdAt:desc&pagination[page]=${currentPage}`;
 
-    fetch(urlWithSorting)
+    console.log(urlWithSorting);
+
+    return fetch(urlWithSorting)
       .then(res => {
         if (!res.ok) {
           throw new Error(`Network response was not ok: ${res.statusText}`);
@@ -194,6 +193,9 @@ document.addEventListener('DOMContentLoaded', function () {
         return res.json();
       })
       .then(data => {
+        // Extract pageCount from the API response
+        pageCount = data.meta.pagination.pageCount;
+
         const spritePromises = data.data.map(sprite => {
           return fetch(`https://analytics.sgxp.me/api/websites/c78c6fb7-bd5f-4715-8af5-f794ad7b3584/stats?startAt=1672578061000&endAt=${todaysDate}&url=/sprites/${sprite.id}`, {
             headers: { Authorization: `Bearer ${umamiKey}` }
@@ -202,49 +204,58 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(data => {
               let views = data.pageviews.value;
 
+              // Assume the following functions return dynamically fed values
+              const countValue = count(sprite.id);
+              const titleValue = sprite.attributes.title;
+              const iconImageUrl = `https://api.sgxp.me${sprite.attributes.iconimage.data.attributes.url}`;
+              const authorName = sprite.attributes.author.data.attributes.name;
+              const gameName = sprite.attributes.game.data.attributes.name;
+              const createdByUsername = sprite.attributes.createdBy.username;
+              const sizeValue = formatBytes(sprite.attributes.spritesheet.data.attributes.size * 1000, 2);
+
               return `
-              <a href="/sprites/${sprite.id}" class="sprite-box">
-              <div class="sprite-star-container">
-                <div class="sprite-star"></div>
-                <div class="sprite-star"></div>
-                <div class="sprite-star"></div>
-                <div class="sprite-star"></div>
-                <div class="sprite-star"></div>
-                <div class="sprite-star"></div>
-                <div class="sprite-star"></div>
-                <div class="sprite-star"></div>
-                <div class="sprite-star"></div>
-                <div class="sprite-star"></div>
-              </div>
-              <div class="sprite-number">${count(sprite.id)}</div>
-              <div class="sprite-title">
-                <div id="author" class="sprite-text">${sprite.attributes.title}</div>
-              </div>
-              <div class="sprite-image">
-                <img src="https://api.sgxp.me${sprite.attributes.iconimage.data.attributes.url}" alt="">
-              </div>
-              <div class="sprite-author">
-                <div class="sprite-text">${sprite.attributes.author.data.attributes.name}</div>
-              </div>
-              <div class="sprite-stats">
-                <div class="sprite-text">${sprite.attributes.game.data.attributes.name}</div>
-              </div>
-              <div class="sprite-stats">
-                <div class="sprite-text">${sprite.attributes.createdBy.username}</div>
-              </div>
-              <div class="sprite-stats">
-                <div class="sprite-text">${views}</div>
-              </div>
-              <div class="sprite-stats">
-                <div class="sprite-text">${formatBytes(sprite.attributes.spritesheet.data.attributes.size*1000, 2)}</div>
-              </div>
-            </a>
+              <a href="/sprites/${sprite.id}" class="sprite-box" target="_blank">
+                <div class="sprite-star-container">
+                  <div class="sprite-star"></div>
+                  <div class="sprite-star"></div>
+                  <div class="sprite-star"></div>
+                  <div class="sprite-star"></div>
+                  <div class="sprite-star"></div>
+                  <div class="sprite-star"></div>
+                  <div class="sprite-star"></div>
+                  <div class="sprite-star"></div>
+                  <div class="sprite-star"></div>
+                  <div class="sprite-star"></div>
+                </div>
+                <div class="sprite-number">${countValue}</div>
+                <div class="sprite-title">
+                  <div id="author" class="sprite-text">${titleValue}</div>
+                </div>
+                <div class="sprite-image">
+                  <img src="${iconImageUrl}" alt="">
+                </div>
+                <div class="sprite-author">
+                  <div class="sprite-text">${authorName}</div>
+                </div>
+                <div class="sprite-stats">
+                  <div class="sprite-text">${gameName}</div>
+                </div>
+                <div class="sprite-stats">
+                  <div class="sprite-text">${createdByUsername}</div>
+                </div>
+                <div class="sprite-stats">
+                  <div class="sprite-text">${views}</div>
+                </div>
+                <div class="sprite-stats">
+                  <div class="sprite-text">${sizeValue}</div>
+                </div>
+              </a>
               `;
             });
         });
 
         // Use Promise.all to wait for all fetches to complete
-        Promise.all(spritePromises)
+        return Promise.all(spritePromises)
           .then(spriteHtmlArray => {
             // Combine the HTML strings and append to the div
             div.innerHTML += spriteHtmlArray.join('');
@@ -256,11 +267,21 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // Fetch and display sprites on page load with default sorting
-  fetchAndSortSprites();
+  fetchAndSortSprites(sortBy).finally(() => {
+    isFetchingInProgress = false;
+    // Disable the decrement button when on the first page
+    decrementButton.disabled = currentPage === 1;
+    // Disable the increment button when on the last page
+    incrementButton.disabled = currentPage === pageCount;
+  });
 });
+
+
 
 // Old code kept in case I need it >:]
 
+
+// Depricated 01/25/2024
 // function getSprites() {
 //   const div = document.getElementById('hello')
 //   fetch(apiUrl)
@@ -321,6 +342,74 @@ document.addEventListener('DOMContentLoaded', function () {
 // }
 
 // getSprites();
+
+
+// Depricated 01/29/2024
+// function getSprites() {
+//   const div = document.getElementById('hello');
+//   fetch(apiUrl)
+//       .then(res => res.json())
+//       .then(data => {
+//           const spritePromises = data.data.map(sprite => {
+//               return fetch(`https://analytics.sgxp.me/api/websites/c78c6fb7-bd5f-4715-8af5-f794ad7b3584/stats?startAt=1672578061000&endAt=${todaysDate}&url=/sprites/${sprite.id}`, {
+//                   headers: { Authorization: `Bearer ${umamiKey}` }
+//               })
+//                   .then(res => res.json())
+//                   .then(data => {
+//                       let views = data.pageviews.value;
+
+//                       return `
+//                       <a href="/sprites/${sprite.id}" class="sprite-box">
+//                       <div class="sprite-star-container">
+//                         <div class="sprite-star"></div>
+//                         <div class="sprite-star"></div>
+//                         <div class="sprite-star"></div>
+//                         <div class="sprite-star"></div>
+//                         <div class="sprite-star"></div>
+//                         <div class="sprite-star"></div>
+//                         <div class="sprite-star"></div>
+//                         <div class="sprite-star"></div>
+//                         <div class="sprite-star"></div>
+//                         <div class="sprite-star"></div>
+//                       </div>
+//                       <div class="sprite-number">${count(sprite.id)}</div>
+//                       <div class="sprite-title">
+//                         <div id="author" class="sprite-text">${sprite.attributes.title}</div>
+//                       </div>
+//                       <div class="sprite-image">
+//                         <img src="https://api.sgxp.me${sprite.attributes.iconimage.data.attributes.url}" alt="">
+//                       </div>
+//                       <div class="sprite-author">
+//                         <div class="sprite-text">${sprite.attributes.author.data.attributes.name}</div>
+//                       </div>
+//                       <div class="sprite-stats">
+//                         <div class="sprite-text">${sprite.attributes.game.data.attributes.name}</div>
+//                       </div>
+//                       <div class="sprite-stats">
+//                         <div class="sprite-text">${sprite.attributes.createdBy.username}</div>
+//                       </div>
+//                       <div class="sprite-stats">
+//                         <div class="sprite-text">${views}</div>
+//                       </div>
+//                       <div class="sprite-stats">
+//                         <div class="sprite-text">${formatBytes(sprite.attributes.spritesheet.data.attributes.size*1000, 2)}</div>
+//                       </div>
+//                     </a>
+//                       `;
+//                   });
+//           });
+
+//           // Use Promise.all to wait for all fetches to complete
+//           Promise.all(spritePromises)
+//               .then(spriteHtmlArray => {
+//                   // Combine the HTML strings and append to the div
+//                   div.innerHTML += spriteHtmlArray.join('');
+//               })
+//               .catch(error => {
+//                   console.error('Error fetching sprite data:', error);
+//               });
+//       });
+// }
 
 
 

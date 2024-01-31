@@ -20,14 +20,19 @@ import FrontPageLayout from "../layouts/FrontPageLayout.astro";
 
         <div class="custom-select-container">
           <div class="custom-select">
-              <select class="sprite-select">
-                  <option value="">Sort by</option>
-                  <option value="createdAt:ASC">Newest</option>
-                  <option value="createdAt:DESC">Oldest</option>
-                  <option value="views:DESC">Most Viewed</option>
-              </select>
+            <select class="sprite-select">
+              <option value="">Sort by</option>
+              <option value="createdAt:desc">Newest</option>
+              <option value="createdAt:asc">Oldest</option>
+              <option value="views:DESC">Most Viewed</option>
+            </select>
           </div>
-      </div>
+          <p class="page-number" id="pageNumber">1</p>
+          <button class="arrow-button" id="incrementButton">Next Page</button>
+          <button class="arrow-button" id="decrementButton">Previous Page</button>
+          
+          
+        </div>
         
 
         <div id="hello" class="sprite-container">

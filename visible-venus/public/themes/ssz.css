@@ -9,7 +9,6 @@
 }
 
 body {
-  transform: translateZ(0);
   background-color: var(--page-bg);
   background-attachment: fixed;
   background-image:
