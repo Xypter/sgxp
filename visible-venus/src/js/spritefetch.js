@@ -7,7 +7,7 @@ let currentPage = 1;
 // Now, currentPage is accessible outside the script
 console.log(currentPage);
 
-const apiUrl = `https://api.sgxp.me/api/sprites?populate=*&pagination[pageSize]=2`
+const apiUrl = `https://api.sgxp.me/api/sprites?populate=*&pagination[pageSize]=21`
 
 // Sprite Card special number maker
 function count(number) {
