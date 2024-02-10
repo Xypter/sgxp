@@ -2,7 +2,7 @@ const view = (() => {
     const matrix = [1, 0, 0, 1, 0, 0]; // current view transform
     var m = matrix;             // alias 
     var scale = 1;              // current scale
-    const pos = { x: 0, y: 0 }; // current position of origin
+    const pos = { x: 0, y: 0}; // current position of origin
     var dirty = true;
     const API = {
       applyTo(el) {

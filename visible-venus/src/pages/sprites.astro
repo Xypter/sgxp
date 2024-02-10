@@ -6,12 +6,13 @@ import FrontPageLayout from "../layouts/FrontPageLayout.astro";
 <FrontPageLayout title="Sprites">
 
   <script src="/src/js/spritefetch.js"></script>
-  <script src="/src/js/spriteselect.js"></script>
     <div class="sprite-page-container">
       <div class="categories-container-group">
-        <div class="categories-container-title">Category</div>
+        <div class="categories-container-title">Author</div>
         <div class="categories-container-main"></div>
-        <div class="categories-container-title">Categories</div>
+        <div class="categories-container-title">Game</div>
+        <div class="categories-container-main"></div>
+        <div class="categories-container-title">Character</div>
         <div class="categories-container-main"></div>
       </div>
       <div class="sprite-container-group">
@@ -19,13 +20,18 @@ import FrontPageLayout from "../layouts/FrontPageLayout.astro";
 
         <div class="custom-select-container">
           <div class="custom-select">
-            <select>
+            <select class="sprite-select">
               <option value="">Sort by</option>
-              <option value="newest">Newest</option>
-              <option value="oldest">Oldest</option>
-              <option value="mostviewed">Most Viewed</option>
+              <option value="createdAt:desc">Newest</option>
+              <option value="createdAt:asc">Oldest</option>
+              <option value="views:DESC">Most Viewed</option>
             </select>
           </div>
+          <p class="page-number" id="pageNumber">1</p>
+          <button class="arrow-button" id="incrementButton">Next Page</button>
+          <button class="arrow-button" id="decrementButton">Previous Page</button>
+          
+          
         </div>
         
 

@@ -20,8 +20,26 @@ try {
 } catch (error) {
   return Astro.redirect('/404');
 }
+
+function count(number) {
+  if (number <= 9) {
+    return '00' + number
+  } else if (number > 9 && number <= 99) {
+    return '0' + number
+  } else {
+    return number
+  }
+}
 ---
 
 <SpriteViewerLayout>
-  <img id="zoomMe" class="zoomables" src=`https://api.sgxp.me${sheet.attributes.spritesheet.data.attributes.url}` alt="">
+  <div class="image-container-group">
+    <div class="image-container">
+      <div class="image-card">
+        <div class="image-panel">
+          <img id="zoomMe" class="zoom-img" src=`https://api.sgxp.me${sheet.attributes.spritesheet.data.attributes.url}` alt="">
+        </div>
+      </div>
+    </div>
+  </div>
 </SpriteViewerLayout>
