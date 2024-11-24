@@ -3,7 +3,7 @@ import { format, parseISO } from "date-fns";
 function getSprites() {
 
     const div = document.getElementById('posts')
-    fetch('https://api.sgxp.me/api/posts?[populate][author][populate]=avatar')
+    fetch('https://api.sgxp.me/api/posts?sort=id:desc&[populate][author][populate]=avatar')
     .then(res => res.json())
     .then(data => {
       data.data.forEach(post => {

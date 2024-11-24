@@ -15,9 +15,9 @@ body {
   background-color: var(--page-bg);
   background-attachment: fixed;
   background-image: 
-  url("./snow/snow_pattern.gif"),
-  url("./snow/snow_pattern.gif"),
-  url("./snow/Snowy-BG.gif");
+  url("https://sgxp.me/themes/snow/snow_pattern.gif"),
+  url("https://sgxp.me/themes/snow/snow_pattern.gif"),
+  url("https://sgxp.me/themes/snow/Snowy-BG.gif");
 
   background-position:
     /*rocks 5*/ left 0px bottom 0px, 

@@ -1,6 +1,6 @@
 // Function to set the theme
 function setTheme(theme) {
-  themeStylesheet.setAttribute("href", "/themes/" + theme + ".css");
+  themeStylesheet.setAttribute("href", "https://sgxp.me/themes/" + theme + ".css");
   // Save the selected theme to local storage
   localStorage.setItem("theme", theme);
 }

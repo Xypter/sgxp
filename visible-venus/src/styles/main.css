@@ -549,7 +549,7 @@ body {
   display: block;
   background: color-mix(in srgb, var(--page-color) 60%, black);
   padding: 0px 0px 3px 10px;
-  animation: fadein-left .7s;
+  animation: fadein-left .4s;
   text-rendering:geometricPrecision;
   transform:scaleZ(5);
   font-family: 'main-content-title';
@@ -568,7 +568,7 @@ body {
   background: var(--page-color);
   padding: 10px;
   min-height: 75px;
-  animation: fadein-left .7s;
+  animation: fadein-left .4s;
   margin-bottom: var(--gap);
   text-rendering:geometricPrecision;
   transform:scaleZ(5);

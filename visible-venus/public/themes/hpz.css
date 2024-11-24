@@ -13,19 +13,19 @@ body {
   background-color: var(--page-bg);
   background-attachment: fixed;
   background-image:
-    /*boss*/ url("./hpz/boss.gif"), 
-    /*sonic*/ url("./hpz/sonic_run.gif"), 
-    /*floor 1*/ url("./hpz/floor_01.png"), 
-    /*wall 1*/ url("./hpz/wall_01.png"),
-    /*wall 2*/ url("./hpz/wall_02.png"), 
-    /*wall 3*/ url("./hpz/wall_03.png"), 
-    /*wall 4*/ url("./hpz/wall_04.png"), 
-    /*wall 5*/ url("./hpz/wall_05.png"),
-    /*wall 6*/ url("./hpz/wall_06.png"), 
-    /*wall 7*/ url("./hpz/wall_07.png"), 
-    /*wall 8*/ url("./hpz/wall_08.png"), 
-    /*wall 9*/ url("./hpz/wall_09.png"),
-    /*wall 10*/ url("./hpz/wall_10.png");
+    /*boss*/ url("https://sgxp.me/themes/hpz/boss.gif"), 
+    /*sonic*/ url("https://sgxp.me/themes/hpz/sonic_run.gif"), 
+    /*floor 1*/ url("https://sgxp.me/themes/hpz/floor_01.png"), 
+    /*wall 1*/ url("https://sgxp.me/themes/hpz/wall_01.png"),
+    /*wall 2*/ url("https://sgxp.me/themes/hpz/wall_02.png"), 
+    /*wall 3*/ url("https://sgxp.me/themes/hpz/wall_03.png"), 
+    /*wall 4*/ url("https://sgxp.me/themes/hpz/wall_04.png"), 
+    /*wall 5*/ url("https://sgxp.me/themes/hpz/wall_05.png"),
+    /*wall 6*/ url("https://sgxp.me/themes/hpz/wall_06.png"), 
+    /*wall 7*/ url("https://sgxp.me/themes/hpz/wall_07.png"), 
+    /*wall 8*/ url("https://sgxp.me/themes/hpz/wall_08.png"), 
+    /*wall 9*/ url("https://sgxp.me/themes/hpz/wall_09.png"),
+    /*wall 10*/ url("https://sgxp.me/themes/hpz/wall_10.png");
   background-repeat: repeat-x;
   background-position:
     /*boss*/ left -3500px bottom 120px, 
