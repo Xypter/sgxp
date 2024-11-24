@@ -11,7 +11,6 @@
 
 body {
   image-rendering: pixelated;
-  transform: translateZ(0);
   background-attachment: fixed;
   background-color: var(--page-bg);
   background-image:
