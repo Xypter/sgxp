@@ -14,22 +14,22 @@ body {
   background-attachment: fixed;
   background-color: var(--page-bg);
   background-image:
-    /*rocks 5*/ url("https://sgxp.me/themes/ddz/rocks5.png"), 
-    /*rocks 4*/ url("https://sgxp.me/themes/ddz/rocks4.png"), 
-    /*rocks 3*/ url("https://sgxp.me/themes/ddz/rocks3.png"), 
-    /*sonic*/ url("https://sgxp.me/themes/ddz/supersonic.gif"), 
-    /*eggman*/ url("https://sgxp.me/themes/ddz/eggmanboss.gif"),
-    /*rocks 2*/ url("https://sgxp.me/themes/ddz/rocks2.png"), 
-    /*rocks 1*/ url("https://sgxp.me/themes/ddz/rocks1.png"), 
-    /*world 7*/ url("https://sgxp.me/themes/ddz/world7.png"), 
-    /*world 6*/ url("https://sgxp.me/themes/ddz/world6.png"), 
-    /*world 5*/ url("https://sgxp.me/themes/ddz/world5.png"), 
-    /*world 4*/ url("https://sgxp.me/themes/ddz/world4.png"),
-    /*world 3*/ url("https://sgxp.me/themes/ddz/world3.png"), 
-    /*world 2*/ url("https://sgxp.me/themes/ddz/world2.png"), 
-    /*world 1*/ url("https://sgxp.me/themes/ddz/world1.png"), 
-    /*stars 2*/ url("https://sgxp.me/themes/ddz/stars2.gif"), 
-    /*stars 1*/ url("https://sgxp.me/themes/ddz/stars1.gif");
+    /*rocks 5*/ url("https://cdn.sgxp.me/themes/ddz/rocks5.png"), 
+    /*rocks 4*/ url("https://cdn.sgxp.me/themes/ddz/rocks4.png"), 
+    /*rocks 3*/ url("https://cdn.sgxp.me/themes/ddz/rocks3.png"), 
+    /*sonic*/ url("https://cdn.sgxp.me/themes/ddz/supersonic.gif"), 
+    /*eggman*/ url("https://cdn.sgxp.me/themes/ddz/eggmanboss.gif"),
+    /*rocks 2*/ url("https://cdn.sgxp.me/themes/ddz/rocks2.png"), 
+    /*rocks 1*/ url("https://cdn.sgxp.me/themes/ddz/rocks1.png"), 
+    /*world 7*/ url("https://cdn.sgxp.me/themes/ddz/world7.png"), 
+    /*world 6*/ url("https://cdn.sgxp.me/themes/ddz/world6.png"), 
+    /*world 5*/ url("https://cdn.sgxp.me/themes/ddz/world5.png"), 
+    /*world 4*/ url("https://cdn.sgxp.me/themes/ddz/world4.png"),
+    /*world 3*/ url("https://cdn.sgxp.me/themes/ddz/world3.png"), 
+    /*world 2*/ url("https://cdn.sgxp.me/themes/ddz/world2.png"), 
+    /*world 1*/ url("https://cdn.sgxp.me/themes/ddz/world1.png"), 
+    /*stars 2*/ url("https://cdn.sgxp.me/themes/ddz/stars2.gif"), 
+    /*stars 1*/ url("https://cdn.sgxp.me/themes/ddz/stars1.gif");
   background-repeat: repeat-x;
   background-position:
     /*rocks 5*/ left 0px bottom 0px, 
