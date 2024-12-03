@@ -148,7 +148,7 @@ body {
   background-color: var(--page-bg);
 }
 
-.container {
+.container:not(.ignore-main) {
   display: grid;
   grid-gap: var(--gap);
   grid-template-columns: 1fr 200px;
@@ -668,7 +668,7 @@ body {
 }
 
 @media (max-width: 800px) {
-  .container {
+  .container:not(.ignore-main) {
     display: flex;
     flex-flow: wrap;
     flex-direction: row;

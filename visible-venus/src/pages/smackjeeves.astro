@@ -1,0 +1,39 @@
+---
+import FrontPageLayout from "../layouts/FrontPageLayout.astro";
+import "../styles/comic.css";
+import "../styles/datatable.css";
+import "../styles/searchPanes.dataTables.css";
+import "../styles/dataTables.dataTables.css";
+---
+
+<FrontPageLayout title="Smack Jeeves Archive">
+  <link href="https://cdn.datatables.net/select/2.1.0/css/select.dataTables.css" rel="stylesheet">
+  <link href="https://cdn.datatables.net/responsive/3.0.3/css/responsive.dataTables.css" rel="stylesheet">  
+  <script type="text/javascript" src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script type="text/javascript" src="https://cdn.datatables.net/2.1.8/js/dataTables.js"></script>
+  <script type="text/javascript" src="https://cdn.datatables.net/searchpanes/2.3.3/js/dataTables.searchPanes.js"></script>
+  <script type="text/javascript" src="https://cdn.datatables.net/searchpanes/2.3.3/js/searchPanes.dataTables.js"></script>
+  <script type="text/javascript" src="https://cdn.datatables.net/select/2.1.0/js/dataTables.select.js"></script>
+  <script type="text/javascript" src="https://cdn.datatables.net/select/2.1.0/js/select.dataTables.js"></script>
+  <script type="text/javascript" src="https://cdn.datatables.net/responsive/3.0.3/js/dataTables.responsive.js"></script>
+  <script type="text/javascript" src="https://cdn.datatables.net/responsive/3.0.3/js/responsive.dataTables.js"></script>
+        <div class="comic-container">
+          <div class="smackjeeves-content-title">Smack Jeeves Archive</div>
+          <div class="comic-content" style="padding:20px">
+            <div class="smackjeeves-content-box">Welcome to this archive, a sanctuary for comics and their original user comments, preserved from a now-vanished website. The thoughts and views expressed in these works belong solely to their creators. They do not, in any way, reflect the opinions or beliefs of this website or its keeper.
+              <br>
+              <br>
+              This collection exists to honor history, to educate, and perhaps even to entertain. It is not an endorsement but a preservation of voices from another time. So, as you journey through these pages, remember: discretion is your guide. Take what you will, leave what you must, and understand it for what it is—a glimpse into the past.</div>
+              <div class="container ignore-main">
+                <table id="example" class="display nowrap" width="100%">
+                    
+                </table>
+              </div>
+          </div>
+        </div> 
+        <script type="text/javascript" src="/src/js/datatable.js"></script>
+
+        <!--<div class="footer">All material seen on The SGXP is © 2021 to their respective owners. All rights reserved. Sonic, Knuckles, Tails, etc © Sega
+          All staff avatars and sub-characters are © their respective owners. </div>
+      </div>-->
+</FrontPageLayout>

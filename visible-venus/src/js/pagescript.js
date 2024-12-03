@@ -199,21 +199,25 @@ let comicPageTemplate = `
     <h4 class="chapter-num">Chapter {{ chapterNumber }}</h4>
     <h2 class="center">{{ articleTitle }}</h2>
 
-    <a id="page-prev" class="page-nav" href="#{{ prevPage }}">&lt;</a>
-    {{ ^isLastPage }}
-    <a id="page-next" class="page-nav" href="#{{ nextPage }}">&gt;</a>
-    {{ /isLastPage }}
+    
+    
 
     <div class="comic center">
         <img src="https://cdn.sgxp.me/smackjeeves_archive/smackjeeves-${comicId}/${comicId}/{{ pagesPath }}" class="{{ ^isLastPage }} clickable {{ /isLastPage }}" onerror="this.onerror=null;this.src='https://cdn.sgxp.me/smackjeeves_archive/comic/KansDefaultgif2.gif';" />
       {{ ^pagesPath.0 }}<span class="missing">Image missing even on Smackjeeves</span>{{ /pagesPath.0 }}
     </div>
 
+    <a id="page-prev" class="page-nav" href="#{{ prevPage }}">&lt;</a>
+    {{ ^isLastPage }}
+
     <div class="select-container center">
       <div class="chapter-select">
         <select id="chapter-select-bottom"></select>
       </div>
     </div>
+
+    <a id="page-next" class="page-nav" href="#{{ nextPage }}">&gt;</a>
+    {{ /isLastPage }}
     
   </section>
 

@@ -104,6 +104,45 @@ body {
     border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
   }
 
+  .smackjeeves-content-title {
+    background: color-mix(in srgb, var(--page-color) 60%, black);
+    padding: 10px;
+    margin-bottom: -15px;
+    text-rendering:geometricPrecision;
+    transform:scaleZ(5);
+    font-family: 'mainfont';
+    font-weight: 900;
+    font-style: italic;
+    font-size: 24px;
+    line-height: 20px;
+  
+    text-shadow:
+    calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
+    calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+    calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color);
+  
+    border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  }
+
+  .smackjeeves-content-box {
+    background: color-mix(in srgb, var(--page-color) 60%, black);
+    padding: 10px;
+    margin-bottom: 20px;
+    text-rendering:geometricPrecision;
+    transform:scaleZ(5);
+    font-family: 'mainfont';
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+  
+    text-shadow:
+    calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
+    calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+    calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color);
+  
+    border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 30%, black);
+  }
+
   #chapter-select {
     max-width: 100%;
   }
@@ -150,9 +189,12 @@ body {
 
   .author {
     display: flex;
-    flex-flow: row wrap;
-    align-items: baseline;
+    flex-flow: wrap;
+    flex-direction: row;
+    align-items: end;
+    align-content: end;
     padding-right: 10px;
+
   }
 
   .authors {
@@ -194,8 +236,8 @@ body {
 
   .chapter-row a {
     display: flex;
-    align-items: center;
-    flex-flow: row nowrap;
+    align-items: top;
+    flex-flow: column nowrap;
   }
 
   .chapter-row a span {
