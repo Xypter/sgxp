@@ -181,7 +181,7 @@ let mainTemplate = `
 
   <section class="page-inner">
     <hr />
-    <h2>Chapter List</h2>
+    <h2 style="padding: 10px 0px;">Chapter List</h2>
     <ol id="chapter-toc">
       {{ #chapters }}
         <li class="chapter-row">
@@ -218,6 +218,12 @@ let comicPageTemplate = `
 
     <a id="page-next" class="page-nav" href="#{{ nextPage }}">&gt;</a>
     {{ /isLastPage }}
+
+    <div class="author-comment">
+      <h4>Author's Comment</h4>
+      {{ #authorComment }} {{{ authorCommentHTML }}} {{ /authorComment }}
+      {{ ^authorComment }}<span class="missing">No comment</span>{{ /authorComment }}
+    </div>
     
   </section>
 
