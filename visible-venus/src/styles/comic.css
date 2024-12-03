@@ -1,0 +1,430 @@
+@font-face {
+    font-family: mainfont;
+    src: url(src/styles/fonts/Rubik-VariableFont_wght.ttf);
+}
+
+body {
+    color: var(--font-color);
+  }
+
+  a {
+    color: var(--font-link-color);
+    text-decoration: none;
+    background: none;
+  }
+
+  a:visited {
+    color: var(--font-link-color);
+    text-decoration: none;
+    background: none;
+  }
+
+  a:hover {
+    color: color-mix(in srgb, var(--font-link-color) 30%, white);
+    text-decoration: none;
+    background: none;
+  }
+
+  h1 {
+    font-size: 32px;
+    font-weight: 800;
+  }
+
+  h2 {
+    font-size: 24px;
+    font-weight: 800;
+    text-decoration: underline;
+  }
+
+  h3 {
+    font-size: 24px;
+  }
+
+  h4 {
+    font-size: 16px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--font-color);
+    margin: 0;
+    padding: 0 8px 0 0;
+  }
+
+  header {
+    display: flex;
+    flex-flow: row wrap;
+    border-bottom: 4px solid #ddd;;
+    justify-content: space-between;
+    padding: 16px;
+  }
+
+  .comic-container {
+    display: grid;
+    grid-gap: var(--gap);
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    grid-template-areas:
+    "main";
+    width: 80%;
+    min-height: 100%;
+    height: auto;
+    margin: auto;
+    padding: 20px;
+  }
+
+  .comic-content-title {
+    display: block;
+    background: color-mix(in srgb, var(--page-color) 60%, black);
+    padding: 10px;
+    text-rendering:geometricPrecision;
+    transform:scaleZ(5);
+    font-family: 'mainfont';
+    font-weight: 900;
+    font-style: italic;
+    font-size: 24px;
+    line-height: 20px;
+  
+    text-shadow:
+    calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
+    calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+    calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color);
+  
+    border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    border-top: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  }
+
+  .comic-content {
+    background: var(--page-color);
+    line-height: 1.5rem;
+    font-size: 14px;
+    font-weight: 400;
+    font-family: mainfont;
+
+    border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  }
+
+  .smackjeeves-content-title {
+    background: color-mix(in srgb, var(--page-color) 60%, black);
+    padding: 10px;
+    margin-bottom: -15px;
+    text-rendering:geometricPrecision;
+    transform:scaleZ(5);
+    font-family: 'mainfont';
+    font-weight: 900;
+    font-style: italic;
+    font-size: 24px;
+    line-height: 20px;
+  
+    text-shadow:
+    calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
+    calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+    calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color);
+  
+    border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  }
+
+  .smackjeeves-content-box {
+    background: color-mix(in srgb, var(--page-color) 60%, black);
+    padding: 10px;
+    margin-bottom: 20px;
+    text-rendering:geometricPrecision;
+    transform:scaleZ(5);
+    font-family: 'mainfont';
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+  
+    text-shadow:
+    calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
+    calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+    calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color);
+  
+    border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 30%, black);
+  }
+
+  #chapter-select {
+    max-width: 100%;
+  }
+
+  .detail {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: baseline;
+    padding: 0 6px 0 0;
+  }
+
+  .details {
+    display: flex;
+    flex-flow: row wrap;
+    margin: 0 0 10px 0;
+  }
+
+  .comic-info-wrapper {
+    display: flex;
+    flex-flow: row wrap;
+  }
+
+  .comic-info {
+    display: flex;
+    flex-flow: column wrap;
+    flex: 1 1 50%;
+    padding: 0 2% 0 0;
+  }
+
+  img.comic-cover {
+    display: flex;
+    order: 1;
+    border: 1px solid #ddd;
+    width: 50%;
+    height: auto;
+  }
+
+  .comic img {
+    display: block;
+    margin: 10px auto;
+    max-width: 100%;
+
+  }
+
+  .author {
+    display: flex;
+    flex-flow: wrap;
+    flex-direction: row;
+    align-items: end;
+    align-content: end;
+    padding-right: 10px;
+
+  }
+
+  .authors {
+    display: flex;
+    flex-flow: row wrap;
+    padding: 5px 0;
+  }
+
+  .author .avatar, .comment-header .avatar {
+    margin-right: 10px;
+    margin-left: 2px;
+    max-height: 150px;
+  }
+
+  .comment-header {
+    padding-bottom: 10px;
+  }
+
+  .comment-header .timestamp {
+    float: right;
+  }
+
+  #chapter-toc .chapter-cover {
+    width: 150px;
+    height: 150px;
+    border: 1px solid #ddd;
+    overflow: visible; /* Allows overflow outside the container */
+    position: relative; /* Ensures positioning works as expected */
+  }
+
+  #chapter-toc .chapter-cover img {
+    width: 150px; /* Fixed width */
+    height: auto; /* Keeps aspect ratio */
+  }
+
+  ol#chapter-toc {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+  }
+
+  #chapter-toc li {
+    margin: 8px 0;
+  }
+
+  .chapter-row a {
+    display: flex;
+    align-items: top;
+    flex-flow: column nowrap;
+  }
+
+  .chapter-row a span {
+    margin-left: 10px;
+    display: inline-block;
+    max-width: 150px; /* Adjust width as needed */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  #comic-page .page-inner {
+    margin: auto;
+    padding: 30px 30px 0px 30px;
+  }
+
+  .chapter-title {
+    font-size: 2em;
+    text-align: center;
+  }
+
+  .chapter-num {
+    text-align: center;
+  }
+
+  .author-comment {
+    margin: 13px 0 0;
+  }
+
+  .missing {
+    font-style: italic;
+    color: #666;
+  }
+
+  .center {
+    text-align: center;
+  }
+
+  .clickable {
+    cursor: pointer;
+  }
+
+  #to-top {
+    position: fixed;
+    right: .5em;
+    bottom: .5em;
+    transform: translate(0,-50%);
+  }
+
+  .page-nav {
+    position: fixed;
+    top: 50%;
+    transform: translate(0,-50%);
+    padding: 16px;
+    border: 1px solid #ddd
+  }
+
+  .page-nav:hover {
+    border: 1px solid #007bff;
+    text-decoration: none;
+  }
+
+  #page-next {
+    right: 0;
+  }
+
+  #page-prev {
+    left: 0;
+  }
+
+  @media (max-width: 1380px) {
+    img.comic-cover {
+      order: 0;
+      margin: 0 auto 10px;
+    }
+    .comic-info-wrapper {
+      flex-flow: column wrap;
+    }
+
+  }
+
+  .chapter-select-container {
+    background: var(--page-color);
+    float: none;
+    text-align: center;
+    margin: 10px 0;
+  }
+  
+  .chapter-select {
+    display: inline-block;
+    position: relative;
+    font-family: 'nav';
+    font-size: 16px;
+    text-shadow: 
+    calc(-1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 var(--bg-color),
+    calc( 0px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 var(--bg-color),
+    calc( 1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 var(--bg-color),
+    calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
+    calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+    calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+    calc(-1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+    calc(-1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color);
+  }
+  
+  .chapter-select select {
+    display: none; /*hide original SELECT element:*/
+  }
+  
+  .chapter-selected {
+    width: 225px;
+    text-align: right;
+    position: relative;
+    color: var(--font-color);
+    padding: 1px 10px 5px 10px;
+    border: none;
+    cursor: pointer;
+    user-select: none;
+    background-color: color-mix(in srgb, var(--page-color) 80%, black);
+    text-align: left;
+  
+    border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    border-top: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  }
+  
+  .chapter-selected:hover {
+    background-color: color-mix(in srgb, var(--page-color) 60%, black);
+  }
+  
+  .chapter-selected:after {
+    position: absolute;
+    bottom: 17px;
+    right: 15px;
+    width: 0;
+    height: 0;
+  }
+  
+  .chapter-selected.chapter-arrow-active:after {
+    border-color: transparent transparent color-mix(in srgb, var(--font-color) 0%, var(--font-color)) transparent;
+    bottom: 20px;
+  }
+  
+  .chapter-items {
+    width: 247px;
+    position: absolute;
+    background-color: color-mix(in srgb, var(--page-color) 60%, black);
+    top: 100%;
+    left: 0;
+    margin: 0px 0px 0px 0px;
+    z-index: 10;
+  }
+  
+  .chapter-items div {
+    height: 20px;
+    color: var(--font-color);
+    padding: 2px 10px 10px 10px;
+    border: none;
+    cursor: pointer;
+    user-select: none;
+    text-align: left;
+  }
+  
+  .chapter-items div, .chapter-selected:nth-child(-n+1) {
+    border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  }
+  
+  .chapter-items div:nth-child(0) {
+    border-top: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  }
+  
+  .chapter-hide {
+    display: none;
+  }
+  
+  .chapter-items div:hover, .chapter-as-selected {
+    background-color: color-mix(in srgb, var(--page-color) 90%, black);
+  }
+  
