@@ -12,6 +12,7 @@
   "dependencies": {
     "@astrojs/netlify": "^4.1.0",
     "@astrojs/node": "^8.3.4",
+    "@supabase/supabase-js": "^2.46.2",
     "astro": "^4.1.0",
     "datatables.net-dt": "^2.1.8",
     "datatables.net-responsive-dt": "^3.0.3",
