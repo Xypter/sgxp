@@ -488,3 +488,20 @@ window.addEventListener('load', function() {
     umami.trackView(window.location.pathname + window.location.search);
   }
 });
+
+window.addEventListener('load', function() {
+  console.log('Full URL:', window.location.href);
+  console.log('Pathname + Search:', window.location.pathname + window.location.search);
+  
+  if (window.umami) {
+    console.log('Umami exists');
+    try {
+      umami.trackView(window.location.pathname + window.location.search);
+      console.log('Umami track view called');
+    } catch (error) {
+      console.error('Umami tracking error:', error);
+    }
+  } else {
+    console.error('Umami not found');
+  }
+});
