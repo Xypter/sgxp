@@ -2,6 +2,29 @@
 let comicId;
 let metadataUrl;
 
+function formatCommentTime(isoString) {
+  const date = new Date(isoString);
+  
+  // Pad single digit hours and minutes with leading zero
+  const pad = (num) => num.toString().padStart(2, '0');
+  
+  // Extract components
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+  
+  // Handle hours and AM/PM
+  let hours = date.getHours();
+  const minutes = pad(date.getMinutes());
+  const ampm = hours >= 12 ? 'pm' : 'am';
+  
+  // Convert to 12-hour format
+  hours = hours % 12;
+  hours = hours ? hours : 12; // handle midnight (0 hours)
+  
+  return `${month}-${day}-${year}, ${hours}:${minutes}${ampm}`;
+}
+
 function getCurrentPageNum() {
   let page = window.location.hash.substr(1);
   if (page == "" || typeof page === 'undefined') {
@@ -88,20 +111,28 @@ function getCurrentPageNum() {
   
       // Generate each chapters page
       $.each( metadata.chapters, function(key, chapter) {
-          chapter.chapterNumber = key + 1
-          if (typeof chapter["authorComment"] !== 'undefined'){
-              chapter["authorCommentHTML"] = chapter["authorComment"].replace(/(\r\n|\n|\r)/g,"<br />")
-          }
-  
-          $.each( chapter.comments, function(key, comment) {
-              chapter.comments[key]["commentHTML"] = comment["commentText"].replace(/(\r\n|\n|\r)/g,"<br />")
-          })
-          // Used for the next/prev button links
-          chapter["nextPage"] = chapter.chapterNumber + 1
-          chapter["prevPage"] = chapter.chapterNumber - 1
-          chapter["isLastPage"] = chapter.chapterNumber == metadata.chapters.length
-          pageHtml.push(Mustache.render(comicPageTemplate, chapter))
-      })
+        chapter.chapterNumber = key + 1
+        if (typeof chapter["authorComment"] !== 'undefined'){
+            chapter["authorCommentHTML"] = chapter["authorComment"].replace(/(\r\n|\n|\r)/g,"<br />")
+        }
+    
+        // NEW: Sort comments from oldest to newest
+        chapter.comments.sort((a, b) => {
+            return new Date(a.time) - new Date(b.time);
+        });
+    
+        $.each( chapter.comments, function(key, comment) {
+          // Format comment text and time
+          chapter.comments[key]["commentHTML"] = comment["commentText"].replace(/(\r\n|\n|\r)/g,"<br />")
+          chapter.comments[key]["time"] = formatCommentTime(comment["time"])
+        })
+        
+        // Rest of the code remains the same
+        chapter["nextPage"] = chapter.chapterNumber + 1
+        chapter["prevPage"] = chapter.chapterNumber - 1
+        chapter["isLastPage"] = chapter.chapterNumber == metadata.chapters.length
+        pageHtml.push(Mustache.render(comicPageTemplate, chapter))
+    })
   
       // Push to main page to the front. Needed so we can fix the ChapterNumber issues when looping over the chapters above
       pageHtml.unshift(Mustache.render(mainTemplate, metadata))
@@ -482,26 +513,14 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// In your existing script
 window.addEventListener('load', function() {
-  if (window.umami) {
-    umami.trackView(window.location.pathname + window.location.search);
-  }
-});
-
-window.addEventListener('load', function() {
-  console.log('Full URL:', window.location.href);
-  console.log('Pathname + Search:', window.location.pathname + window.location.search);
-  
-  if (window.umami) {
-    console.log('Umami exists');
+  if (window.umami && window.umami.track) {
     try {
-      umami.trackView(window.location.pathname + window.location.search);
-      console.log('Umami track view called');
+      umami.track(window.location.pathname + window.location.search);
     } catch (error) {
       console.error('Umami tracking error:', error);
     }
   } else {
-    console.error('Umami not found');
+    console.error('Umami tracking not available');
   }
 });
