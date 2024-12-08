@@ -481,3 +481,10 @@ style.textContent = `
 }
 `;
 document.head.appendChild(style);
+
+// In your existing script
+window.addEventListener('load', function() {
+  if (window.umami) {
+    umami.trackView(window.location.pathname + window.location.search);
+  }
+});
