@@ -194,7 +194,7 @@ let mainTemplate = `
       <div class="authors">
         {{ #authors }}
           <span class="author">
-            <img src="https://cdn.sgxp.me/smackjeeves_archive/{{ imgPath }}" class="avatar" onerror="this.onerror=null;this.src='https://cdn.sgxp.me/smackjeeves_archive/comic/KansDefaultgif2.gif';" />{{ name }}
+            <img src="https://cdn.sgxp.me/smackjeeves_archive/{{ imgPath }}" class="avatar" onerror="this.onerror=null;this.src='https://cdn.sgxp.me/smackjeeves_archive/comic/KansDefaultgif3.gif';" />{{ name }}
           </span>
         {{ /authors }}
       </div>
@@ -217,7 +217,7 @@ let mainTemplate = `
       {{ #chapters }}
         <li class="chapter-row">
           <a href="#{{ chapterNumber }}" data-chapter_num="{{ chapterNumber }}">
-            <img class="chapter-cover" src="https://cdn.sgxp.me/smackjeeves_archive/smackjeeves-${comicId}/${comicId}/{{ pagesPath }}" onerror="this.onerror=null;this.src='https://cdn.sgxp.me/smackjeeves_archive/comic/KansDefaultgif2.gif';" /> <span>{{ chapterNumber }} - {{ articleTitle }}</span>
+            <img class="chapter-cover" src="https://cdn.sgxp.me/smackjeeves_archive/smackjeeves-${comicId}/${comicId}/{{ pagesPath }}" onerror="this.onerror=null;this.src='https://cdn.sgxp.me/smackjeeves_archive/comic/KansDefaultgif3.gif';" /> <span>{{ chapterNumber }} - {{ articleTitle }}</span>
           </a>
         </li>
       {{ /chapters }}
@@ -259,19 +259,19 @@ let comicPageTemplate = `
   </section>
 
   <section class="page-inner comments">
-      <h3>User Comments</h3>
+      <h3 style="margin-bottom: 15px;">User Comments</h3>
       {{ #comments }}
-        <div class="comment">
+        <div class="comment" style="margin-bottom: 20px;">
           <div class="comment-header">
             <img src="https://cdn.sgxp.me/smackjeeves_archive/{{ imgPath }}" class="avatar" onerror="this.onerror=null;this.src='https://cdn.sgxp.me/smackjeeves_archive/comic/KansDefaultgif2.gif';" />
             <span class="username">{{ nickname }}</span>
             <span class="timestamp">{{ time }}</span>
           </div>
-          <div class="content">{{{ commentHTML }}}</div>
+          <div class="content" style="margin-bottom: 20px;">{{{ commentHTML }}}</div>
           <hr />
         </div>
       {{ /comments }}
-      {{ ^comments.0 }}<span class="missing">No comments</span>{{ /comments.0 }}
+      {{ ^comments.0 }}<div class="missing">No comments</div>{{ /comments.0 }}
   </section>
 `
 

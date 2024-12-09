@@ -220,15 +220,13 @@ body {
   #chapter-toc .chapter-cover {
     width: 150px;
     height: 150px;
-    border: 1px solid #ddd;
-    overflow: visible; /* Allows overflow outside the container */
-    position: relative; /* Ensures positioning works as expected */
-  }
-
-  #chapter-toc .chapter-cover img {
-    width: 150px; /* Fixed width */
-    height: auto; /* Keeps aspect ratio */
-  }
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden; /* Changed from visible to hidden to prevent overflow */
+    position: relative;
+    object-fit: contain;
+}
 
   ol#chapter-toc {
     list-style-type: none;
@@ -279,6 +277,7 @@ body {
   .missing {
     font-style: italic;
     color: #666;
+    margin-bottom: 30px;
   }
 
   .center {
