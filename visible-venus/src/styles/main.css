@@ -45,6 +45,11 @@
   font-family: 'title';
   src: url('./fonts/BN6FontTinyExt.ttf');
 }
+
+@font-face {
+  font-family: 'typing';
+  src: url('fonts/BN6FontSmallThCd.ttf');
+}
   
 
 html {
@@ -479,6 +484,7 @@ body {
   text-align: center;
   animation: fadein-right .7s;
   margin-bottom: var(--gap);
+  box-shadow: var(--box-shadow);
 
   text-shadow:
   calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
@@ -573,6 +579,7 @@ body {
   text-rendering:geometricPrecision;
   transform:scaleZ(5);
   line-height: 16px;
+  box-shadow: var(--box-shadow);
 
   border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
   border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
@@ -657,6 +664,53 @@ body {
   calc( 4px * var(--multiply-factor)) calc( 4px * var(--multiply-factor)) 0 var(--bg-color);
 
 }
+
+/* Add this before your @media queries in main.css */
+
+.hidden-audio {
+  display: none;
+}
+
+@keyframes contentFadeOut {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.3);
+  }
+}
+
+/* Add this class to target everything */
+.fade-out-content *:not(.final-image):not(.typing-text):not(.shadow-image):not(.go-back-button) {
+  animation: contentFadeOut 10s forwards;
+}
+
+.go-back-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: var(--font-link-color);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  opacity: 0; /* Initially hidden */
+  transition: opacity 1s ease-in-out; /* Smooth transition for fade-in */
+}
+
+.go-back-button.fade-in {
+  opacity: 1; /* Fade in when this class is added */
+}
+
+.go-back-button:hover {
+  background: color-mix(in srgb, var(--font-link-color) 30%, white);
+}
+
 
 /*Media Queries*/
 

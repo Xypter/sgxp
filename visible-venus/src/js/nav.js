@@ -1,13 +1,27 @@
 // Function to set the theme
 function setTheme(theme) {
-  themeStylesheet.setAttribute("href", "https://cdn.sgxp.me/themes/" + theme + ".css");
+  themeStylesheet.setAttribute("href", "themes/" + theme + ".css");
   // Save the selected theme to local storage
   localStorage.setItem("theme", theme);
 }
 
+function updateWorldStarsClass(theme) {
+  const worldStarsDiv = document.querySelector('.world-stars');
+
+  if (theme === "ark") {
+    if (!worldStarsDiv) {
+      const newWorldStarsDiv = document.createElement('div');
+      newWorldStarsDiv.className = 'world-stars';
+      document.body.prepend(newWorldStarsDiv);
+    }
+  } else if (worldStarsDiv) {
+    worldStarsDiv.remove();
+  }
+}
+
 // Function to get the saved theme from local storage
 function getSavedTheme() {
-  return localStorage.getItem("theme") || "snow"; // Default theme is "snow"
+  return localStorage.getItem("theme") || "ark"; // Default theme is "snow"
 }
 
 const themeSelects = document.getElementsByClassName("theme-select");

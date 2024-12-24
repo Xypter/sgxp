@@ -24,7 +24,6 @@ const { title } = Astro.props;
   <link rel="icon" type="image/gif" href="/img/SGXPkanDos.gif" />
 </head>
 <body>
-  
   <!--<div class="other-header">
     <div class="header-title"></div>
     <div class="slogan">
@@ -61,6 +60,7 @@ const { title } = Astro.props;
       <div class="theme-select">
         <select name="themeSelect" id="themeSelect">
           <option value="">Themes</option>
+          <option value="ark">SPACE COLONY ARK</option> 
           <option value="snow">CHRISTMAS</option>
           <option value="cozy">FIRESIDE</option>
           <option value="sbn">BATTLE NETWORK</option>
@@ -73,6 +73,8 @@ const { title } = Astro.props;
     </div>
   </nav>
 
+  <div class="sonic-trigger" title="Click me!"></div>
+  <script is:inline src="/js/arkanimation.js"></script>
   <slot>You're not supposed to see this LMAO</slot>
 </body>
 </html>

@@ -88,8 +88,8 @@ body {
     calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
     calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color);
   
-    border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
-    border-top: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 65%, white);
+    border-top: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 65%, white);
   }
 
   .comic-content {
@@ -99,9 +99,9 @@ body {
     font-weight: 400;
     font-family: mainfont;
 
-    border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
-    border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
-    border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 65%, white);
+    border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 65%, white);
+    border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 65%, white);
   }
 
   .smackjeeves-content-title {
@@ -121,7 +121,7 @@ body {
     calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
     calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color);
   
-    border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 65%, white);
   }
 
   .smackjeeves-content-box {
@@ -215,6 +215,13 @@ body {
 
   .comment-header .timestamp {
     float: right;
+  }
+
+  .comments .comment {
+    margin: 20px 0; /* Adds 20px of vertical margin between comments */
+    padding: 20px; /* Adds padding inside the comment box for better readability */
+    border: 1px solid color-mix(in srgb, var(--page-color) 65%, white); /* Adds a subtle border around each comment */
+    background-color: color-mix(in srgb, var(--page-color) 60%, black);
   }
 
   #chapter-toc .chapter-cover {
@@ -366,10 +373,10 @@ body {
     background-color: color-mix(in srgb, var(--page-color) 80%, black);
     text-align: left;
   
-    border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
-    border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
-    border-top: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
-    border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 65%, white);
+    border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 65%, white);
+    border-top: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 65%, white);
+    border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 65%, white);
   }
   
   .chapter-selected:hover {
@@ -410,13 +417,13 @@ body {
   }
   
   .chapter-items div, .chapter-selected:nth-child(-n+1) {
-    border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
-    border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
-    border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 65%, white);
+    border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 65%, white);
+    border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 65%, white);
   }
   
   .chapter-items div:nth-child(0) {
-    border-top: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    border-top: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 65%, white);
   }
   
   .chapter-hide {

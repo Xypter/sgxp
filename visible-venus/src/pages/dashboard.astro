@@ -1,0 +1,27 @@
+---
+import { supabase } from '../lib/supabaseClient';
+
+// Fetch session server-side
+const { data: { session } } = await supabase.auth.getSession();
+if (!session) {
+  throw new Error('Not authenticated');
+}
+---
+<script type="module">
+    import { supabase } from '/src/lib/supabaseClient';
+  
+    async function checkSession() {
+      const { data: { session }, error } = await supabase.auth.getSession();
+  
+      if (!session) {
+        window.location.href = '/login'; // Redirect to login if not authenticated
+      } else {
+        document.getElementById('welcome-message').textContent = `Welcome, ${session.user.email}!`;
+      }
+    }
+  
+    checkSession();
+  </script>
+
+
+<h1>Welcome, {session.user.email}!</h1>

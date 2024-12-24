@@ -156,10 +156,21 @@ function getCurrentPageNum() {
       $("body").on("click", "header .comic-title", function(event) {
           setPage(0)
       })
+
   
       $("body").on("click", ".comic img", function(event) {
-          setPage(getCurrentPageNum() + 1)
-      })
+        const imageWidth = this.offsetWidth; // Get the width of the image
+        const clickX = event.offsetX; // Get the x-coordinate of the click relative to the image
+    
+        if (clickX < imageWidth / 2) {
+            // Clicked on the left side
+            setPage(getCurrentPageNum() - 1);
+        } else {
+            // Clicked on the right side
+            setPage(getCurrentPageNum() + 1);
+        }
+      });
+    
   
       $("body").on("click", "#page-next", function(event) {
           setPage(getCurrentPageNum() + 1)
@@ -230,25 +241,16 @@ let comicPageTemplate = `
     <h4 class="chapter-num">Chapter {{ chapterNumber }}</h4>
     <h2 class="center">{{ articleTitle }}</h2>
 
-    
-    
-
     <div class="comic center">
         <img src="https://cdn.sgxp.me/smackjeeves_archive/smackjeeves-${comicId}/${comicId}/{{ pagesPath }}" class="{{ ^isLastPage }} clickable {{ /isLastPage }}" onerror="this.onerror=null;this.src='https://cdn.sgxp.me/smackjeeves_archive/comic/KansDefaultgif2.gif';" />
       {{ ^pagesPath.0 }}<span class="missing">Image missing even on Smackjeeves</span>{{ /pagesPath.0 }}
     </div>
-
-    <a id="page-prev" class="page-nav" href="#{{ prevPage }}">&lt;</a>
-    {{ ^isLastPage }}
 
     <div class="select-container center">
       <div class="chapter-select">
         <select id="chapter-select-bottom"></select>
       </div>
     </div>
-
-    <a id="page-next" class="page-nav" href="#{{ nextPage }}">&gt;</a>
-    {{ /isLastPage }}
 
     <div class="author-comment">
       <h4>Author's Comment</h4>
@@ -267,8 +269,7 @@ let comicPageTemplate = `
             <span class="username">{{ nickname }}</span>
             <span class="timestamp">{{ time }}</span>
           </div>
-          <div class="content" style="margin-bottom: 20px;">{{{ commentHTML }}}</div>
-          <hr />
+          <div class="content">{{{ commentHTML }}}</div>
         </div>
       {{ /comments }}
       {{ ^comments.0 }}<div class="missing">No comments</div>{{ /comments.0 }}
