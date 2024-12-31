@@ -2,41 +2,57 @@
 import FrontPageLayout from "../layouts/FrontPageLayout.astro";
 import { supabase } from '../lib/supabaseClient';
 ---
+
 <FrontPageLayout title="Login Test">  
     <h1>Login</h1>
-    <form id="login-form" action="javascript:void(0);" method="post">
+    <form id="login-form">
       <label>Email:</label>
       <input type="email" name="email" required />
-      
+     
       <label>Password:</label>
       <input type="password" name="password" required />
-      
+     
       <button type="submit">Login</button>
     </form>
-  
+ 
     <p class="error" style="display:none;"></p>
 
     <script type="module">
-        import('/src/lib/supabaseClient.js').then(({ supabase }) => {
-            async function handleLogin(event) {
-                event.preventDefault();
-    
-                const email = document.querySelector('input[name="email"]').value;
-                const password = document.querySelector('input[name="password"]').value;
-                const errorElement = document.querySelector('.error');
-    
-                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-                if (error) {
-                    errorElement.textContent = error.message;
-                    errorElement.style.display = 'block';
-                } else {
-                    errorElement.style.display = 'none';
-                    window.location.href = '/dashboard';
-                }
+        import { supabase } from '/src/lib/supabaseClient';
+        
+        const form = document.getElementById('login-form');
+        const errorElement = document.querySelector('.error');
+
+        form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        
+        try {
+            sessionStorage.removeItem('supabase.auth.token');
+            
+            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+                email: form.email.value,
+                password: form.password.value,
+            });
+
+            if (signInError) throw signInError;
+
+            // Refresh the session to ensure it's valid
+            const { data: { session }, error: sessionError } = await supabase.auth.refreshSession();
+            if (sessionError) throw sessionError;
+
+            console.log('Session:', session);
+
+            if (session) {
+                sessionStorage.setItem('sb-supa-auth-token', JSON.stringify(session));
+                window.location.href = '/dashboard';
+            } else {
+                throw new Error('No session established');
             }
-    
-            document.getElementById('login-form').addEventListener('submit', handleLogin);
-        });
+        } catch (error) {
+            errorElement.textContent = error.message;
+            errorElement.style.display = 'block';
+        }
+    });
+
     </script>
-    
 </FrontPageLayout>
