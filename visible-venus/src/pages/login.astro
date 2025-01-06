@@ -118,7 +118,7 @@ if (accessToken && refreshToken) {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'discord',
         options: {
-          redirectTo: `${window.location.origin}/api/auth/callback`
+          redirectTo: `https://discord.com/oauth2/authorize?client_id=969267581691244634&response_type=code&redirect_uri=https%3A%2F%2Fbheonuqhgyvywthsccgw.supabase.co%2Fauth%2Fv1%2Fcallback&scope=email`
         }
       });
       
