@@ -1,75 +1,106 @@
 ---
-import { supabase } from '../lib/supabaseClient';
+import FrontPageLayout from '../layouts/FrontPageLayout.astro';
+import { supabase } from '../lib/supabase';
 
-let user;
+console.log('Starting dashboard route handler');
+const { cookies, redirect } = Astro;
+const accessToken = cookies.get('sb-access-token');
+const refreshToken = cookies.get('sb-refresh-token');
 
-try {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if (session) {
-        user = session.user;
-    } else {
-        return Astro.redirect('/login');
-    }
-} catch (error) {
-    console.error('Session error:', error);
-    return Astro.redirect('/login');
+console.log('Tokens present:', {
+  hasAccessToken: !!accessToken,
+  hasRefreshToken: !!refreshToken
+});
+
+if (!accessToken || !refreshToken) {
+  console.log('No tokens found, redirecting to login');
+  return redirect('/login');
 }
+
+const { data: { session }, error: sessionError } = await supabase.auth.setSession({
+  access_token: accessToken.value,
+  refresh_token: refreshToken.value
+});
+
+if (sessionError) {
+  console.error('Session error:', sessionError);
+  cookies.delete('sb-access-token', { path: '/' });
+  cookies.delete('sb-refresh-token', { path: '/' });
+  return redirect('/login');
+}
+
+const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+if (userError || !user) {
+  console.error('User error:', userError);
+  cookies.delete('sb-access-token', { path: '/' });
+  cookies.delete('sb-refresh-token', { path: '/' });
+  return redirect('/login');
+}
+
+console.log('Authentication successful, rendering dashboard');
 ---
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Dashboard</title>
-</head>
-<body>
-    <div id="dashboard">
-        {user && (
-            <>
-                <h1 id="welcome-message">Welcome, {user.email}!</h1>
-                <button id="logout-btn">Logout</button>
-            </>
-        )}
+<FrontPageLayout title="Dashboard">
+  <div class="container">
+    <div class="main-content">
+      <div class="main-content-title">Dashboard</div>
+      <div class="main-content-box">
+        <div class="news">
+          <div class="news-user">Welcome, {user.email}</div>
+          <div class="news-content">
+            <p>Your account dashboard content will appear here.</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="main-content-title">Recent Activity</div>
+      <div class="main-content-box">
+        <div class="news">
+          <div class="news-content">
+            <p>Your recent activity will appear here.</p>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <script type="module">
-      import { supabase } from '/src/lib/supabaseClient';
+    <div class="sidebar">
+      <div class="sidebar-title">User Settings</div>
+      <div class="sidebar-box">
+        <button id="logout-button">Sign out</button>
+      </div>
 
-const checkSession = async () => {
+      <div class="sidebar-title">Stats</div>
+      <div class="sidebar-box">
+        <p>Member since: {new Date(user.created_at).toLocaleDateString()}</p>
+      </div>
+    </div>
+  </div>
+</FrontPageLayout>
+
+<script>
+  import { supabase } from '../lib/supabase';
+  const logoutButton = document.querySelector('#logout-button');
+  
+  logoutButton?.addEventListener('click', async () => {
     try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-
-        if (error || !session) {
-            console.error('Session check failed:', error);
-            window.location.href = '/login';
-        } else {
-            document.getElementById('welcome-message').textContent = `Welcome, ${session.user.email}!`;
-        }
+      await supabase.auth.signOut();
+      
+      await fetch('/api/auth/callback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          access_token: '',
+          refresh_token: '',
+        }),
+      });
+      
+      window.location.href = '/login';
     } catch (error) {
-        console.error('Error during session check:', error);
-        window.location.href = '/login';
+      console.error('Error:', error);
+      alert('Failed to sign out');
     }
-};
-
-checkSession();
-  
-      // Handle logout
-      document.getElementById('logout-btn')?.addEventListener('click', async () => {
-          try {
-              await supabase.auth.signOut();
-              sessionStorage.removeItem('sb-supa-auth-token');
-              window.location.href = '/login';
-          } catch (error) {
-              console.error('Logout error:', error);
-          }
-      });
-  
-      // Monitor auth state changes
-      supabase.auth.onAuthStateChange((event, session) => {
-          if (event === 'SIGNED_OUT' || !session) {
-              sessionStorage.removeItem('sb-supa-auth-token');
-              window.location.href = '/login';
-          }
-      });
-  </script>
-</body>
-</html>
+  });
+</script>

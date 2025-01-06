@@ -7,10 +7,13 @@
 }
 
 @font-face {
-  font-family: Rubik;
-  src: url('./fonts/Squarewave-Bold.ttf');
-  font-weight: normal;
-  font-style: normal;
+  font-family: saira;
+  src: url('./fonts/saira.ttf');
+}
+
+@font-face {
+  font-family: rubik;
+  src: url('./fonts/Rubik-VariableFont_wght.ttf');
 }
 
 @font-face {
@@ -145,11 +148,11 @@ h1, h2, h3, h4, h5, h6, p, a, ul, ol, li, small {
 body {
   margin: 0;
   color: var(--font-color);
-  font-family: 'Rubik', monospace;
-  font-size: 16px;
+  font-family: 'saira', monospace;
+  font-weight: 400;
+  font-size: 14px;
   display: flex;
   flex-direction: column;
-  line-height: 16px;
   background-color: var(--page-bg);
 }
 
@@ -261,6 +264,7 @@ body {
   font-family: 'nav';
   font-size: calc(16px * var(--multiply-factor));
   line-height: calc(12px * var(--multiply-factor));
+  font-weight: 400;
   
   text-shadow:
   calc(-1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 var(--bg-color),
@@ -346,6 +350,8 @@ body {
   display: inline-block;
   position: relative;
   font-family: 'nav';
+  font-size: 16px;
+  line-height: 13px;
 
   text-shadow: 
   calc(-1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0 var(--bg-color),
@@ -461,13 +467,11 @@ body {
 .sidebar-title {
   display: block;
   background: color-mix(in srgb, var(--page-color) 60%, black);
-  padding: 0px 0px 3px 0px;
+  padding: 3px 0px 3px 0px;
   animation: fadein-right .7s;
-  text-rendering:geometricPrecision;
-  transform:scaleZ(5);
-  font-family: 'main-content-title';
-  font-size: 16px;
-  line-height: 20px;
+  font-family: 'saira';
+  font-weight: 800;
+  font-size: 18px;
   text-align: center;
 
   text-shadow:
@@ -485,6 +489,7 @@ body {
   animation: fadein-right .7s;
   margin-bottom: var(--gap);
   box-shadow: var(--box-shadow);
+  line-height: 16px;
 
   text-shadow:
   calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
@@ -554,13 +559,11 @@ body {
 .main-content-title {
   display: block;
   background: color-mix(in srgb, var(--page-color) 60%, black);
-  padding: 0px 0px 3px 10px;
+  padding: 3px 0px 3px 15px;
   animation: fadein-left .4s;
-  text-rendering:geometricPrecision;
-  transform:scaleZ(5);
-  font-family: 'main-content-title';
-  font-size: 16px;
-  line-height: 20px;
+  font-family: 'saira';
+  font-weight: 800;
+  font-size: 18px;
 
   text-shadow:
   calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
@@ -572,14 +575,17 @@ body {
 
 .main-content-box {
   background: var(--page-color);
-  padding: 10px;
+  padding: 15px;
   min-height: 75px;
   animation: fadein-left .4s;
   margin-bottom: var(--gap);
-  text-rendering:geometricPrecision;
-  transform:scaleZ(5);
   line-height: 16px;
   box-shadow: var(--box-shadow);
+
+  text-shadow:
+  calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color);
 
   border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
   border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
@@ -629,9 +635,9 @@ body {
 }
 
 .news-user {
-  font-family: 'Rubik';
-  font-size: 32px;
-  padding-top: 0px;
+  font-family: 'saira';
+  font-size: 16px;
+  font-weight: 700;
 
   text-shadow:
   calc( 2px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
@@ -651,7 +657,12 @@ body {
 
 .news-content li {
   list-style-position: inside;
-  list-style-type: "➖ ";
+  list-style-type: "- ";
+}
+
+.news-info-container {
+  display: block;
+  height: 80px;
 }
 
 .news-img img {
@@ -711,6 +722,80 @@ body {
   background: color-mix(in srgb, var(--font-link-color) 30%, white);
 }
 
+.auth-form {
+  max-width: 400px;
+  margin: 100px auto;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-family: 'saira';
+  font-weight: 600;
+}
+
+.form-group input {
+  width: 350px;
+  margin-right: 20px;
+  padding: 8px;
+  border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  background: color-mix(in srgb, var(--page-color) 60%, black);
+  color: var(--font-color);
+  font-family: 'saira';
+  font-size: 14px;
+  font-weight: 600;
+
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 30px;
+}
+
+.login-button {
+  width: 100%;
+  padding: 8px 20px;
+  background: color-mix(in srgb, var(--page-color) 60%, black);
+  border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  color: var(--font-color);
+  font-family: 'saira';
+  cursor: pointer;
+}
+
+.login-button:hover {
+  background: color-mix(in srgb, var(--page-color) 40%, black);
+}
+
+.discord-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #5865F2;
+  border: var(--border-width) var(--border-style) color-mix(in srgb, #4752C4 80%, white);
+  width: 100%;
+}
+
+.discord-button:hover {
+  background-color: color-mix(in srgb, #4752C4 80%, black);
+}
+
+.error-message {
+  background-color: #dc2626;
+  color: white;
+  padding: 8px 12px;
+  margin-bottom: 16px;
+  border-radius: 4px;
+}
+
+.error-message.hidden {
+  display: none;
+}
 
 /*Media Queries*/
 
@@ -771,20 +856,23 @@ body {
 
 a {
   text-decoration: none;
-  color: var(--bg-color);
-  background: var(--font-link-color);
-  padding: 0px 5px 2px 5px;
-  margin: 0px 1px 0px 0px;
+  color: var(--font-link-color);
+  font-family: 'saira';
+  font-weight: 700;
+  font-size: 14px;
   border-radius: 2px;
   transition: ease-in-out .2s;
-  text-shadow: none;
+  text-shadow:
+  calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 1px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color),
+  calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color);
 }
 
 a:visited {
-  color: var(--bg-color);
+  color: var(--font-link-color);
   text-decoration: none;
 }
 
 a:hover {
-  background: color-mix(in srgb, var(--font-link-color) 30%, white);
+  color: color-mix(in srgb, var(--font-link-color) 30%, white);
 }
