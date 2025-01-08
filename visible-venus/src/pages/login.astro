@@ -65,68 +65,72 @@ if (accessToken && refreshToken) {
 </FrontPageLayout>
 
 <script>
-  import { supabase } from '../lib/supabase';
-  const form = document.querySelector('#login-form');
-  const discordButton = document.querySelector('#discord-login');
-  const errorAlert = document.querySelector('#error-alert');
-  const errorMessage = document.querySelector('#error-message');
-  
-  const showError = (message: string) => {
-    if (errorAlert && errorMessage) {
-      errorMessage.textContent = message;
-      errorAlert.classList.remove('hidden');
-    }
-  };
-
-  form?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-   
-    const formData = new FormData(e.target as HTMLFormElement);
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
+    import { supabase } from '../lib/supabase';
+    const form = document.querySelector('#login-form');
+    const discordLoginButton = document.querySelector('#discord-login');
+    const errorAlert = document.querySelector('#error-alert');
+    const errorMessage = document.querySelector('#error-message');
     
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    const showError = (message: string) => {
+      if (errorAlert && errorMessage) {
+        errorMessage.textContent = message;
+        errorAlert.classList.remove('hidden');
+      }
+    };
+  
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+     
+      const formData = new FormData(e.target as HTMLFormElement);
+      const email = formData.get('email') as string;
+      const password = formData.get('password') as string;
       
-      if (error) throw error;
-      
-      // Store session in cookies
-      await fetch('/api/auth/callback', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          access_token: data.session?.access_token,
-          refresh_token: data.session?.refresh_token,
-        }),
-      });
-      
-      // Redirect to dashboard
-      window.location.href = '/dashboard';
-    } catch (error: any) {
-      console.error('Error:', error);
-      showError(error.message || 'Failed to sign in');
-    }
-  });
-
-  discordButton?.addEventListener('click', async () => {
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'discord',
-        options: {
-          redirectTo: `https://discord.com/oauth2/authorize?client_id=969267581691244634&response_type=code&redirect_uri=https%3A%2F%2Fbheonuqhgyvywthsccgw.supabase.co%2Fauth%2Fv1%2Fcallback&scope=email`
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        
+        if (error) throw error;
+        
+        // Store session in cookies
+        await fetch('/api/auth/callback', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            access_token: data.session?.access_token,
+            refresh_token: data.session?.refresh_token,
+          }),
+        });
+        
+        // Redirect to dashboard
+        window.location.href = '/dashboard';
+      } catch (error: any) {
+        console.error('Error:', error);
+        showError(error.message || 'Failed to sign in');
+      }
+    });
+  
+    const handleDiscordAuth = async () => {
+        try {
+            const { data, error } = await supabase.auth.signInWithOAuth({
+            provider: 'discord',
+            options: {
+                skipBrowserRedirect: false,
+                redirectTo: `${window.location.origin}/dashboard`
+            }
+            });
+            
+            if (error) throw error;
+            
+        } catch (error: any) {
+            console.error('Error:', error);
+            showError('Failed to sign in with Discord');
         }
-      });
-      
-      if (error) throw error;
-      
-    } catch (error: any) {
-      console.error('Error:', error);
-      showError('Failed to sign in with Discord');
-    }
-  });
-</script>
+        };
+  
+    discordLoginButton?.addEventListener('click', () => handleDiscordAuth());
+  </script>
+  

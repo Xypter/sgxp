@@ -61,11 +61,11 @@ if (accessToken && refreshToken) {
             <button class="login-button" type="submit">Create account</button>
           </div>
           <div class="form-actions" style="margin-top: 10px;">
-            <button type="button" id="discord-signup" class="discord-button login-button">
+            <button type="button" id="discord-register" class="discord-button login-button">
               <svg class="discord-icon" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; margin-right: 8px;">
                 <path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z"/>
               </svg>
-              Sign up with Discord
+              Register with Discord
             </button>
           </div>
         </form>
@@ -76,77 +76,151 @@ if (accessToken && refreshToken) {
 
 <script>
   import { supabase } from '../lib/supabase';
+
   const form = document.querySelector('#register-form');
-  const discordButton = document.querySelector('#discord-signup');
   const errorAlert = document.querySelector('#error-alert');
   const errorMessage = document.querySelector('#error-message');
-  
+
   const showError = (message: string) => {
     if (errorAlert && errorMessage) {
       errorMessage.textContent = message;
       errorAlert.classList.remove('hidden');
     }
   };
-  
-  form?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const formData = new FormData(e.target as HTMLFormElement);
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
-    const username = formData.get('username') as string;
-    
+
+  const hideError = () => {
+    if (errorAlert) {
+      errorAlert.classList.add('hidden');
+    }
+  };
+
+  const validatePassword = (password: string) => {
+    if (password.length < 8) {
+      showError('Password must be at least 8 characters long.');
+      return false;
+    }
+    return true;
+  };
+
+  const checkExistingUser = async (email: string, username: string) => {
     try {
+      // First check for existing email in auth.users
+      const { data: emailCheck, error: emailError } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('email', email)
+        .single();
+
+      if (emailError && emailError.code !== 'PGRST116') {
+        throw emailError;
+      }
+
+      if (emailCheck) {
+        showError('The username or email address is already in use.');
+        return false;
+      }
+
+      // Then check for existing username in profiles
+      const { data: usernameCheck, error: usernameError } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username)
+        .single();
+
+      if (usernameError && usernameError.code !== 'PGRST116') {
+        throw usernameError;
+      }
+
+      if (usernameCheck) {
+        showError('The username or email address is already in use.');
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error checking existing user:', error);
+      showError('An error occurred while checking your details.');
+      return false;
+    }
+  };
+
+  form?.addEventListener('submit', async (e: SubmitEvent) => {
+    e.preventDefault();
+    hideError();
+
+    const formElement = e.target as HTMLFormElement;
+    const formData = new FormData(formElement);
+    
+    const email = formData.get('email')?.toString().trim();
+    const password = formData.get('password')?.toString();
+    const username = formData.get('username')?.toString().trim();
+
+    if (!email || !password || !username) {
+      showError('All fields are required.');
+      return;
+    }
+
+    // Validate password client-side
+    if (!validatePassword(password)) return;
+
+    try {
+      // Check for existing email and username
+      const isValid = await checkExistingUser(email, username);
+      if (!isValid) return;
+
+      // Proceed with signup if validations pass
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            username: username,
-            display_name: username
-          }
-        }
       });
-      
+
       if (signUpError) throw signUpError;
 
       if (signUpData?.user) {
-        const { error: updateError } = await supabase.auth.updateUser({
-          data: {
-            display_name: username
-          }
-        });
+        // Insert username into profiles table
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            { 
+              id: signUpData.user.id, 
+              email, 
+              username 
+            }
+          ])
+          .single();
 
-        if (updateError) {
-          console.error('Error updating display name:', updateError);
-        }
+        if (profileError) throw profileError;
+
+        // Redirect to check-email page
+        window.location.href = '/check-email';
       }
-      
-      window.location.href = '/check-email';
-      
-    } catch (error: any) {
-      console.error('Error:', error);
-      showError(error.message || 'Failed to create account');
+    } catch (error) {
+      console.error('Error signing up:', error);
+      showError(error.message || 'Failed to create account. Please try again.');
     }
   });
-  
-  discordButton?.addEventListener('click', async () => {
+
+    const discordRegisterButton = document.querySelector('#discord-register');
+
+    const handleDiscordAuth = async () => {
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
+        const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'discord',
         options: {
-          redirectTo: `https://discord.com/oauth2/authorize?client_id=969267581691244634&response_type=code&redirect_uri=https%3A%2F%2Fbheonuqhgyvywthsccgw.supabase.co%2Fauth%2Fv1%2Fcallback&scope=email`,
-          data: {
-            preferred_username: true
-          }
+            redirectTo: window.location.origin + '/api/auth/callback',
+            queryParams: {
+            registration: 'true'
+            }
         }
-      });
-      
-      if (error) throw error;
-      
+        });
+        
+        if (error) throw error;
+        
     } catch (error: any) {
-      console.error('Error:', error);
-      showError('Failed to sign in with Discord');
+        console.error('Error:', error);
+        showError('Failed to register with Discord');
     }
-  });
+    };
+
+    discordRegisterButton?.addEventListener('click', handleDiscordAuth);
 </script>
