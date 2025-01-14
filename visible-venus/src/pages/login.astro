@@ -9,22 +9,32 @@ const refreshToken = cookies.get('sb-refresh-token');
 if (accessToken && refreshToken) {
   return redirect('/dashboard');
 }
+
+// Check for success message
+const searchParams = Astro.url.searchParams;
+const registered = searchParams.get('registered') === 'true';
 ---
 
 <FrontPageLayout title="Login">
-  <div class="container ignore-main">
-    <div class="auth-form">
-      <div class="main-content-title" style="animation: none;">Sign in to your account</div>
-      <div class="main-content-box" style="animation: none;">
-        <p style="margin-bottom: 20px; text-align: center;">
-          Or <a href="/register">create a new account</a>
-        </p>
+    <div class="container ignore-main">
+        <div class="auth-form">
+            <div class="main-content-title" style="animation: none;">Sign in to your account</div>
+            <div class="main-content-box" style="animation: none;">
+            <p style="margin-bottom: 20px; text-align: center;">
+                Or <a href="/register">create a new account</a>
+            </p>
 
-        <!-- Error Alert -->
-        <div id="error-alert" class="error-message hidden" role="alert">
-          <strong>Error!</strong>
-          <span id="error-message"></span>
-        </div>
+            {registered && (
+                <div class="success-message" role="alert" style="background-color: #4CAF50; color: white; padding: 10px; border-radius: 4px; margin-bottom: 20px; text-align: center;">
+                Registration successful! Please check your email to verify your account.
+                </div>
+            )}
+
+            <!-- Error Alert -->
+            <div id="error-alert" class="error-message hidden" role="alert">
+                <strong>Error!</strong>
+                <span id="error-message"></span>
+            </div>
 
         <form id="login-form">
           <div class="form-group">
@@ -66,71 +76,107 @@ if (accessToken && refreshToken) {
 
 <script>
     import { supabase } from '../lib/supabase';
-    const form = document.querySelector('#login-form');
-    const discordLoginButton = document.querySelector('#discord-login');
-    const errorAlert = document.querySelector('#error-alert');
-    const errorMessage = document.querySelector('#error-message');
-    
-    const showError = (message: string) => {
-      if (errorAlert && errorMessage) {
-        errorMessage.textContent = message;
-        errorAlert.classList.remove('hidden');
-      }
+
+const form = document.querySelector('#login-form');
+const discordLoginButton = document.querySelector('#discord-login');
+const errorAlert = document.querySelector('#error-alert');
+const errorMessage = document.querySelector('#error-message');
+
+const showError = (message: string) => {
+  if (errorAlert && errorMessage) {
+    errorMessage.textContent = message;
+    errorAlert.classList.remove('hidden');
+    // Log error to console for debugging
+    console.error('Auth Error:', message);
+  }
+};
+
+// Function to parse error from URL
+const handleUrlError = () => {
+  const params = new URLSearchParams(window.location.search);
+  const error = params.get('error');
+  if (error) {
+    const errorMessages = {
+      'no_auth_code': 'Authentication code missing. Please try again.',
+      'auth_error': 'Failed to authenticate with Discord. Please try again.',
+      'no_session': 'Failed to create session. Please try again.',
+      'auth_callback_failed': 'Authentication callback failed. Please try again.'
     };
-  
-    form?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-     
-      const formData = new FormData(e.target as HTMLFormElement);
-      const email = formData.get('email') as string;
-      const password = formData.get('password') as string;
-      
-      try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        
-        if (error) throw error;
-        
-        // Store session in cookies
-        await fetch('/api/auth/callback', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            access_token: data.session?.access_token,
-            refresh_token: data.session?.refresh_token,
-          }),
-        });
-        
-        // Redirect to dashboard
-        window.location.href = '/dashboard';
-      } catch (error: any) {
-        console.error('Error:', error);
-        showError(error.message || 'Failed to sign in');
+    showError(errorMessages[error] || 'Authentication failed. Please try again.');
+  }
+};
+
+// Check for errors on page load
+handleUrlError();
+
+const handleDiscordAuth = async () => {
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'discord',
+      options: {
+        skipBrowserRedirect: true // Prevent automatic redirect
       }
     });
+
+    if (error) throw error;
+    
+    if (data?.url) {
+      // Manually redirect to the URL provided by Supabase
+      window.location.href = data.url;
+    }
+  } catch (error) {
+    console.error('Discord login error:', error);
+    showError('Failed to sign in with Discord');
+  }
+};
+
+discordLoginButton?.addEventListener('click', handleDiscordAuth);
+
+form?.addEventListener('submit', async (e) => {
+  e.preventDefault();
   
-    const handleDiscordAuth = async () => {
-        try {
-            const { data, error } = await supabase.auth.signInWithOAuth({
-            provider: 'discord',
-            options: {
-                skipBrowserRedirect: false,
-                redirectTo: `${window.location.origin}/dashboard`
-            }
-            });
-            
-            if (error) throw error;
-            
-        } catch (error: any) {
-            console.error('Error:', error);
-            showError('Failed to sign in with Discord');
-        }
-        };
+  const formData = new FormData(e.target as HTMLFormElement);
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
   
-    discordLoginButton?.addEventListener('click', () => handleDiscordAuth());
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    
+    if (error) throw error;
+    
+    if (data.session) {
+      console.log('Login successful, storing session...');
+      
+      const response = await fetch('/api/auth/callback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to store session');
+      }
+      
+      console.log('Session stored, redirecting to dashboard...');
+      window.location.href = '/dashboard';
+    }
+  } catch (error: any) {
+    console.error('Login error:', {
+      message: error.message,
+      status: error.status,
+      name: error.name
+    });
+    showError(error.message || 'Failed to sign in');
+  }
+});
   </script>
   

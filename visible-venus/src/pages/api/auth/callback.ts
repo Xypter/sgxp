@@ -1,45 +1,101 @@
+// In your callback.ts file:
+
 import type { APIRoute } from 'astro';
 import { supabase } from '../../../lib/supabase';
 
-export const POST: APIRoute = async ({ request, cookies }) => {
-  const { access_token, refresh_token } = await request.json();
+export const GET: APIRoute = async ({ request, cookies, redirect }) => {
+  const requestUrl = new URL(request.url);
+  console.log('Callback URL:', requestUrl.toString());
+  
+  // Get all the parameters
+  const params = Object.fromEntries(requestUrl.searchParams.entries());
+  console.log('All parameters:', params);
 
-  if (access_token) {
-    cookies.set('sb-access-token', access_token, {
-      path: '/',
-      httpOnly: true,
-      secure: import.meta.env.PROD,
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-    });
-  }
-  if (refresh_token) {
-    cookies.set('sb-refresh-token', refresh_token, {
-      path: '/',
-      httpOnly: true,
-      secure: import.meta.env.PROD,
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-    });
-  }
+  try {
+    // Get session from URL
+    const { data, error } = await supabase.auth.getSession();
+    
+    if (error) throw error;
+    
+    if (data?.session) {
+      const user = data.session.user;
+      const isNewUser = user.app_metadata.provider === 'discord' && 
+                       user.created_at === user.last_sign_in_at;
 
-  return new Response(JSON.stringify({
-    message: 'Auth tokens stored',
-    success: true
-  }), {
-    status: 200
-  });
+      // If this is a new Discord user, create their profile
+      if (isNewUser) {
+        try {
+          const metadata = user.user_metadata;
+          await supabase.from('profiles').insert({
+            id: user.id,
+            email: user.email,
+            username: metadata.full_name || metadata.preferred_username || user.email.split('@')[0],
+            avatar_url: metadata.avatar_url
+          }).single();
+        } catch (profileError) {
+          console.error('Profile creation error:', profileError);
+          // Continue anyway since auth succeeded
+        }
+      }
+
+      // Set the cookies
+      cookies.set('sb-access-token', data.session.access_token, {
+        path: '/',
+        httpOnly: true,
+        secure: import.meta.env.PROD,
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7
+      });
+
+      cookies.set('sb-refresh-token', data.session.refresh_token, {
+        path: '/',
+        httpOnly: true,
+        secure: import.meta.env.PROD,
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7
+      });
+
+      return redirect('/dashboard');
+    }
+
+    return redirect('/login?error=no_session');
+  } catch (error) {
+    console.error('Auth error:', error);
+    return redirect('/login?error=auth_failed');
+  }
 };
 
-export const GET: APIRoute = async ({ request, cookies, redirect }) => {
-    const requestUrl = new URL(request.url);
-    const code = requestUrl.searchParams.get('code');
-    const next = requestUrl.searchParams.get('next') || '/dashboard';
-  
-    if (code) {
-      await supabase.auth.exchangeCodeForSession(code);
-      return redirect(next);
+// Keep the POST handler the same as before
+export const POST: APIRoute = async ({ request, cookies }) => {
+  try {
+    const body = await request.json();
+    
+    if (!body.access_token || !body.refresh_token) {
+      throw new Error('Missing tokens');
     }
-  
-    return redirect('/login?error=no_code');
-  };
+
+    cookies.set('sb-access-token', body.access_token, {
+      path: '/',
+      httpOnly: true,
+      secure: import.meta.env.PROD,
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7
+    });
+
+    cookies.set('sb-refresh-token', body.refresh_token, {
+      path: '/',
+      httpOnly: true,
+      secure: import.meta.env.PROD,
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7
+    });
+
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500
+    });
+  }
+};
