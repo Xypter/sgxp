@@ -1,0 +1,53 @@
+---
+import FrontPageLayout from '../../layouts/FrontPageLayout.astro';
+import { supabase } from '../../lib/supabaseClient';
+---
+
+<FrontPageLayout title="Authenticating...">
+    <div class="container ignore-main">
+        <div class="flex items-center justify-center min-h-screen">
+            <p>Authenticating...</p>
+        </div>
+    </div>
+</FrontPageLayout>
+
+<script>
+    // Handle the hash fragment containing the access token
+    if (window.location.hash) {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const access_token = hashParams.get('access_token');
+        const refresh_token = hashParams.get('refresh_token');
+
+        if (access_token && refresh_token) {
+            // Store the session
+            fetch('/api/auth/callback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    access_token,
+                    refresh_token,
+                }),
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Redirect to dashboard on success
+                    window.location.href = '/dashboard';
+                } else {
+                    // Redirect to login with error
+                    window.location.href = '/login?error=no_session';
+                }
+            })
+            .catch(error => {
+                console.error('Auth callback error:', error);
+                window.location.href = '/login?error=auth_callback_failed';
+            });
+        } else {
+            window.location.href = '/login?error=no_auth_code';
+        }
+    } else {
+        // No hash parameters found
+        window.location.href = '/login?error=no_auth_code';
+    }
+</script> 

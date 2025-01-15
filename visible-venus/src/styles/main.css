@@ -759,13 +759,14 @@ body {
 }
 
 .login-button {
-  width: 100%;
   padding: 8px 20px;
   background: color-mix(in srgb, var(--page-color) 60%, black);
   border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
   color: var(--font-color);
   font-family: 'saira';
   cursor: pointer;
+  font-weight: 700;
+  width: 100%;
 }
 
 .login-button:hover {
@@ -868,11 +869,138 @@ a {
   calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color);
 }
 
-a:visited {
-  color: var(--font-link-color);
+a:visited:not(.login-button) {
   text-decoration: none;
 }
 
 a:hover {
   color: color-mix(in srgb, var(--font-link-color) 30%, white);
+}
+
+.settings-section {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    border-bottom: 1px solid #2c2c2c;
+}
+
+.settings-section:last-child {
+    border-bottom: none;
+}
+
+.settings-title {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: #fff;
+}
+
+.settings-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.settings-input {
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #2c2c2c;
+    background: #1a1a1a;
+    color: #fff;
+}
+
+.avatar-preview {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+/* Dashboard specific layout */
+.dashboard-container {
+    display: grid;
+    grid-gap: var(--gap);
+    grid-template-columns: 1000px 200px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.dashboard-main {
+    width: 1000px;
+}
+
+.dashboard-sidebar {
+    width: 200px;
+}
+
+/* Responsive dashboard layout */
+@media (max-width: 1250px) {
+    .dashboard-container {
+        grid-template-columns: 1fr;
+        padding: 10px;
+    }
+
+    .dashboard-main,
+    .dashboard-sidebar {
+        width: 100%;
+    }
+}
+
+.dashboard-main-title {
+    display: block;
+    background: color-mix(in srgb, var(--page-color) 60%, black);
+    padding: 3px 0px 3px 15px;
+    animation: fadein-left .4s;
+    font-family: 'saira';
+    font-weight: 800;
+    font-size: 18px;
+    text-shadow: calc(1px * var(--multiply-factor)) 0 0 var(--bg-color),
+                 calc(1px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 0 var(--bg-color),
+                 0 calc(1px * var(--multiply-factor)) 0 var(--bg-color);
+    border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+}
+
+.dashboard-main-box {
+    background: var(--page-color);
+    padding: 15px;
+    min-height: 75px;
+    animation: fadein-left .4s;
+    margin-bottom: var(--gap);
+    line-height: 16px;
+    box-shadow: var(--box-shadow);
+    text-shadow: calc(1px * var(--multiply-factor)) 0 0 var(--bg-color),
+                 calc(1px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 0 var(--bg-color),
+                 0 calc(1px * var(--multiply-factor)) 0 var(--bg-color);
+    border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+}
+
+.dashboard-sidebar-title {
+    display: block;
+    background: color-mix(in srgb, var(--page-color) 60%, black);
+    padding: 3px 0px 3px 0px;
+    animation: fadein-right .7s;
+    font-family: 'saira';
+    font-weight: 800;
+    font-size: 18px;
+    text-align: center;
+    text-shadow: calc(1px * var(--multiply-factor)) 0 0 var(--bg-color),
+                 calc(1px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 0 var(--bg-color),
+                 0 calc(1px * var(--multiply-factor)) 0 var(--bg-color);
+    border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+}
+
+.dashboard-sidebar-box {
+    background: var(--page-color);
+    padding: 20px;
+    text-align: center;
+    animation: fadein-right .7s;
+    margin-bottom: var(--gap);
+    box-shadow: var(--box-shadow);
+    line-height: 16px;
+    text-shadow: calc(1px * var(--multiply-factor)) 0 0 var(--bg-color),
+                 calc(1px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 0 var(--bg-color),
+                 0 calc(1px * var(--multiply-factor)) 0 var(--bg-color);
+    border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
 }

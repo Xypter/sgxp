@@ -1,0 +1,194 @@
+---
+import FrontPageLayout from '../layouts/FrontPageLayout.astro';
+import { supabase } from '../lib/supabaseClient';
+
+const { cookies, redirect } = Astro;
+
+// Get session
+const accessToken = cookies.get('sb-access-token');
+const refreshToken = cookies.get('sb-refresh-token');
+
+if (!accessToken || !refreshToken) {
+    return redirect('/login');
+}
+
+// Set up Supabase session
+const { data: { user }, error } = await supabase.auth.getUser(accessToken.value);
+
+if (error || !user) {
+    cookies.delete('sb-access-token', { path: '/' });
+    cookies.delete('sb-refresh-token', { path: '/' });
+    return redirect('/login');
+}
+
+const username = user.user_metadata?.full_name || user.user_metadata?.username || user.email;
+const avatar_url = user.user_metadata?.avatar_url || user.user_metadata?.picture;
+---
+
+<FrontPageLayout title="Settings">
+    <div class="container ignore-main" style="max-width: 1200px; margin: 0 auto;">
+        <div class="main-content">
+            <div class="main-content-title">User Settings</div>
+            <div class="main-content-box">
+                <!-- Display Name Section -->
+                <div class="settings-section">
+                    <h3 class="settings-title">Display Name</h3>
+                    <div class="settings-content">
+                        <input 
+                            type="text" 
+                            id="display-name" 
+                            value={username}
+                            class="settings-input"
+                            placeholder="Enter your display name"
+                        />
+                        <button id="update-name" class="login-button">Update Name</button>
+                    </div>
+                </div>
+
+                <!-- Profile Picture Section -->
+                <div class="settings-section">
+                    <h3 class="settings-title">Profile Picture</h3>
+                    <div class="settings-content">
+                        <div class="avatar-preview">
+                            <img 
+                                src={avatar_url || '/default-avatar.png'} 
+                                alt="Profile" 
+                                id="avatar-preview"
+                                style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;"
+                            />
+                        </div>
+                        <input 
+                            type="file" 
+                            id="avatar-upload" 
+                            accept="image/*"
+                            style="margin: 10px 0;"
+                        />
+                        <button id="update-avatar" class="login-button">Update Picture</button>
+                    </div>
+                </div>
+
+                <!-- Password Section -->
+                <div class="settings-section">
+                    <h3 class="settings-title">Change Password</h3>
+                    <div class="settings-content">
+                        <input 
+                            type="password" 
+                            id="current-password" 
+                            class="settings-input"
+                            placeholder="Current password"
+                        />
+                        <input 
+                            type="password" 
+                            id="new-password" 
+                            class="settings-input"
+                            placeholder="New password"
+                        />
+                        <input 
+                            type="password" 
+                            id="confirm-password" 
+                            class="settings-input"
+                            placeholder="Confirm new password"
+                        />
+                        <button id="update-password" class="login-button">Update Password</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</FrontPageLayout>
+
+<script>
+    import { supabase } from '../lib/supabaseClient';
+
+    // Update Display Name
+    document.getElementById('update-name')?.addEventListener('click', async () => {
+        const newName = (document.getElementById('display-name') as HTMLInputElement)?.value;
+        if (!newName) return;
+
+        try {
+            const { data, error } = await supabase.auth.updateUser({
+                data: { full_name: newName }
+            });
+
+            if (error) throw error;
+            alert('Display name updated successfully!');
+        } catch (error) {
+            console.error('Error updating name:', error);
+            alert('Failed to update display name. Please try again.');
+        }
+    });
+
+    // Update Avatar
+    document.getElementById('update-avatar')?.addEventListener('click', async () => {
+        const fileInput = document.getElementById('avatar-upload') as HTMLInputElement;
+        const file = fileInput?.files?.[0];
+        if (!file) return;
+
+        try {
+            // Upload file to Supabase Storage
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Math.random()}.${fileExt}`;
+            const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('avatars')
+                .upload(fileName, file);
+
+            if (uploadError) throw uploadError;
+
+            // Get public URL
+            const { data: { publicUrl } } = supabase.storage
+                .from('avatars')
+                .getPublicUrl(fileName);
+
+            // Update user metadata
+            const { data, error } = await supabase.auth.updateUser({
+                data: { avatar_url: publicUrl }
+            });
+
+            if (error) throw error;
+            
+            // Update preview
+            const preview = document.getElementById('avatar-preview') as HTMLImageElement;
+            if (preview) preview.src = publicUrl;
+            
+            alert('Profile picture updated successfully!');
+        } catch (error) {
+            console.error('Error updating avatar:', error);
+            alert('Failed to update profile picture. Please try again.');
+        }
+    });
+
+    // Update Password
+    document.getElementById('update-password')?.addEventListener('click', async () => {
+        const currentPassword = (document.getElementById('current-password') as HTMLInputElement)?.value;
+        const newPassword = (document.getElementById('new-password') as HTMLInputElement)?.value;
+        const confirmPassword = (document.getElementById('confirm-password') as HTMLInputElement)?.value;
+
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            alert('Please fill in all password fields');
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            alert('New passwords do not match');
+            return;
+        }
+
+        try {
+            const { data, error } = await supabase.auth.updateUser({
+                password: newPassword
+            });
+
+            if (error) throw error;
+            
+            // Clear password fields
+            ['current-password', 'new-password', 'confirm-password'].forEach(id => {
+                (document.getElementById(id) as HTMLInputElement).value = '';
+            });
+            
+            alert('Password updated successfully!');
+        } catch (error) {
+            console.error('Error updating password:', error);
+            alert('Failed to update password. Please try again.');
+        }
+    });
+</script> 

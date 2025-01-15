@@ -1,106 +1,90 @@
 ---
 import FrontPageLayout from '../layouts/FrontPageLayout.astro';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabaseClient';
 
-console.log('Starting dashboard route handler');
 const { cookies, redirect } = Astro;
+
+// Get session
 const accessToken = cookies.get('sb-access-token');
 const refreshToken = cookies.get('sb-refresh-token');
 
-console.log('Tokens present:', {
-  hasAccessToken: !!accessToken,
-  hasRefreshToken: !!refreshToken
-});
-
 if (!accessToken || !refreshToken) {
-  console.log('No tokens found, redirecting to login');
-  return redirect('/login');
+    return redirect('/login');
 }
 
-const { data: { session }, error: sessionError } = await supabase.auth.setSession({
-  access_token: accessToken.value,
-  refresh_token: refreshToken.value
-});
+// Set up Supabase session
+const { data: { user }, error } = await supabase.auth.getUser(accessToken.value);
 
-if (sessionError) {
-  console.error('Session error:', sessionError);
-  cookies.delete('sb-access-token', { path: '/' });
-  cookies.delete('sb-refresh-token', { path: '/' });
-  return redirect('/login');
+if (error || !user) {
+    // Clear cookies if session is invalid
+    cookies.delete('sb-access-token', { path: '/' });
+    cookies.delete('sb-refresh-token', { path: '/' });
+    return redirect('/login');
 }
 
-const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-if (userError || !user) {
-  console.error('User error:', userError);
-  cookies.delete('sb-access-token', { path: '/' });
-  cookies.delete('sb-refresh-token', { path: '/' });
-  return redirect('/login');
-}
-
-console.log('Authentication successful, rendering dashboard');
+// Get the username from user metadata
+const username = user.user_metadata?.full_name || user.user_metadata?.username || user.email;
 ---
 
 <FrontPageLayout title="Dashboard">
-  <div class="container">
-    <div class="main-content">
-      <div class="main-content-title">Dashboard</div>
-      <div class="main-content-box">
-        <div class="news">
-          <div class="news-user">Welcome, {user.email}</div>
-          <div class="news-content">
-            <p>Your account dashboard content will appear here.</p>
-          </div>
+    <div class="dashboard-container">
+        <div class="dashboard-main">
+            <div class="dashboard-main-title">Dashboard</div>
+            <div class="dashboard-main-box">
+                <div class="news">
+                    <div class="news-user">Welcome, {username}</div>
+                    <div class="news-content">
+                        <p>Your account dashboard content will appear here.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dashboard-main-title">Recent Activity</div>
+            <div class="dashboard-main-box">
+                <div class="news">
+                    <div class="news-content">
+                        <p>Your recent activity will appear here.</p>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-      
-      <div class="main-content-title">Recent Activity</div>
-      <div class="main-content-box">
-        <div class="news">
-          <div class="news-content">
-            <p>Your recent activity will appear here.</p>
-          </div>
+
+        <div class="dashboard-sidebar">
+            <div class="dashboard-sidebar-title">User Settings</div>
+            <div class="dashboard-sidebar-box">
+                <a href="/settings" class="login-button" style="display: block; margin-bottom: 10px; text-align: center; word-break: keep-all; white-space: nowrap;">Settings</a>
+                <button class="login-button" id="signout-button">Sign out</button>
+            </div>
+
+            <div class="dashboard-sidebar-title">Stats</div>
+            <div class="dashboard-sidebar-box">
+                <p>Member since: {new Date(user.created_at).toLocaleDateString()}</p>
+            </div>
         </div>
-      </div>
     </div>
-
-    <div class="sidebar">
-      <div class="sidebar-title">User Settings</div>
-      <div class="sidebar-box">
-        <button id="logout-button">Sign out</button>
-      </div>
-
-      <div class="sidebar-title">Stats</div>
-      <div class="sidebar-box">
-        <p>Member since: {new Date(user.created_at).toLocaleDateString()}</p>
-      </div>
-    </div>
-  </div>
 </FrontPageLayout>
 
 <script>
-  import { supabase } from '../lib/supabase';
-  const logoutButton = document.querySelector('#logout-button');
-  
-  logoutButton?.addEventListener('click', async () => {
-    try {
-      await supabase.auth.signOut();
-      
-      await fetch('/api/auth/callback', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          access_token: '',
-          refresh_token: '',
-        }),
-      });
-      
-      window.location.href = '/login';
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Failed to sign out');
-    }
-  });
+    import { supabase } from '../lib/supabaseClient';
+
+    document.getElementById('signout-button')?.addEventListener('click', async () => {
+        try {
+            await supabase.auth.signOut();
+            
+            // Clear cookies
+            const response = await fetch('/api/auth/signout', {
+                method: 'POST',
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to sign out');
+            }
+
+            // Redirect to login page
+            window.location.href = '/login';
+        } catch (error) {
+            console.error('Error signing out:', error);
+            alert('Failed to sign out. Please try again.');
+        }
+    });
 </script>

@@ -8,6 +8,29 @@ if (!supabaseUrl || !supabaseKey) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseKey, {
-    persistSession: true, // Ensure session is persisted
-    detectSessionInUrl: true, // Check for session in the URL (e.g., OAuth)
+    persistSession: true,
+    detectSessionInUrl: true,
+    auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
+    }
 });
+
+// Helper function for Discord auth
+export const signInWithDiscord = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'discord',
+        options: {
+            redirectTo: `${window.location.origin}/auth/callback`,
+            skipBrowserRedirect: false,
+            queryParams: {
+                access_type: 'offline',
+                prompt: 'consent'
+            }
+        }
+    });
+    
+    if (error) throw error;
+    return data;
+};
