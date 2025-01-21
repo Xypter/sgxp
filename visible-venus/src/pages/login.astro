@@ -8,7 +8,7 @@ const { cookies, redirect } = Astro;
 const accessToken = cookies.get('sb-access-token');
 const refreshToken = cookies.get('sb-refresh-token');
 if (accessToken && refreshToken) {
-  return redirect('/dashboard');
+  return redirect('/profile');
 }
 
 // Check for success message
@@ -167,8 +167,8 @@ form?.addEventListener('submit', async (e) => {
         throw new Error(errorData.message || 'Failed to store session');
       }
       
-      console.log('Session stored, redirecting to dashboard...');
-      window.location.href = '/dashboard';
+      console.log('Session stored, redirecting to profile...');
+      window.location.href = '/profile';
     }
   } catch (error: any) {
     console.error('Login error:', {

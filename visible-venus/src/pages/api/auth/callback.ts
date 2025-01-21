@@ -26,10 +26,12 @@ export const GET: APIRoute = async ({ request, cookies, redirect }) => {
       if (isNewUser) {
         try {
           const metadata = user.user_metadata;
+          const defaultUsername = user.email ? user.email.split('@')[0] : `user_${Date.now()}`;
+
           await supabase.from('profiles').insert({
             id: user.id,
-            email: user.email,
-            username: metadata.full_name || metadata.preferred_username || user.email.split('@')[0],
+            email: user.email ?? '',
+            username: metadata.full_name || metadata.preferred_username || defaultUsername,
             avatar_url: metadata.avatar_url
           }).single();
         } catch (profileError) {
@@ -55,7 +57,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect }) => {
         maxAge: 60 * 60 * 24 * 7
       });
 
-      return redirect('/dashboard');
+      return redirect('/profile');
     }
 
     return redirect('/login?error=no_session');
@@ -93,7 +95,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     return new Response(JSON.stringify({ success: true }), {
       status: 200
     });
-  } catch (error) {
+  } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500
     });

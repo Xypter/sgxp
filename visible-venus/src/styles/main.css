@@ -767,10 +767,16 @@ body {
   cursor: pointer;
   font-weight: 700;
   width: 100%;
+  font-size: 14px;
 }
 
 .login-button:hover {
   background: color-mix(in srgb, var(--page-color) 40%, black);
+}
+
+.login-button a {
+  text-decoration: none;
+  color: var(--font-color);
 }
 
 .discord-button {

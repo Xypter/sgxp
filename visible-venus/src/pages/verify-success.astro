@@ -15,8 +15,8 @@ import FrontPageLayout from '../layouts/FrontPageLayout.astro';
         You will be redirected to login in <span id="countdown">5</span> seconds...
       </p>
       <div class="mt-4">
-        <a href="/dashboard" class="text-indigo-600 hover:text-indigo-500">
-          Go to dashboard now →
+        <a href="/profile" class="text-indigo-600 hover:text-indigo-500">
+          Go to profile now →
         </a>
       </div>
     </div>
@@ -33,7 +33,7 @@ import FrontPageLayout from '../layouts/FrontPageLayout.astro';
     
     if (countdown <= 0) {
       clearInterval(timer);
-      window.location.href = '/dashboard';
+      window.location.href = '/profile';
     }
   }, 1000);
 </script>

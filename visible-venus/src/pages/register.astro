@@ -7,7 +7,7 @@ const { cookies, redirect } = Astro;
 const accessToken = cookies.get('sb-access-token');
 const refreshToken = cookies.get('sb-refresh-token');
 if (accessToken && refreshToken) {
-  return redirect('/dashboard');
+  return redirect('/profile');
 }
 ---
 
@@ -145,7 +145,7 @@ if (accessToken && refreshToken) {
       }
     };
   
-    form?.addEventListener('submit', async (e: SubmitEvent) => {
+    form?.addEventListener('submit', async (e: Event) => {
         e.preventDefault();
         hideError();
 

@@ -1,0 +1,70 @@
+---
+import Layout from '../layouts/FrontPageLayout.astro';
+---
+
+<Layout title="Database Tests">
+  <div class="p-4" id="test-results">
+    <h1 class="text-2xl font-bold mb-4">Database Integration Tests</h1>
+    <div id="loading">Running database tests...</div>
+    <div id="error" class="text-red-600 hidden"></div>
+    <div id="results" class="space-y-4 hidden">
+      <!-- Results will be inserted here -->
+    </div>
+  </div>
+</Layout>
+
+<script>
+  const loadingEl = document.getElementById('loading');
+  const errorEl = document.getElementById('error');
+  const resultsEl = document.getElementById('results');
+
+  async function runTests() {
+    try {
+      const response = await fetch('/api/test-db');
+      const data = await response.json();
+      
+      loadingEl?.classList.add('hidden');
+      
+      if (!data.success) {
+        errorEl?.classList.remove('hidden');
+        errorEl!.textContent = data.error || 'Test failed';
+        return;
+      }
+
+      resultsEl?.classList.remove('hidden');
+      
+      // Create test result elements
+      Object.entries(data.tests).forEach(([testName, result]: [string, any]) => {
+        const div = document.createElement('div');
+        div.className = 'border p-4 rounded';
+        div.innerHTML = `
+          <h2 class="font-semibold">
+            ${testName}: 
+            <span class="${result.success ? 'text-green-600' : 'text-red-600'}">
+              ${result.success ? '✓ Passed' : '✗ Failed'}
+            </span>
+          </h2>
+          ${result.error ? `<p class="text-red-600 mt-2">${result.error}</p>` : ''}
+        `;
+        resultsEl?.appendChild(div);
+      });
+
+      // Add summary
+      const summary = document.createElement('div');
+      summary.className = 'mt-4';
+      summary.innerHTML = `
+        <p class="${data.success ? 'text-green-600' : 'text-red-600'}">
+          ${data.success ? 'All tests passed!' : 'Some tests failed'}
+        </p>
+        ${data.message ? `<p class="mt-2 text-gray-600">${data.message}</p>` : ''}
+      `;
+      resultsEl?.appendChild(summary);
+    } catch (err) {
+      loadingEl?.classList.add('hidden');
+      errorEl?.classList.remove('hidden');
+      errorEl!.textContent = err instanceof Error ? err.message : 'An error occurred';
+    }
+  }
+
+  runTests();
+</script> 

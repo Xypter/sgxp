@@ -32,8 +32,8 @@ import { supabase } from '../../lib/supabaseClient';
             })
             .then(response => {
                 if (response.ok) {
-                    // Redirect to dashboard on success
-                    window.location.href = '/dashboard';
+                    // Redirect to profile on success
+                    window.location.href = '/profile';
                 } else {
                     // Redirect to login with error
                     window.location.href = '/login?error=no_session';
