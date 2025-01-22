@@ -22,7 +22,7 @@
     "paths": {
       "@/*": ["./*"]
     },
-    "typeRoots": ["./node_modules/@types", "visible-venus/lib/types"]
+    "typeRoots": ["./node_modules/@types", "./lib/types"]
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules"]
