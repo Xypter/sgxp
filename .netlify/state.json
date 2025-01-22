@@ -1,0 +1,20 @@
+{
+	"promptVSCodeSettings": true,
+	"geolocation": {
+		"data": {
+			"city": "Brasília",
+			"country": {
+				"code": "BR",
+				"name": "Brazil"
+			},
+			"subdivision": {
+				"code": "DF",
+				"name": "Federal District"
+			},
+			"timezone": "America/Sao_Paulo",
+			"latitude": -15.857,
+			"longitude": -47.943
+		},
+		"timestamp": 1704463031421
+	}
+}
