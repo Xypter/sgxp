@@ -10,8 +10,7 @@ This repo is a project to transition the current website to fit new technologies
 If you would like to work on this repository, there a just a few things you will need to know:
 
 1. You will need to make sure Node and NPM are installed on your machine
-2. Once you have cloned the repository, you will need to cd inside visible-venus as this is where the main directory of the project is located
-3. Once inside the directory, open your terminal in VS Code and type `npm run build` to have astro compile the project. Then once that's finished, type `npm run start` to start up Astro's localhost server to view the site.
+2. Once you have cloned the repository open your terminal in VS Code and type `npm run build` to have astro compile the project. Then once that's finished, type `npm run start` to start up Astro's localhost server to view the site.
 
 ## Contact
 

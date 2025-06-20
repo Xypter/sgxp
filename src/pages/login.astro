@@ -98,12 +98,12 @@ const handleUrlError = () => {
   const error = params.get('error');
   if (error) {
     const errorMessages = {
-      'no_auth_code': 'Authentication code missing. Please try again.',
-      'auth_error': 'Failed to authenticate with Discord. Please try again.',
-      'no_session': 'Failed to create session. Please try again.',
-      'auth_callback_failed': 'Authentication callback failed. Please try again.'
+      no_auth_code: 'No authorization code provided',
+      auth_error: 'Authentication failed',
+      no_session: 'No session found',
+      auth_callback_failed: 'Authentication callback failed'
     };
-    showError(errorMessages[error] || 'Authentication failed. Please try again.');
+    showError(error in errorMessages ? errorMessages[error as keyof typeof errorMessages] : 'Authentication failed. Please try again.');
   }
 };
 

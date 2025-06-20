@@ -198,12 +198,19 @@ if (accessToken && refreshToken) {
 
             if (profileError) throw profileError;
 
+            // Set default avatar for new user
+            await fetch('/api/auth/signup', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ user: signUpData.user })
+            });
+
             // Redirect to login page with success message
             window.location.href = '/login?registered=true';
             }
         } catch (error) {
             console.error('Error signing up:', error);
-            showError(error.message || 'Failed to create account. Please try again.');
+            showError(error instanceof Error ? error.message : 'Failed to create account. Please try again.');
         }
         });
   

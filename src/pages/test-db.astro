@@ -1,70 +1,135 @@
 ---
 import Layout from '../layouts/FrontPageLayout.astro';
+import pg from 'pg';
+const { Client } = pg;
+
+// Initialize the SQL client
+const sql = new Client({
+  host: import.meta.env.POSTGRES_HOST,
+  port: Number(import.meta.env.POSTGRES_PORT),
+  database: import.meta.env.POSTGRES_DATABASE,
+  username: import.meta.env.POSTGRES_USER,
+  password: import.meta.env.POSTGRES_PASSWORD
+});
+
+// Use Supabase client instead
+const { data: testData, error: testError } = await supabase
+  .from('your_table')
+  .select('*');
+
+// Run a simple test query
+let testResults;
+try {
+  // Test basic connection
+  await supabase.from('your_table').select('*');
+  
+  // Get all tables and their schemas with foreign key information
+  const tableInfo = await supabase.from('information_schema.table_constraints').select('*');
+
+  console.log('Schema Info:', JSON.stringify(tableInfo, null, 2));
+
+  // Get custom enum types
+  const enumTypes = await supabase.from('pg_type').select('*');
+
+  // Get all tables
+  const tables: { table_name: string, table_schema: string }[] = await supabase.from('information_schema.tables').select('*');
+
+  // Get columns for each table
+  const tableTests = {};
+  for (const {table_name, table_schema} of tables) {
+    const columns = await supabase.from('information_schema.columns').select('*').eq('table_name', table_name).eq('table_schema', table_schema);
+    
+    const fullTableName = table_schema === 'public' ? table_name : `${table_schema}.${table_name}`;
+    tableTests[`Table '${fullTableName}'`] = {
+      success: true,
+      details: columns.map(col => ({
+        name: col.column_name,
+        type: col.data_type,
+        nullable: col.is_nullable === 'YES',
+        isPrimaryKey: col.is_primary_key,
+        references: col.references
+      }))
+    };
+  }
+
+  testResults = {
+    success: true,
+    tests: {
+      'Database Connection': { success: true },
+      'Custom Types': {
+        success: true,
+        details: enumTypes.map(type => ({
+          name: type.typname,
+          values: type.enumlabel
+        }))
+      },
+      ...tableTests
+    },
+    message: `Found ${tables.length} tables and ${enumTypes.length} custom types`
+  };
+
+} catch (error: any) {
+  console.error('Database Error:', error);
+  testResults = {
+    success: false,
+    tests: {
+      'Database Connection': {
+        success: false,
+        error: error.message
+      }
+    },
+    message: 'Failed to connect to PostgreSQL'
+  };
+}
 ---
 
 <Layout title="Database Tests">
   <div class="p-4" id="test-results">
-    <h1 class="text-2xl font-bold mb-4">Database Integration Tests</h1>
-    <div id="loading">Running database tests...</div>
-    <div id="error" class="text-red-600 hidden"></div>
-    <div id="results" class="space-y-4 hidden">
-      <!-- Results will be inserted here -->
-    </div>
-  </div>
-</Layout>
-
-<script>
-  const loadingEl = document.getElementById('loading');
-  const errorEl = document.getElementById('error');
-  const resultsEl = document.getElementById('results');
-
-  async function runTests() {
-    try {
-      const response = await fetch('/api/test-db');
-      const data = await response.json();
-      
-      loadingEl?.classList.add('hidden');
-      
-      if (!data.success) {
-        errorEl?.classList.remove('hidden');
-        errorEl!.textContent = data.error || 'Test failed';
-        return;
-      }
-
-      resultsEl?.classList.remove('hidden');
-      
-      // Create test result elements
-      Object.entries(data.tests).forEach(([testName, result]: [string, any]) => {
-        const div = document.createElement('div');
-        div.className = 'border p-4 rounded';
-        div.innerHTML = `
+    <h1 class="text-2xl font-bold mb-4">Database Schema Tests</h1>
+    <div id="results" class="space-y-4">
+      {Object.entries(testResults.tests).map(([testName, result]: [string, any]) => (
+        <div class="border p-4 rounded">
           <h2 class="font-semibold">
-            ${testName}: 
-            <span class="${result.success ? 'text-green-600' : 'text-red-600'}">
-              ${result.success ? '✓ Passed' : '✗ Failed'}
+            {testName}: 
+            <span class={result.success ? 'text-green-600' : 'text-red-600'}>
+              {result.success ? '✓ Passed' : '✗ Failed'}
             </span>
           </h2>
-          ${result.error ? `<p class="text-red-600 mt-2">${result.error}</p>` : ''}
-        `;
-        resultsEl?.appendChild(div);
-      });
-
-      // Add summary
-      const summary = document.createElement('div');
-      summary.className = 'mt-4';
-      summary.innerHTML = `
-        <p class="${data.success ? 'text-green-600' : 'text-red-600'}">
-          ${data.success ? 'All tests passed!' : 'Some tests failed'}
+          {result.error && <p class="text-red-600 mt-2">{result.error}</p>}
+          {result.details && (
+            <div class="mt-2 text-sm">
+              <table class="min-w-full">
+                <thead>
+                  <tr>
+                    <th class="text-left">Column</th>
+                    <th class="text-left">Type</th>
+                    <th class="text-left">Nullable</th>
+                    <th class="text-left">Key</th>
+                    <th class="text-left">References</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {result.details.map((col: any) => (
+                    <tr>
+                      <td class="pr-4">{col.name}</td>
+                      <td class="pr-4">{col.type}</td>
+                      <td class="pr-4">{col.nullable ? 'Yes' : 'No'}</td>
+                      <td class="pr-4">{col.isPrimaryKey ? 'PK' : ''}</td>
+                      <td class="pr-4">{col.references || ''}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      ))}
+      <div class="mt-4">
+        <p class={testResults.success ? 'text-green-600' : 'text-red-600'}>
+          {testResults.success ? 'All tests passed!' : 'Some tests failed'}
         </p>
-        ${data.message ? `<p class="mt-2 text-gray-600">${data.message}</p>` : ''}
-      `;
-      resultsEl?.appendChild(summary);
-    } catch (err) {
-      loadingEl?.classList.add('hidden');
-      errorEl?.classList.remove('hidden');
-      errorEl!.textContent = err instanceof Error ? err.message : 'An error occurred';
-    }
-  }
-
-  runTests();
-</script> 
+        {testResults.message && <p class="mt-2 text-gray-600">{testResults.message}</p>}
+      </div>
+    </div>
+  </div>
+</Layout> 
