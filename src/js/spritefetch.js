@@ -180,91 +180,85 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function fetchAndSortSprites(sortBy) {
-    // Append sorting query parameter based on the selected option
-    const urlWithSorting = sortBy ? `${apiUrl}&sort=${sortBy}&pagination[page]=${currentPage}` : `${apiUrl}&sort=createdAt:desc&pagination[page]=${currentPage}`;
+  // Append sorting query parameter based on the selected option
+  const urlWithSorting = sortBy
+    ? `${apiUrl}&sort=${sortBy}&pagination[page]=${currentPage}`
+    : `${apiUrl}&sort=createdAt:desc&pagination[page]=${currentPage}`;
 
-    console.log(urlWithSorting);
+  console.log(urlWithSorting);
 
-    return fetch(urlWithSorting)
-      .then(res => {
-        if (!res.ok) {
-          throw new Error(`Network response was not ok: ${res.statusText}`);
-        }
-        return res.json();
-      })
-      .then(data => {
-        // Extract pageCount from the API response
-        pageCount = data.meta.pagination.pageCount;
+  return fetch(urlWithSorting)
+    .then(res => {
+      if (!res.ok) {
+        throw new Error(`Network response was not ok: ${res.statusText}`);
+      }
+      return res.json();
+    })
+    .then(data => {
+      // Extract pageCount from the API response
+      pageCount = data.meta.pagination.pageCount;
 
-        const spritePromises = data.data.map(sprite => {
-          return fetch(`https://analytics.sgxp.me/api/websites/c78c6fb7-bd5f-4715-8af5-f794ad7b3584/stats?startAt=1672578061000&endAt=${todaysDate}&url=/sprites/${sprite.id}`, {
-            headers: { Authorization: `Bearer ${umamiKey}` }
-          })
-            .then(res => res.json())
-            .then(data => {
-              let views = data.pageviews.value;
+      const spritePromises = data.data.map(sprite => {
+        // Assume the following functions return dynamically fed values
+        const countValue = count(sprite.id);
+        const titleValue = sprite.attributes.title;
+        const iconImageUrl = `https://api.sgxp.me${sprite.attributes.iconimage.data.attributes.url}`;
+        const authorName = sprite.attributes.author.data.attributes.name;
+        const gameName = sprite.attributes.game.data.attributes.name;
+        const createdByUsername = sprite.attributes.createdBy.username;
+        const sizeValue = formatBytes(sprite.attributes.spritesheet.data.attributes.size * 1000, 2);
 
-              // Assume the following functions return dynamically fed values
-              const countValue = count(sprite.id);
-              const titleValue = sprite.attributes.title;
-              const iconImageUrl = `https://api.sgxp.me${sprite.attributes.iconimage.data.attributes.url}`;
-              const authorName = sprite.attributes.author.data.attributes.name;
-              const gameName = sprite.attributes.game.data.attributes.name;
-              const createdByUsername = sprite.attributes.createdBy.username;
-              const sizeValue = formatBytes(sprite.attributes.spritesheet.data.attributes.size * 1000, 2);
-
-              return `
-              <a href="/sprites/${sprite.id}" class="sprite-box" target="_blank">
-                <div class="sprite-star-container">
-                  <div class="sprite-star"></div>
-                  <div class="sprite-star"></div>
-                  <div class="sprite-star"></div>
-                  <div class="sprite-star"></div>
-                  <div class="sprite-star"></div>
-                  <div class="sprite-star"></div>
-                  <div class="sprite-star"></div>
-                  <div class="sprite-star"></div>
-                  <div class="sprite-star"></div>
-                  <div class="sprite-star"></div>
-                </div>
-                <div class="sprite-number">${countValue}</div>
-                <div class="sprite-title">
-                  <div id="author" class="sprite-text">${titleValue}</div>
-                </div>
-                <div class="sprite-image">
-                  <img src="${iconImageUrl}" alt="">
-                </div>
-                <div class="sprite-author">
-                  <div class="sprite-text">${authorName}</div>
-                </div>
-                <div class="sprite-stats">
-                  <div class="sprite-text">${gameName}</div>
-                </div>
-                <div class="sprite-stats">
-                  <div class="sprite-text">${createdByUsername}</div>
-                </div>
-                <div class="sprite-stats">
-                  <div class="sprite-text">${views}</div>
-                </div>
-                <div class="sprite-stats">
-                  <div class="sprite-text">${sizeValue}</div>
-                </div>
-              </a>
-              `;
-            });
-        });
-
-        // Use Promise.all to wait for all fetches to complete
-        return Promise.all(spritePromises)
-          .then(spriteHtmlArray => {
-            // Combine the HTML strings and append to the div
-            div.innerHTML += spriteHtmlArray.join('');
-          })
-          .catch(error => {
-            console.error('Error fetching sprite data:', error);
-          });
+        return Promise.resolve(`
+          <a href="/sprites/${sprite.id}" class="sprite-box" target="_blank">
+            <div class="sprite-star-container">
+              <div class="sprite-star"></div>
+              <div class="sprite-star"></div>
+              <div class="sprite-star"></div>
+              <div class="sprite-star"></div>
+              <div class="sprite-star"></div>
+              <div class="sprite-star"></div>
+              <div class="sprite-star"></div>
+              <div class="sprite-star"></div>
+              <div class="sprite-star"></div>
+              <div class="sprite-star"></div>
+            </div>
+            <div class="sprite-number">${countValue}</div>
+            <div class="sprite-title">
+              <div id="author" class="sprite-text">${titleValue}</div>
+            </div>
+            <div class="sprite-image">
+              <img src="${iconImageUrl}" alt="">
+            </div>
+            <div class="sprite-author">
+              <div class="sprite-text">${authorName}</div>
+            </div>
+            <div class="sprite-stats">
+              <div class="sprite-text">${gameName}</div>
+            </div>
+            <div class="sprite-stats">
+              <div class="sprite-text">${createdByUsername}</div>
+            </div>
+            <div class="sprite-stats">
+              <div class="sprite-text">69</div>
+            </div>
+            <div class="sprite-stats">
+              <div class="sprite-text">${sizeValue}</div>
+            </div>
+          </a>
+        `);
       });
-  }
+
+      // Use Promise.all to wait for all sprite HTML blocks
+      return Promise.all(spritePromises)
+        .then(spriteHtmlArray => {
+          div.innerHTML += spriteHtmlArray.join('');
+        })
+        .catch(error => {
+          console.error('Error building sprite HTML:', error);
+        });
+    });
+}
+
 
   // Fetch and display sprites on page load with default sorting
   fetchAndSortSprites(sortBy).finally(() => {

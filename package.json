@@ -11,12 +11,12 @@
     "setup-db": "tsx src/db/setup-db.ts"
   },
   "dependencies": {
-    "@astrojs/netlify": "^6.0.1",
-    "@astrojs/node": "^9.0.0",
+    "@astrojs/netlify": "^6.5.7",
+    "@astrojs/node": "^9.4.2",
     "@aws-sdk/client-s3": "^3.732.0",
     "@supabase/supabase-js": "^2.47.10",
     "@types/dotenv": "^8.2.3",
-    "astro": "^5.1.2",
+    "astro": "^5.13.2",
     "datatables.net-dt": "^2.1.8",
     "datatables.net-responsive-dt": "^3.0.3",
     "datatables.net-searchpanes-dt": "^2.3.3",

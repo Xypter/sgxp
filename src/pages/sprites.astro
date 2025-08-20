@@ -37,7 +37,46 @@ import FrontPageLayout from "../layouts/FrontPageLayout.astro";
 
         <div id="hello" class="sprite-container">
 
-        </div>
+        </div>      
     </div>
   </div>
+
+  <input id="textInput" placeholder="Type your message" />
+<button onclick="renderText()">Render</button>
+<div id="output"></div>
+
+<script is:inline src="https://pixijs.download/release/pixi.min.js"></script>
+<script is:inline>
+  let app = new PIXI.Application({
+    width: 300,
+    height: 100,
+    backgroundAlpha: 0
+  });
+  document.getElementById('output').appendChild(app.view);
+
+  // Load your bitmap font
+  PIXI.Assets.addBundle('fonts', {
+    pixeltinyFnt: '/src/styles/fonts/pixeltiny.fnt',  // Your exported .fnt file
+  });
+
+  PIXI.Assets.loadBundle('fonts').then(() => {
+    renderText();
+  });
+
+  function renderText() {
+    const userInput = document.getElementById('textInput').value || 'Hello Pixi!';
+
+    app.stage.removeChildren(); // Clear previous text
+
+    const text = new PIXI.BitmapText(userInput, {
+      fontName: 'pixeltiny', // Must match name in .fnt file
+      fontSize: 16,
+      tint: 0xffffff
+    });
+
+    text.x = 10;
+    text.y = 20;
+    app.stage.addChild(text);
+  }
+</script>
 </FrontPageLayout>

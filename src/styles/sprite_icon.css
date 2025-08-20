@@ -233,7 +233,7 @@ body {
   justify-content: flex-start;
   align-items: flex-start;
   margin-top: calc(4px * var(--multiplication-factor));
-  margin-left: calc(24px * var(--multiplication-factor));
+  margin-left: calc(23px * var(--multiplication-factor));
   margin-right: calc(3px * var(--multiplication-factor));
   width: calc(110px * var(--multiplication-factor));
 }
