@@ -4,7 +4,6 @@
 	import { Button } from '../components/ui/button/index.ts';
 	import * as Select from "../components/ui/select/index.ts";
 	import { Input } from '../components/ui/input/index.ts';
-	import { Badge } from '../components/ui/badge/index.ts';
 	// Updated interface to match your API structure
 	interface ImageData {
 		id: number;
