@@ -1,82 +1,19 @@
 ---
 import FrontPageLayout from "../layouts/FrontPageLayout.astro";
-
+import SpriteBrowser from "../components/SpriteBrowser.svelte";
 ---
 
 <FrontPageLayout title="Sprites">
-
-  <script src="/src/js/spritefetch.js"></script>
-    <div class="sprite-page-container">
-      <div class="categories-container-group">
-        <div class="categories-container-title">Author</div>
-        <div class="categories-container-main"></div>
-        <div class="categories-container-title">Game</div>
-        <div class="categories-container-main"></div>
-        <div class="categories-container-title">Character</div>
-        <div class="categories-container-main"></div>
-      </div>
-      <div class="sprite-container-group">
-        <div class="sprite-container-title">Sprite Index</div>
-
-        <div class="custom-select-container">
-          <div class="custom-select">
-            <select class="sprite-select">
-              <option value="">Sort by</option>
-              <option value="createdAt:desc">Newest</option>
-              <option value="createdAt:asc">Oldest</option>
-              <option value="views:DESC">Most Viewed</option>
-            </select>
-          </div>
-          <p class="page-number" id="pageNumber">1</p>
-          <button class="arrow-button" id="incrementButton">Next Page</button>
-          <button class="arrow-button" id="decrementButton">Previous Page</button>
-          
-          
-        </div>
-        
-
-        <div id="hello" class="sprite-container">
-
-        </div>      
+  <div class="sprite-page-container">
+    <div class="flex flex-col items-center justify-start w-full">
+      <SpriteBrowser client:load />
     </div>
   </div>
 
-  <input id="textInput" placeholder="Type your message" />
-<button onclick="renderText()">Render</button>
-<div id="output"></div>
-
-<script is:inline src="https://pixijs.download/release/pixi.min.js"></script>
-<script is:inline>
-  let app = new PIXI.Application({
-    width: 300,
-    height: 100,
-    backgroundAlpha: 0
-  });
-  document.getElementById('output').appendChild(app.view);
-
-  // Load your bitmap font
-  PIXI.Assets.addBundle('fonts', {
-    pixeltinyFnt: '/src/styles/fonts/pixeltiny.fnt',  // Your exported .fnt file
-  });
-
-  PIXI.Assets.loadBundle('fonts').then(() => {
-    renderText();
-  });
-
-  function renderText() {
-    const userInput = document.getElementById('textInput').value || 'Hello Pixi!';
-
-    app.stage.removeChildren(); // Clear previous text
-
-    const text = new PIXI.BitmapText(userInput, {
-      fontName: 'pixeltiny', // Must match name in .fnt file
-      fontSize: 16,
-      tint: 0xffffff
+  <script is:inline>
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Sprites page loaded');
     });
-
-    text.x = 10;
-    text.y = 20;
-    app.stage.addChild(text);
-  }
-</script>
+  </script>
+  <script src="https://unpkg.com/opentype.js@1.3.4/dist/opentype.min.js"></script>
 </FrontPageLayout>

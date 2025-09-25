@@ -3,7 +3,10 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "$lib/*": ["src/lib/*"],
+      "$components/*": ["src/components/*"]
     }
-  }
+  },
+  "include": ["src/**/*", "src/types/window.d.ts"]
 } 

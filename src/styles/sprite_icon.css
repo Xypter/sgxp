@@ -2,14 +2,12 @@
   --multiplication-factor: 1;
   --number-shadow: #002806;
   --text-shadow: #4b4b54;
-  --font-size: 16px;
+  --font-size: 10px;
 }
 
 @font-face {
   font-family: sprite;
-  src: url('/src/styles/fonts/PixelTiny.ttf');
-  font-weight: normal;
-  font-style: normal; 
+  src: url('/src/styles/fonts/saira.ttf');
 }
 
 body {
@@ -20,17 +18,12 @@ body {
 }
 
 .sprite-page-container {
-  display: grid;
-  grid-gap: var(--gap);
-  grid-template-columns: 200px 1fr;
-  grid-template-rows: auto;
-  grid-template-areas:
-  "categories sprites";
-  max-width: 1200px;
-  min-height: 100%;
-  height: auto;
-  margin: auto;
-  padding: 20px;
+  display: block; /* Changed from grid */
+  width: 80%;
+  margin: 0 auto;
+  padding: 2rem;
+  min-height: 100vh;
+  overflow: visible;
 }
 
 .categories-container-group {
@@ -72,17 +65,16 @@ body {
 
 .sprite-container-group {
   grid-area: sprites;
-  min-width: 1000px;
 }
 
 .sprite-container-title {
   display: block;
   background: color-mix(in srgb, var(--page-color) 60%, black);
-  padding: 0px 0px 3px 10px;
+  padding: 3px 0px 3px 10px;
   text-rendering:geometricPrecision;
-  font-family: 'main-content-title';
-  font-size: 16px;
-  line-height: 20px;
+  font-family: 'sprite';
+  font-weight: 900;
+  font-size: 18px;
 
   text-shadow:
   calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
@@ -93,25 +85,26 @@ body {
 }
 
 .sprite-container {
-  display: flex;
-  flex-flow: row wrap;
-  justify-content: flex-start;
-  padding: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 120px);
+  grid-gap: 20px;
+  justify-content: center;
+  align-content: flex-start;
+  padding: 0 15px 40px 15px;
   background-color: var(--page-color);
   box-shadow: 10px 10px 0px rgba(0,0,0,0.7);
-
   border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
   border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
   border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
-
   min-height: 630px;
+  max-width: 100%; /* Ensure it doesn't overflow */
+  margin-bottom: 50px;
 }
 
 .sprite-box {  
   width: calc(117px * var(--multiplication-factor));
-  height: calc(188px * var(--multiplication-factor));
-  background-image: url("/img/spriteicon/icon_image.svg");
-  margin: 10px;
+  height: calc(192px * var(--multiplication-factor));
+  background-image: url("/img/spriteicon/icon_image.png");
   user-select: none;
   transition: transform ease-in-out .2s;
   text-decoration: none;
@@ -119,16 +112,44 @@ body {
   box-shadow: 10px 10px 0px rgba(0,0,0,0.7);
   animation: fadein-top .5s, fadeout 1s; /* Add fade-out animation */
   transform: translateY(calc(-.1px * var(--multiplication-factor))); /*forced hardware acceleration*/
+
+  position: relative;
+}
+
+.sprite-box::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  right: -1px;
+  bottom: -1px;
+  border-radius: 4px;
+  box-shadow: 
+    1px 0px 0 #22ff80,
+    1px 1px 0 #22ff80,
+    0px 1px 0 #22ff80,
+    -1px 0px 0 #22ff80,
+    -1px -1px 0 #22ff80,
+    0px -1px 0 #22ff80,
+    1px -1px 0 #22ff80,
+    -1px 1px 0 #22ff80;
+  opacity: 0;
+  transition: opacity .1s ease-in-out;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.sprite-box:hover::before {
+  opacity: 1;
+}
+
+.sprite-box:nth-last-child {
+  padding-bottom: 50px;
 }
 
 .fade-out {
   animation: fadein-bottom .5s; /* Use fade-out animation */
   opacity: 0; /* Set initial opacity to 0 */
-}
-
-.sprite-box:hover {
-  transform: translateY(calc(-5px * var(--multiplication-factor)));
-  animation: fadein-top .7s;
 }
 
 .sprite-page-container a {
@@ -138,7 +159,7 @@ body {
 
 .sprite-page-container a:hover {
   padding: 0;
-  background-image: url("/img/spriteicon/icon_image.svg");
+  background-image: url("/img/spriteicon/icon_image.png");
 }
 
 .sprite-page-container a:visited {
@@ -164,22 +185,26 @@ body {
 }
 
 .sprite-number {
-  font-family: 'sprite', monospace;
-  font-size: calc(var(--font-size) * var(--multiplication-factor));
+  font-family: sprite;
+  font-weight: 700;
+  font-style: normal;
+  font-size: calc(9px * var(--multiplication-factor));
   user-select: none;
   display: flex;
   justify-content: right;
   line-height: 0;
-  margin-right: calc(6px * var(--multiplication-factor));
+  margin-right: calc(5px * var(--multiplication-factor));
   margin-top: calc(3px * var(--multiplication-factor));
   text-shadow: calc(1px * var(--multiplication-factor)) 0px var(--number-shadow), 0px calc(1px * var(--multiplication-factor)) var(--number-shadow), calc(1px * var(--multiplication-factor)) calc(1px * var(--multiplication-factor)) var(--number-shadow);
 }
 
 .sprite-text {
-  font-family: 'sprite', monospace;
+  font-family: sprite;
+  font-weight: 500;
+  font-style: normal;
   user-select: none;
   font-size: calc(var(--font-size) * var(--multiplication-factor));
-  line-height: calc(7px * var(--multiplication-factor));
+  line-height: calc(8px * var(--multiplication-factor));
   text-align: center;
 }
 
@@ -200,14 +225,26 @@ body {
   justify-content: center;
   align-items: center;
   image-rendering: pixelated;
-  pointer-events: none;
-  height: calc(71px * var(--multiplication-factor));
-  width: calc(103px * var(--multiplication-factor));  
-  margin-top: calc(5px * var(--multiplication-factor));
+  margin-top: calc(7px * var(--multiplication-factor));
   margin-left: calc(7px * var(--multiplication-factor));
-  margin-right: calc(6px * var(--multiplication-factor));
+  margin-right: calc(7px * var(--multiplication-factor));
   object-fit: cover;
   overflow: hidden;
+
+  background: url("/img/spriteicon/white-bg.png"),
+              linear-gradient(0deg,#002705 0%, #12a740 100%);
+  background-blend-mode: overlay;
+  background-position: left 0px bottom 0px;
+}
+
+.sprite-box:hover .sprite-image {
+  animation: 200s grid-para infinite linear;
+}
+
+@keyframes grid-para {
+  100% {
+    background-position: left -3000px bottom 0px;
+  }
 }
 
 .sprite-image > img {
@@ -219,11 +256,11 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: calc(-2px * var(--multiplication-factor));
+  margin-top: calc(0px * var(--multiplication-factor));
   margin-left: calc(13px * var(--multiplication-factor));
   margin-right: calc(12px * var(--multiplication-factor));
-  margin-bottom: calc(0spx * var(--multiplication-factor));
-  height: calc(26px * var(--multiplication-factor));
+  margin-bottom: calc(0px * var(--multiplication-factor));
+  height: calc(18px * var(--multiplication-factor));
   width: calc(93px * var(--multiplication-factor));
   overflow-wrap: anywhere;
 }
@@ -232,14 +269,14 @@ body {
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
-  margin-top: calc(4px * var(--multiplication-factor));
-  margin-left: calc(23px * var(--multiplication-factor));
+  margin-top: calc(5px * var(--multiplication-factor));
+  margin-left: calc(24px * var(--multiplication-factor));
   margin-right: calc(3px * var(--multiplication-factor));
   width: calc(110px * var(--multiplication-factor));
 }
 
 .sprite-stats:nth-child(n+2) {
-  height: calc(5px * var(--multiplication-factor));
+  height: calc(6px * var(--multiplication-factor));
 }
 
 @keyframes fadein-top {
@@ -357,3 +394,91 @@ body {
 .arrow-button:active {
   background-color: color-mix(in srgb, var(--page-color) 60%, black);
 }
+
+/* Remove the old categories container styles since we're not using them */
+.categories-container-group,
+.categories-container-title,
+.categories-container-main {
+  display: none;
+}
+
+/* Remove old custom select styles and replace with modern approach */
+.custom-select-container,
+.custom-select,
+.select-selected,
+.select-items,
+.select-hide,
+.page-number,
+.arrow-button {
+  display: none;
+}
+
+/* Add search section styling */
+.search-section {
+  background: var(--page-color);
+  border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 10px 10px 0px rgba(0,0,0,0.7);
+}
+
+.search-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.search-bar-container {
+  margin-top: 1.5rem;
+}
+
+/* Results section */
+.results-section {
+  min-height: 400px;
+  position: relative;
+}
+
+.pagination-section {
+  background-color: var(--page-color);
+  border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1240px) {
+  .sprite-page-container {
+    max-width: 100%;
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .search-section {
+    padding: 1rem;
+  }
+  
+  .search-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .sprite-container {
+    min-height: 400px;
+  }
+}
+
+.sprite-text canvas {
+    display: block !important;
+    image-rendering: pixelated !important;
+    image-rendering: -moz-crisp-edges !important;
+    image-rendering: crisp-edges !important;
+  }
+  
+  /* Custom pagination styling to match your theme */
+  .pagination-wrapper {
+    background-color: var(--page-color);
+    border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  }
