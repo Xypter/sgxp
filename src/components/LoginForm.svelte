@@ -105,15 +105,15 @@
         loginError = '';
 
         try {
-            const response = await fetch('https://cms.sgxp.me/api/users/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include', // Important for cookies
-            body: JSON.stringify({
-                email: loginFormData.email,
-                password: loginFormData.password,
-            }),
-            });
+            const response = await fetch('/api/users/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    email: loginFormData.email,
+                    password: loginFormData.password,
+                }),
+                });
 
             console.log('Response headers:', response.headers);
             console.log('Response status:', response.status);
@@ -241,7 +241,7 @@
 					<Card.Title class="text-lg theme-title">Check Your Email!</Card.Title>
 					<Card.Description class="theme-description">
 						We've sent you a verification email. Please check your inbox and click the verification link
-						to activate your account.
+                        to activate your account before you can log in.
 					</Card.Description>
 					<Button on:click={handleSwitchToLogin} class="theme-button">
 						Back to Login

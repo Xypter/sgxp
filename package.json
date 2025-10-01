@@ -44,6 +44,7 @@
     "jquery-ui": "^1.13.2",
     "jsdom": "^23.0.1",
     "lucide-react": "^0.540.0",
+    "lucide-svelte": "^0.544.0",
     "markdown-it": "^14.0.0",
     "marked": "^11.1.0",
     "next": "^15.1.4",

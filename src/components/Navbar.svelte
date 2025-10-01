@@ -47,7 +47,7 @@
   // Function to check authentication status
 async function checkAuthStatus(): Promise<void> {
   try {
-    const response = await fetch(`${baseURL}/api/users/me`, {
+    const response = await fetch('/api/users/me', {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',

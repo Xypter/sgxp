@@ -526,7 +526,7 @@
 				</div>
 			{:else if sprites.length > 0}
 				{#each sprites as sprite (sprite.id)}
-					<a href={`/sprites/${sprite.id}`} class="sprite-box sprite-glow" target="_blank">
+					<a href={`/sprites/${sprite.id}`} class="sprite-box sprite-glow">
 						<div class="sprite-star-container">
 							{#each Array.from({ length: 10 }) as _, index}
 								<div class="sprite-star"></div>

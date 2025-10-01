@@ -9,7 +9,8 @@ import "../styles/sprite_icon.css";
 import SGXPNavbar from "../components/Navbar.svelte";
 
 // Import types from the .tsx file
-import type { User, ThemeValue } from '../components/SGXPNavbar.tsx';
+import ThemeValue from '../components/Navbar.svelte';
+import User from '../components/Navbar.svelte';
 
 // Get the theme from the cookie during SSR to prevent flashing
 const themeFromCookie = (Astro.cookies.get('theme')?.value as ThemeValue) || "style_v7";

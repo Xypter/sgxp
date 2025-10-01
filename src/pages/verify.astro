@@ -1,0 +1,180 @@
+---
+// src/pages/verify.astro
+import FrontPageLayout from '../layouts/FrontPageLayout.astro';
+
+const token = Astro.url.searchParams.get('token');
+const email = Astro.url.searchParams.get('email');
+
+let verificationResult = null;
+let errorMessage = '';
+
+if (token && email) {
+  try {
+    const response = await fetch(`${import.meta.env.PUBLIC_PAYLOAD_URL}/api/users/verify/${token}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    if (response.ok) {
+      verificationResult = 'success';
+    } else {
+      const errorData = await response.json().catch(() => ({}));
+      verificationResult = 'error';
+      errorMessage = errorData.message || 'Verification failed. The link may have expired.';
+    }
+  } catch (error) {
+    verificationResult = 'error';
+    errorMessage = 'Network error occurred during verification.';
+  }
+} else {
+  verificationResult = 'invalid';
+}
+---
+
+<FrontPageLayout title="Email Verification - SGXP">
+  <div class="theme-compatible-verification">
+    {verificationResult === 'success' && (
+      <div class="verification-card">
+        <div class="card-content">
+          <div class="text-center space-y-4">
+            <div class="text-4xl">✅</div>
+            <h1 class="verification-title">Email Verified Successfully!</h1>
+            <p class="verification-description">
+              Welcome to SGXP! Your account has been verified and you're ready to start sharing sprites with our community.
+            </p>
+            <a href="/login" class="verification-button">
+              Sign In to Your Account
+            </a>
+          </div>
+        </div>
+      </div>
+    )}
+    
+    {verificationResult === 'error' && (
+      <div class="verification-card">
+        <div class="card-content">
+          <div class="text-center space-y-4">
+            <div class="text-4xl">❌</div>
+            <h1 class="verification-title">Verification Failed</h1>
+            <p class="verification-description">
+              {errorMessage || 'Your verification link may have expired or is invalid. Please try registering again.'}
+            </p>
+            <a href="/login" class="verification-button">
+              Try Registering Again
+            </a>
+          </div>
+        </div>
+      </div>
+    )}
+    
+    {verificationResult === 'invalid' && (
+      <div class="verification-card">
+        <div class="card-content">
+          <div class="text-center space-y-4">
+            <div class="text-4xl">⚠️</div>
+            <h1 class="verification-title">Invalid Verification Link</h1>
+            <p class="verification-description">
+              This verification link appears to be malformed or incomplete. Please check your email for the correct link.
+            </p>
+            <a href="/login" class="verification-button">
+              Go to Login
+            </a>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+</FrontPageLayout>
+
+<style>
+  .theme-compatible-verification {
+    margin: auto;
+    margin-top: 200px;
+    width: 100%;
+    max-width: 400px;
+    padding: 0 1rem;
+  }
+
+  .verification-card {
+    background: var(--page-color);
+    border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    border-radius: 0px;
+    box-shadow: var(--box-shadow);
+    width: 100%;
+  }
+
+  .card-content {
+    padding: 2rem;
+  }
+
+  .verification-title {
+    color: var(--font-color);
+    font-family: 'saira', monospace;
+    font-weight: 800;
+    font-size: 1.5rem;
+    text-shadow: 1px 0px 0 var(--bg-color), 1px 1px 0 var(--bg-color), 0px 1px 0 var(--bg-color);
+    margin: 0 0 1rem 0;
+  }
+  
+  .verification-description {
+    color: var(--font-color);
+    font-family: 'saira', monospace;
+    opacity: 0.8;
+    margin: 1rem 0;
+    line-height: 1.6;
+  }
+
+  .verification-button {
+    display: inline-block;
+    background: var(--font-link-color);
+    color: var(--page-color);
+    border: none;
+    border-radius: 0px;
+    font-family: 'saira', monospace;
+    font-weight: 400;
+    font-size: 14px;
+    padding: 12px 24px;
+    text-decoration: none;
+    transition: all var(--transition-speed, 200ms) ease-in-out;
+    cursor: url('/img/Sonic_Cursor.png'), pointer;
+    box-shadow: var(--box-shadow);
+    margin-top: 1rem;
+  }
+  
+  .verification-button:hover {
+    background: color-mix(in srgb, var(--font-link-color) 80%, white);
+    cursor: url('/img/Sonic_Cursor_Spin.gif'), progress;
+    transform: translateY(-1px);
+  }
+
+  .text-center {
+    text-align: center;
+  }
+
+  .space-y-4 > * + * {
+    margin-top: 1rem;
+  }
+
+  .text-4xl {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+  }
+
+  @media (max-width: 800px) {
+    .theme-compatible-verification {
+      max-width: 100%;
+      padding: 0 1rem;
+      margin-top: 100px;
+    }
+
+    .verification-title {
+      font-size: 1.25rem;
+    }
+
+    .card-content {
+      padding: 1.5rem;
+    }
+  }
+</style>
