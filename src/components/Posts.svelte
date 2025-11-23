@@ -1,6 +1,6 @@
 <script>
     import { format, parseISO } from "date-fns";
-    import * as Pagination from "../components/ui/pagination/index.ts";
+    import * as Pagination from "$components/ui/pagination";
     import { MediaQuery } from "svelte/reactivity";
 
     // Reactive state using Svelte's new runes API

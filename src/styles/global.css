@@ -613,4 +613,5 @@ body[data-scroll-locked][data-scroll-locked] {
 
 body {
   padding-right: 0 !important;
+  overflow:visible !important;
 }

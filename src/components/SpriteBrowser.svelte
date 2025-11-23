@@ -1,9 +1,15 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { charMap, altNumberMap } from '../lib/charMap.js';
-	import { Button } from '../components/ui/button/index.ts';
-	import * as Select from "../components/ui/select/index.ts";
-	import { Input } from '../components/ui/input/index.ts';
+
+	// Import from component library
+	import { Button, SearchBar } from '$lib/components';
+
+	// Import shadcn components we don't have wrappers for
+	import * as Select from "$components/ui/select";
+
+	import SpriteViewer from './SpriteViewer.svelte';
+
 	// Updated interface to match your API structure
 	interface ImageData {
 		id: number;
@@ -65,6 +71,13 @@
 	let typeFilter = $state('all');
 	let isFetchingInProgress = $state(false);
 	let searchTerm = $state('');
+
+	// Modal state
+	let modalOpen = $state(false);
+	let modalSprite = $state<Sprite | null>(null);
+	let modalLoading = $state(false);
+	let transitioningCardId = $state<number | null>(null);
+
 	// Derived values for select triggers
 	const sortOptions = [
 		{ value: "createdAt:desc", label: "Newest First" },
@@ -364,6 +377,96 @@
 		return rangeWithDots;
 	}
 
+	// Modal functions
+	async function openSpriteModal(sprite: Sprite, event?: MouseEvent) {
+		// If this is from a click event, prevent default navigation
+		if (event) {
+			event.preventDefault();
+		}
+
+		transitioningCardId = sprite.id;
+		
+		// Check if View Transitions API is supported
+		const supportsViewTransitions = 'startViewTransition' in document;
+		
+		const openModal = async () => {
+			modalSprite = sprite;
+			modalOpen = true;
+			document.body.style.overflow = 'hidden';
+			
+			// Push state to history
+			history.pushState(
+				{ spriteModal: true, spriteId: sprite.id },
+				'',
+				`/sprites/${sprite.id}`
+			);
+			
+			// Small delay to ensure transition completes
+			await new Promise(resolve => setTimeout(resolve, 100));
+			transitioningCardId = null;
+		};
+
+		if (supportsViewTransitions) {
+			// @ts-ignore - View Transitions API
+			await document.startViewTransition(openModal).finished;
+		} else {
+			await openModal();
+		}
+	}
+
+	function closeSpriteModal() {
+		const supportsViewTransitions = 'startViewTransition' in document;
+		
+		const closeModal = () => {
+			modalOpen = false;
+			modalSprite = null;
+			document.body.style.overflow = '';
+			transitioningCardId = null;
+		};
+
+		if (supportsViewTransitions) {
+			// @ts-ignore - View Transitions API
+			document.startViewTransition(closeModal);
+		} else {
+			closeModal();
+		}
+		
+		// Navigate back in history
+		if (history.state?.spriteModal) {
+			history.back();
+		}
+	}
+
+	function handlePopState(event: PopStateEvent) {
+		if (modalOpen && !event.state?.spriteModal) {
+			// User pressed back button, close modal
+			const supportsViewTransitions = 'startViewTransition' in document;
+			
+			const closeModal = () => {
+				modalOpen = false;
+				modalSprite = null;
+				document.body.style.overflow = '';
+				transitioningCardId = null;
+			};
+
+			if (supportsViewTransitions) {
+				// @ts-ignore - View Transitions API
+				document.startViewTransition(closeModal);
+			} else {
+				closeModal();
+			}
+		}
+	}
+
+	async function handleSpriteClick(sprite: Sprite, event: MouseEvent) {
+		// Check if it's a middle-click or ctrl/cmd-click (should open in new tab)
+		if (event.button === 1 || event.ctrlKey || event.metaKey) {
+			return; // Let the browser handle it
+		}
+
+		await openSpriteModal(sprite, event);
+	}
+
 	// Watchers for state changes using Svelte 5 runes
 	$effect(() => {
 		fetchSprites();
@@ -372,18 +475,51 @@
 	// Initial fetch on mount
 	onMount(() => {
 		fetchSprites();
+		
+		// Listen to popstate for browser back/forward
+		window.addEventListener('popstate', handlePopState);
+		
+		return () => {
+			window.removeEventListener('popstate', handlePopState);
+		};
 	});
+
 	// Handle filter changes - these will be triggered by bind:value changes
 	$effect(() => {
 		// Reset to page 1 when filters change
 		currentPage = 1;
 	});
-	function handleSearchChange(event: Event) {
-		const target = event.target as HTMLInputElement;
-		searchTerm = target.value;
+
+	function handleSearchChange(value: string) {
+		searchTerm = value;
 		currentPage = 1;
 	}
 </script>
+
+<svelte:head>
+	<style>
+		@keyframes fadeIn {
+			from { opacity: 0; }
+			to { opacity: 1; }
+		}
+		
+		@keyframes fadeOut {
+			from { opacity: 1; }
+			to { opacity: 0; }
+		}
+
+		/* View Transitions fallback */
+		::view-transition-old(sprite-modal),
+		::view-transition-new(sprite-modal) {
+			animation-duration: 0.3s;
+		}
+		
+		::view-transition-old(sprite-card),
+		::view-transition-new(sprite-card) {
+			animation-duration: 0.4s;
+		}
+	</style>
+</svelte:head>
 
 <div class="flex flex-col items-center justify-start p-4 md:p-8 space-y-8 h-screen w-full">
 	<div class="search-section w-full">
@@ -396,17 +532,13 @@
 			</div>
 		</div>
 		<div class="search-bar-container">
-			<div class="relative mb-6">
-				<svg class="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<circle cx="11" cy="11" r="8"></circle>
-					<path d="m21 21-4.35-4.35"></path>
-				</svg>
-				<Input
-					id="searchInput"
-					class="w-full pl-10 pr-10 py-3 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+			<div class="mb-6">
+				<SearchBar
+					bind:value={searchTerm}
 					placeholder="Search sprites by title, author, or game..."
-					value={searchTerm}
-					on:input={handleSearchChange}
+					onSearch={handleSearchChange}
+					class="w-full"
+					inputClass="py-3 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 				/>
 			</div>
 		</div>
@@ -526,7 +658,12 @@
 				</div>
 			{:else if sprites.length > 0}
 				{#each sprites as sprite (sprite.id)}
-					<a href={`/sprites/${sprite.id}`} class="sprite-box sprite-glow">
+					<a 
+						href={`/sprites/${sprite.id}`} 
+						class="sprite-box sprite-glow"
+						style="view-transition-name: {transitioningCardId === sprite.id ? 'sprite-card' : 'none'};"
+						on:click={(e) => handleSpriteClick(sprite, e)}
+					>
 						<div class="sprite-star-container">
 							{#each Array.from({ length: 10 }) as _, index}
 								<div class="sprite-star"></div>
@@ -624,3 +761,59 @@
 		</div>
 	</div>
 </div>
+
+{#if modalOpen && modalSprite}
+	<div 
+		class="sprite-modal-overlay"
+		style="view-transition-name: sprite-modal;"
+		on:click={closeSpriteModal}
+		on:keydown={(e) => e.key === 'Escape' && closeSpriteModal()}
+		role="button"
+		tabindex="-1"
+	>
+		<div class="sprite-modal-content" on:click|stopPropagation>
+			<SpriteViewer 
+				spriteId={modalSprite.id.toString()} 
+				initialSprite={modalSprite} 
+				initialError={null}
+				isModal={true}
+				onClose={closeSpriteModal}
+			/>
+		</div>
+	</div>
+{/if}
+
+<style>
+	.sprite-modal-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-color: rgba(0, 0, 0, 0.9);
+		z-index: 9999;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		animation: fadeIn 0.3s ease-out;
+		overflow: hidden;
+	}
+
+	.sprite-modal-content {
+		width: 90%;
+		max-width: 1400px;
+		height: 100vh;
+		overflow: hidden;
+		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+		animation: fadeIn 0.3s ease-out;
+	}
+
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+</style>

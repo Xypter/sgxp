@@ -2,11 +2,13 @@ import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import tailwindcss from "@tailwindcss/vite";
 import node from "@astrojs/node";
-
-import sentry from '@sentry/astro';
-import spotlightjs from '@spotlightjs/astro';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 import svelte from '@astrojs/svelte';
+import mcp from 'astro-mcp';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // https://astro.build/config
 export default defineConfig({
@@ -15,6 +17,13 @@ export default defineConfig({
     mode: "standalone"
   }),
   vite: {
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
+        '$lib': path.resolve(__dirname, './src/lib'),
+        '$components': path.resolve(__dirname, './src/components')
+      }
+    },
     server: {
       watch: {
         ignored: ['**/.env', '**/.env.*', '**/node_modules/**']
@@ -23,5 +32,5 @@ export default defineConfig({
     envPrefix: ['PUBLIC_'],
     plugins: [tailwindcss()],
   },
-  integrations: [react(), sentry(), spotlightjs(), svelte()],
+  integrations: [react(), svelte(), mcp()],
 });
