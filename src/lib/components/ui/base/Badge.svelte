@@ -1,40 +1,42 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import { Badge as ShadcnBadge, badgeVariants } from '$components/ui/badge';
+  import { Badge as ShadcnBadge } from '$components/ui/badge';
   import type { BadgeVariant } from '$components/ui/badge';
 
   interface BadgeProps {
     variant?: BadgeVariant;
     themed?: boolean;
+    color?: string;
     class?: string;
     children?: Snippet;
   }
 
   let {
     themed = false,
+    color,
     class: className,
     children,
     ...restProps
   }: BadgeProps = $props();
 
-  // Combine theme class with any custom classes
   const classes = themed ? `theme-badge ${className || ''}` : className;
+  const style = color ? `--badge-color: ${color};` : undefined;
 </script>
 
-<ShadcnBadge class={classes} {...restProps}>
+<ShadcnBadge class={classes} style={style} {...restProps}>
   {@render children?.()}
 </ShadcnBadge>
 
 <style>
-  /* Theme-aware badge styles */
   :global(.theme-badge) {
-    background: var(--font-link-color);
-    color: var(--page-color);
-    border: none;
-    border-radius: 0px;
-    font-family: 'saira', monospace;
-    font-weight: 600;
-    font-size: 12px;
-    padding: 2px 8px;
+    background: var(--badge-color, var(--font-link-color)) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 2px !important;
+    font-family: 'saira', monospace !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    padding: 2px 8px 4px !important;
+    text-shadow: none;
   }
 </style>

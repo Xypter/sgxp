@@ -252,8 +252,7 @@
     text-decoration: none;
     color: var(--font-link-color);
     font-family: 'saira';
-    font-weight: 700;
-    font-size: 14px;
+    font-weight: 800;
     border-radius: 2px;
     transition: ease-in-out .2s;
     text-shadow:
@@ -288,7 +287,6 @@
   .header {
     grid-area: head;
     min-width: 1000px;
-    border-radius: var(--radius);
     box-shadow: var(--box-shadow);
     animation: fadein-up .7s;
   }
@@ -327,13 +325,15 @@
     animation: fadein-left .4s;
     font-family: 'saira';
     font-weight: 800;
-    font-size: 18px;
+    font-size: 22px;
     color: var(--font-color);
     text-shadow:
       calc(1px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 0 var(--bg-color),
       calc(1px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 0 var(--bg-color),
       calc(0px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 0 var(--bg-color);
     border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    box-shadow: var(--box-shadow);
+    position: relative;
   }
 
   .main-content-box {
@@ -352,6 +352,8 @@
     border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
     border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
     border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    position: relative;
+    z-index: 1;
   }
 
   /* Sidebar styles */
@@ -370,6 +372,8 @@
       calc(1px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 0 var(--bg-color),
       calc(0px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 0 var(--bg-color);
     border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    box-shadow: var(--box-shadow);
+    position: relative;
   }
 
   .sidebar-box {
@@ -388,11 +392,13 @@
     border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
     border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
     border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
-  
+
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 5px;
+    position: relative;
+    z-index: 1;
   }
 
   .sidebar-box img {
@@ -614,4 +620,329 @@ body[data-scroll-locked][data-scroll-locked] {
 body {
   padding-right: 0 !important;
   overflow:visible !important;
+}
+/* ============================================
+   Shared Content & Sprite Display Styles
+   (Layout & Unwrapped Components like Card/Avatar)
+   ============================================ */
+
+/* Content Title Patterns */
+.sprite-content-title,
+.sprite-info-title,
+.sprite-comments-title {
+  display: block;
+  background: color-mix(in srgb, var(--page-color) 60%, black);
+  padding: 3px 0px 3px 15px;
+  font-family: 'saira';
+  font-weight: 800;
+  font-size: 24px;
+  color: var(--font-color);
+  text-shadow:
+    calc(1px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 0 var(--bg-color),
+    calc(1px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 0 var(--bg-color),
+    calc(0px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 0 var(--bg-color);
+  border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  box-shadow: var(--box-shadow);
+  position: relative;
+}
+
+.sprite-content-title {
+  flex: 1;
+}
+
+/* Content Container Patterns */
+.sprite-info-content,
+.sprite-content-box,
+.sprite-comments-content {
+  background: var(--page-color);
+  padding: 20px;
+  border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  box-shadow: var(--box-shadow);
+  color: var(--font-color);
+  position: relative;
+  z-index: 1;
+}
+
+.sprite-info-section, .sprite-comments-section { margin-bottom: var(--gap); }
+
+/* Author Display */
+.author-section {
+  display: flex; align-items: flex-start; gap: 15px; padding-bottom: 20px; margin-bottom: 20px;
+  border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 70%, white);
+}
+
+.author-avatar { width: 75px; height: 75px; flex-shrink: 0; image-rendering: auto; }
+.author-avatar img {
+  width: 100%; height: 100%; object-fit: cover;
+  border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  box-shadow: calc(5px * var(--multiply-factor)) calc(5px * var(--multiply-factor)) 0 var(--bg-color);
+}
+
+.avatar-placeholder {
+  width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;
+  background: color-mix(in srgb, var(--page-color) 50%, black);
+  color: var(--font-color);
+  font-family: 'saira'; font-weight: 800; font-size: 32px;
+  border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  box-shadow: calc(5px * var(--multiply-factor)) calc(5px * var(--multiply-factor)) 0 var(--bg-color);
+}
+
+.author-details { flex: 1; }
+.author-name {
+  font-family: 'saira'; font-weight: 800; font-size: 20px; color: var(--font-link-color); margin-bottom: 4px;
+  text-shadow: calc(1px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 0 var(--bg-color), calc(1px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 0 var(--bg-color), calc(0px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 0 var(--bg-color);
+}
+.author-meta { font-family: 'saira'; font-size: 14px; color: var(--font-color); opacity: 0.8; }
+
+/* Grids & Contributors */
+.details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+.detail-item h4 {
+  font-family: 'saira'; font-weight: 800; font-size: 12px; text-transform: uppercase; color: var(--font-link-color); margin-bottom: 4px;
+  text-shadow: calc(1px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 0 var(--bg-color);
+}
+.detail-item p { font-family: 'saira'; font-size: 16px; color: var(--font-color); font-weight: 600; }
+
+.contributors-section { margin-bottom: 20px; padding-top: 20px; border-top: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 70%, white); }
+.contributors-section h4 { font-family: 'saira'; font-weight: 800; font-size: 14px; text-transform: uppercase; color: var(--font-link-color); margin-bottom: 12px; }
+.contributors-list { display: flex; flex-wrap: wrap; gap: 12px; }
+.contributor-item {
+  display: flex; align-items: center; gap: 8px; padding: 6px 12px;
+  background: color-mix(in srgb, var(--page-color) 80%, black);
+  border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 70%, white);
+  font-family: 'saira'; font-size: 14px; color: var(--font-color);
+}
+
+/* Description */
+.description-section { margin-bottom: 20px; }
+.description-section h4 { font-family: 'saira'; font-weight: 800; font-size: 14px; text-transform: uppercase; color: var(--font-link-color); margin-bottom: 12px; }
+.description-text { font-family: 'saira'; font-size: 14px; line-height: 1.6; color: var(--font-color); white-space: pre-wrap; }
+
+/* States & Prompts */
+.loading-state, .error-state, .not-found-state { text-align: center; padding: 40px 20px; font-family: 'saira'; font-size: 14px; color: var(--font-color); }
+.error-state { color: #ff4444; }
+.login-prompt { font-family: 'saira'; font-size: 14px; color: var(--font-color); }
+.login-prompt a { color: var(--font-link-color); text-decoration: none; font-weight: 700; }
+.login-prompt a:hover { opacity: 0.8; text-decoration: underline; }
+
+/* === SHARED CARD & AVATAR STYLES === */
+/* These remain global as they aren't fully wrapped in .svelte files yet */
+
+/* Theme-aware card styles */
+.theme-card {
+  background: var(--page-color);
+  border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  border-radius: 0px;
+  box-shadow: var(--box-shadow);
+}
+.theme-card-title {
+  color: var(--font-color);
+  font-family: 'saira', monospace;
+  font-weight: 800;
+  text-shadow: 1px 0px 0 var(--bg-color), 1px 1px 0 var(--bg-color), 0px 1px 0 var(--bg-color);
+}
+.theme-card-description {
+  color: var(--font-color);
+  font-family: 'saira', monospace;
+  opacity: 0.8;
+}
+
+/* Theme-aware avatar styles */
+.theme-avatar {
+  border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  border-radius: 0px;
+}
+.theme-avatar-fallback {
+  background: var(--font-link-color);
+  color: var(--page-color);
+  font-family: 'saira', monospace;
+  font-weight: 700;
+}
+
+
+/* === COMPLEX COMMENT SYSTEM STYLES === */
+/* Overrides for the Comment Section Layout (using Cards/Avatars) */
+
+.comments-list { display: flex; flex-direction: column; gap: 16px; margin-top: 20px; }
+
+/* Comment Cards */
+.comment-form-card, .comment-card, .reply-card {
+  background: color-mix(in srgb, var(--page-color) 95%, white) !important;
+  border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 70%, white) !important;
+  box-shadow: var(--box-shadow) !important;
+  border-radius: 0 !important;
+  gap: 0 !important;
+}
+
+.comment-form-card { padding: 20px; }
+.comment-card { padding: 20px !important; margin-bottom: 4px; transition: opacity 0.3s ease; }
+.reply-card {
+  background: color-mix(in srgb, var(--page-color) 90%, white) !important;
+  border-color: color-mix(in srgb, var(--page-color) 65%, white) !important;
+  box-shadow: calc(var(--box-shadow) * 0.5) !important;
+  padding: 20px !important; margin-bottom: 20px;
+}
+
+
+/* Pending/Deleting/Editing States */
+.comment-card.pending, .reply-card.pending { opacity: 0.6; position: relative; }
+.comment-card.deleting, .reply-card.deleting { opacity: 0.4; pointer-events: none; position: relative; }
+.comment-card.editing, .reply-card.editing { opacity: 0.6; position: relative; }
+
+.comment-card.pending::after {
+  content: 'Posting...'; position: absolute; top: 20px; right: 95px; font-size: 10px; color: var(--font-link-color);
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 8px;
+  background: color-mix(in srgb, var(--font-link-color) 15%, transparent); border: 1px solid var(--font-link-color); border-radius: 3px;
+}
+
+.reply-card.pending::after {
+  content: 'Posting...'; position: absolute; top: 20px; right: 95px; font-size: 10px; color: var(--font-link-color);
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 8px;
+  background: color-mix(in srgb, var(--font-link-color) 15%, transparent); border: 1px solid var(--font-link-color); border-radius: 3px;
+}
+
+.comment-card.deleting::after {
+  content: 'Deleting...'; position: absolute; top: 20px; right: 95px; font-size: 10px; color: var(--font-link-color);
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 8px;
+  background: color-mix(in srgb, var(--font-link-color) 15%, transparent); border: 1px solid var(--font-link-color); border-radius: 3px;
+}
+
+.reply-card.deleting::after {
+  content: 'Deleting...'; position: absolute; top: 20px; right: 95px; font-size: 10px; color: var(--font-link-color);
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 8px;
+  background: color-mix(in srgb, var(--font-link-color) 15%, transparent); border: 1px solid var(--font-link-color); border-radius: 3px;
+}
+
+.comment-card.editing::after {
+  content: 'Editing...'; position: absolute; top: 20px; right: 95px; font-size: 10px; color: var(--font-link-color);
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 8px;
+  background: color-mix(in srgb, var(--font-link-color) 15%, transparent); border: 1px solid var(--font-link-color); border-radius: 3px;
+}
+
+.reply-card.editing::after {
+  content: 'Editing...'; position: absolute; top: 20px; right: 95px; font-size: 10px; color: var(--font-link-color);
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 8px;
+  background: color-mix(in srgb, var(--font-link-color) 15%, transparent); border: 1px solid var(--font-link-color); border-radius: 3px;
+}
+
+/* Comment Avatars Overrides */
+.comment-avatar, .comment-avatar-large, .comment-avatar-small {
+  flex-shrink: 0; image-rendering: auto; border-radius: 0 !important;
+  border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white) !important;
+}
+.comment-avatar {
+  margin-bottom: 20px;
+}
+.comment-avatar, .comment-avatar-large { width: 75px !important; height: 75px !important; box-shadow: calc(5px * var(--multiply-factor)) calc(5px * var(--multiply-factor)) 0 var(--bg-color); }
+.comment-avatar-small { width: 75px !important; height: 75px !important; box-shadow: calc(5px * var(--multiply-factor)) calc(5px * var(--multiply-factor)) 0 var(--bg-color); }
+
+.comment-avatar img, .comment-avatar-large img { width: 100%; height: 100%; object-fit: cover; border-radius: 0 !important; }
+
+.avatar-fallback, .avatar-fallback-large, .avatar-fallback-small {
+  background: color-mix(in srgb, var(--page-color) 50%, black) !important; color: var(--font-color) !important;
+  font-family: 'saira' !important; font-weight: 800 !important; display: flex; align-items: center; justify-content: center; border-radius: 0 !important;
+}
+.avatar-fallback, .avatar-fallback-large { font-size: 28px !important; width: 100%; height: 100%; }
+.avatar-fallback-small { font-size: 28px !important; width: 100%; height: 100%; }
+
+/* Comments Text & Layout */
+.comment-header { display: flex; align-items: flex-start; gap: 12px; }
+.comment-meta { flex: 1; min-width: 0; }
+.comment-author { font-family: 'saira'; font-weight: 800; font-size: 16px; color: var(--font-link-color); margin: 0 0 2px 0; text-shadow: calc(1px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 0 var(--bg-color); }
+.comment-date { font-family: 'saira'; font-size: 12px; color: var(--font-color); opacity: 0.7; margin: 2px 0 0 0; }
+.edited-badge { font-style: italic; opacity: 0.6; }
+
+.comment-body, .reply-body { padding-left: 0px; margin-bottom: 12px; }
+.comment-text { font-family: 'saira'; font-size: 14px; line-height: 1.6; color: var(--font-color); margin: 0; white-space: pre-wrap; word-wrap: break-word; }
+.comment-text strong { font-weight: 800; color: var(--font-color); }
+.comment-text em { font-style: italic; color: var(--font-color); }
+.comment-text u { text-decoration: underline; text-decoration-color: var(--font-link-color); }
+
+/* Buttons in Comments (Reply, Like, Report) */
+.comment-actions { display: flex; gap: 4px; }
+.comment-action-btn { padding: 4px 8px !important; height: auto !important; min-height: unset !important; color: var(--font-color) !important; opacity: 0.7; }
+.comment-action-btn:hover { background: color-mix(in srgb, var(--page-color) 85%, white); opacity: 1; color: var(--font-link-color); }
+
+.comment-footer, .reply-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.comment-footer-left, .comment-footer-right { display: flex; align-items: center; gap: 12px; }
+.comment-footer-right { margin-left: auto; }
+
+.reply-btn, .view-replies-btn, .like-btn, .report-btn, .delete-btn, .comment-action-btn{
+  display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background: transparent; border: none;
+  font-family: 'saira'; font-size: 12px; font-weight: 600; color: var(--font-link-color); cursor: pointer; transition: all 0.2s ease; border-radius: 4px;
+}
+.reply-btn:hover, .view-replies-btn:hover { background: color-mix(in srgb, var(--page-color) 85%, white); }
+.like-btn { color: var(--font-color); }
+.like-btn.liked { color: var(--font-link-color); opacity: 1; }
+.like-btn:hover { background: color-mix(in srgb, var(--page-color) 85%, white); opacity: 1; }
+.report-btn { color: var(--font-color); opacity: 0.5; }
+.report-btn:hover { opacity: 1; background: color-mix(in srgb, var(--page-color) 85%, white); color: var(--font-link-color); }
+
+/* Toolbars & Edit Forms */
+.comment-input-wrapper, .reply-input-wrapper { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.formatting-toolbar, .edit-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; padding-top: 8px; }
+.formatting-toolbar.edit-toolbar { flex-direction: column; align-items: flex-start; }
+.toolbar-buttons { display: flex; gap: 4px; }
+
+/* Global overrides for Shadcn buttons inside toolbars */
+.toolbar-btn {
+  background: color-mix(in srgb, var(--page-color) 80%, black) !important;
+  border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 70%, white) !important;
+  color: var(--font-color) !important; padding: 6px 8px !important; height: auto !important; min-height: unset !important;
+}
+.toolbar-btn:hover { 
+  background: color-mix(in srgb, var(--page-color) 90%, white) !important; 
+  border-color: var(--font-link-color) !important; 
+  transition: all 0.2s ease;
+}
+
+/* Form Actions - Style all buttons like AlertDialog cancel button */
+.form-actions, .edit-form-actions, .reply-form-actions { display: flex; gap: 8px; }
+
+.form-actions button, .edit-form-actions button, .reply-form-actions button {
+  font-family: 'saira', monospace !important;
+  font-size: 14px !important;
+  padding: 8px 16px !important;
+  font-weight: 700 !important;
+  background: var(--page-color) !important;
+  color: var(--font-color) !important;
+  border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 60%, white) !important;
+  border-radius: 0px !important;
+  box-shadow: var(--box-shadow) !important;
+  transition: all 0.2s ease !important;
+  cursor: url('/img/Sonic_Cursor.png'), pointer !important;
+}
+
+.form-actions button:hover:not(:disabled), .edit-form-actions button:hover:not(:disabled), .reply-form-actions button:hover:not(:disabled) {
+  border-color: var(--font-link-color) !important;
+  cursor: url('/img/Sonic_Cursor_Spin.gif'), progress !important;
+  background: color-mix(in srgb, var(--page-color) 90%, white) !important;
+}
+
+.reply-form {
+  margin-top: 12px;
+  background: color-mix(in srgb, var(--page-color) 70%, white) !important;
+  margin-bottom: 0 !important;
+  border-radius: 0 !important;
+}
+
+.replies-list { margin-top: 20px; padding-left: 20px; border-left: 3px solid color-mix(in srgb, var(--page-color) 70%, white); }
+.loading-replies { margin-top: 12px; text-align: center; padding: 12px; font-family: 'saira'; font-size: 12px; color: var(--font-color); opacity: 0.7; }
+.comment-separator { margin: 20px 0 10px 0 !important; background: color-mix(in srgb, var(--page-color) 70%, white) !important; }
+
+/* Keep specific Textarea override just in case, though component handles .theme-textarea */
+.comment-textarea-modern {
+  width: 100%; min-height: 80px; padding: 12px; resize: vertical;
+  background: color-mix(in srgb, var(--page-color) 85%, black) !important;
+  border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 70%, white) !important;
+}
+.comment-textarea-modern:focus { border-color: color-mix(in srgb, var(--font-link-color) 70%, white) !important; }
+
+@media (max-width: 768px) {
+  .author-section { flex-direction: column; align-items: flex-start; }
+  .comment-form-header { flex-direction: column; }
+  .comment-avatar, .comment-avatar-large, .comment-avatar-small { width: 40px !important; height: 40px !important; }
+  .formatting-toolbar { flex-direction: column; align-items: flex-start; }
+  .toolbar-buttons { width: 100%; justify-content: flex-start; }
 }

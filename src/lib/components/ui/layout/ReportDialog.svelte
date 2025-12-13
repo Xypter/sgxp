@@ -327,7 +327,8 @@
   }
 
   .report-dialog-button:hover {
-    background: #f5f5f5;
+    border-color: var(--font-link-color);
+    transition: all 0.2s ease;
   }
 
   .report-dialog-button.cancel {
@@ -361,16 +362,21 @@
   .report-dialog-button.themed:hover {
     background: color-mix(in srgb, var(--page-color) 90%, var(--font-color));
     cursor: url('/img/Sonic_Cursor_Spin.gif'), progress;
+    border-color: var(--font-link-color);
+    transition: all 0.2s ease;
   }
 
   .report-dialog-button.submit.themed {
-    background: var(--font-link-color);
-    color: var(--page-color);
+    background: var(--page-color);
+    color: var(--font-color);
     border-color: color-mix(in srgb, var(--page-color) 60%, white);
   }
 
   .report-dialog-button.submit.themed:hover {
-    background: color-mix(in srgb, var(--font-link-color) 80%, white);
+    background: color-mix(in srgb, var(--page-color) 90%, var(--font-color));
+    cursor: url('/img/Sonic_Cursor_Spin.gif'), progress;
+    border-color: var(--font-link-color);
+    transition: all 0.2s ease;
   }
 
   @keyframes fadeIn {

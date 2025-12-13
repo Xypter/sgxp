@@ -24,28 +24,30 @@
 </ShadcnButton>
 
 <style>
-  /* Theme-aware button styles */
+  /* Use :global() because the class is applied to the Shadcn component 
+    inside the child scope. !important ensures we override Tailwind defaults.
+  */
   :global(.theme-button) {
-    background: var(--font-link-color);
-    color: var(--page-color);
-    border: none;
-    border-radius: 0px;
-    font-family: 'saira', monospace;
-    font-weight: 700;
-    font-size: 14px;
-    transition: all var(--transition-speed, 200ms) ease-in-out;
-    cursor: url('/img/Sonic_Cursor.png'), pointer;
-    box-shadow: var(--box-shadow);
+    background: var(--font-link-color) !important;
+    color: var(--page-color) !important;
+    border: none !important;
+    border-radius: 0px !important;
+    font-family: 'saira', monospace !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    transition: all var(--transition-speed, 200ms) ease-in-out !important;
+    cursor: url('/img/Sonic_Cursor.png'), pointer !important;
+    box-shadow: var(--box-shadow) !important;
   }
 
   :global(.theme-button:hover:not(:disabled)) {
-    background: color-mix(in srgb, var(--font-link-color) 80%, white);
-    cursor: url('/img/Sonic_Cursor_Spin.gif'), progress;
+    background: color-mix(in srgb, var(--font-link-color) 80%, white) !important;
+    cursor: url('/img/Sonic_Cursor_Spin.gif'), progress !important;
   }
 
   :global(.theme-button:disabled) {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
   }
 </style>

@@ -17,9 +17,10 @@ body {
   calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color);
 }
 
-.sprite-page-container {
+.sprite-page-container,
+.sprite-viewer-page-container {
   display: block; /* Changed from grid */
-  width: 80%;
+  width: 70%;
   margin: 0 auto;
   padding: 2rem;
   min-height: 100vh;
@@ -55,7 +56,7 @@ body {
   justify-content: flex-start;
   padding: 10px;
   background-color: var(--page-color);
-  box-shadow: 10px 10px 0px rgba(0,0,0,0.7);
+  box-shadow: var(--box-shadow);
   margin-bottom: var(--gap);
 
   border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
@@ -73,8 +74,8 @@ body {
   padding: 3px 0px 3px 10px;
   text-rendering:geometricPrecision;
   font-family: 'sprite';
-  font-weight: 900;
-  font-size: 18px;
+  font-weight: 800;
+  font-size: 24px;
 
   text-shadow:
   calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
@@ -82,6 +83,8 @@ body {
   calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color);
 
   border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  box-shadow: var(--box-shadow);
+  position: relative;
 }
 
 .sprite-container {
@@ -92,16 +95,18 @@ body {
   align-content: flex-start;
   padding: 0 15px 40px 15px;
   background-color: var(--page-color);
-  box-shadow: 10px 10px 0px rgba(0,0,0,0.7);
+  box-shadow: var(--box-shadow);
   border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
   border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
   border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  position: relative;
+  z-index: 1;
   min-height: 630px;
   max-width: 100%; /* Ensure it doesn't overflow */
   margin-bottom: 50px;
 }
 
-.sprite-box {  
+.sprite-box {
   width: calc(117px * var(--multiplication-factor));
   height: calc(192px * var(--multiplication-factor));
   background-image: url("/img/spriteicon/icon_image.png");
@@ -109,7 +114,7 @@ body {
   transition: transform ease-in-out .2s;
   text-decoration: none;
   border-radius: 4px;
-  box-shadow: 10px 10px 0px rgba(0,0,0,0.7);
+  box-shadow: var(--box-shadow);
   animation: fadein-top .5s, fadeout 1s; /* Add fade-out animation */
   transform: translateY(calc(-.1px * var(--multiplication-factor))); /*forced hardware acceleration*/
 
@@ -288,7 +293,7 @@ body {
 /*the container must be positioned relative:*/
 .custom-select-container{
   background: var(--page-color);
-  box-shadow: 10px 10px 0px rgba(0,0,0,0.7);
+  box-shadow: var(--box-shadow);
 
   border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
   border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
@@ -419,7 +424,7 @@ body {
   border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
   padding: 2rem;
   margin-bottom: 2rem;
-  box-shadow: 10px 10px 0px rgba(0,0,0,0.7);
+  box-shadow: var(--box-shadow);
 }
 
 .search-header {

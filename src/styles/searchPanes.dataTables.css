@@ -257,7 +257,7 @@ div.dtsp-searchPane div.dataTables_wrapper div.dataTables_scrollBody div.dtsp-na
   overflow: hidden;
   display: inline-block;
   vertical-align: middle;
-  white-space: nowrap;
+  white-space: wrap;
   flex-grow: 1;
   text-align: left;
 }

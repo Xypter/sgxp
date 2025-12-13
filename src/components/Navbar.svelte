@@ -53,12 +53,8 @@ async function checkAuthStatus(): Promise<void> {
       credentials: 'include',
     });
 
-    console.log('Auth check response:', response.status);
-
     if (response.ok) {
-      const data = await response.json();
-      console.log('Auth data:', data);
-      const userData = data.user || data;
+      const userData = await response.json();
       user = userData;
       isLoggedIn = true;
     } else {
@@ -143,13 +139,22 @@ async function checkAuthStatus(): Promise<void> {
   };
 
   onMount(() => {
+  let lastAuthCheck = Date.now();
+  const AUTH_CHECK_DEBOUNCE_MS = 30000; // Only re-check auth every 30 seconds
+
   const handleVisibilityChange = (): void => {
     if (!document.hidden) {
-      checkAuthStatus();
+      const now = Date.now();
+      // Debounce: only check if 30+ seconds since last check
+      if (now - lastAuthCheck >= AUTH_CHECK_DEBOUNCE_MS) {
+        lastAuthCheck = now;
+        checkAuthStatus();
+      }
     }
   };
 
   const handleUserLogin = () => {
+    lastAuthCheck = Date.now();
     checkAuthStatus(); // Re-check auth status when login event fires
   };
 
@@ -162,7 +167,13 @@ async function checkAuthStatus(): Promise<void> {
   window.addEventListener('userLogin', handleUserLogin);
   window.addEventListener('userLogout', handleUserLogout);
 
-  checkAuthStatus();
+  // OPTIMIZATION: Skip initial check if SSR already provided user data
+  if (initialUser) {
+    isCheckingAuth = false;
+  } else {
+    checkAuthStatus();
+    lastAuthCheck = Date.now();
+  }
 
   // Cleanup event listeners
   return () => {

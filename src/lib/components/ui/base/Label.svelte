@@ -15,7 +15,6 @@
     ...restProps
   }: LabelProps = $props();
 
-  // Combine theme class with any custom classes
   const classes = themed ? `theme-label ${className || ''}` : className;
 </script>
 
@@ -24,12 +23,11 @@
 </ShadcnLabel>
 
 <style>
-  /* Theme-aware label styles */
   :global(.theme-label) {
-    color: var(--font-color);
-    font-family: 'saira', monospace;
-    font-weight: 600;
-    font-size: 14px;
-    text-shadow: 1px 0px 0 var(--bg-color), 1px 1px 0 var(--bg-color), 0px 1px 0 var(--bg-color);
+    color: var(--font-color) !important;
+    font-family: 'saira', monospace !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    text-shadow: 1px 0px 0 var(--bg-color), 1px 1px 0 var(--bg-color), 0px 1px 0 var(--bg-color) !important;
   }
 </style>

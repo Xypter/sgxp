@@ -32,5 +32,13 @@ export default defineConfig({
     envPrefix: ['PUBLIC_'],
     plugins: [tailwindcss()],
   },
-  integrations: [react(), svelte(), mcp()],
+  integrations: [
+    react(),
+    svelte({
+      compilerOptions: {
+        hmr: false
+      }
+    }),
+    mcp()
+  ],
 });

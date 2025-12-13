@@ -7,10 +7,14 @@ import "../styles/sprite_icon.css";
 
 // Correct import statement to the .tsx file
 import SGXPNavbar from "../components/Navbar.svelte";
+import Toaster from "../lib/components/ui/layout/Toaster.svelte";
 
 // Import types from the .tsx file
 import ThemeValue from '../components/Navbar.svelte';
 import User from '../components/Navbar.svelte';
+
+// OPTIMIZATION: Import Redis caching utilities
+import { getCached, setCached, cacheKey, hashString, CACHE_TTL } from '../lib/redis';
 
 // Get the theme from the cookie during SSR to prevent flashing
 const themeFromCookie = (Astro.cookies.get('theme')?.value as ThemeValue) || "style_v7";
@@ -19,23 +23,69 @@ let user: User | null = null;
 // Get the auth token from the request cookies on the server
 const token = Astro.cookies.get('payload-token')?.value;
 
-// If the token exists, verify it by calling your Payload backend
+// OPTIMIZATION: Auth check with Redis caching and timeout
+const AUTH_TIMEOUT_MS = 1500; // 1.5 second timeout for auth check
+
 if (token) {
+  const authStart = performance.now();
   try {
-    // Use the environment variable for the Payload URL
-    const response = await fetch(`${import.meta.env.PUBLIC_PAYLOAD_URL}/api/users/me`, {
-      headers: {
-        // Forward the cookie to Payload for verification
-        'Cookie': `payload-token=${token}`
+    const tokenHash = hashString(token);
+    const authCacheKey = cacheKey.auth(tokenHash);
+
+    const cacheCheckStart = performance.now();
+    // Try to get cached auth result first
+    const cachedUser = await getCached<User>(authCacheKey);
+    const cacheCheckDuration = performance.now() - cacheCheckStart;
+
+    if (cachedUser) {
+      user = cachedUser;
+      const authDuration = performance.now() - authStart;
+      console.log(`[SSR Auth] ✅ Cache HIT - using cached user (${authDuration.toFixed(0)}ms total, ${cacheCheckDuration.toFixed(0)}ms cache)`);
+    } else {
+      console.log(`[SSR Auth] ❌ Cache MISS after ${cacheCheckDuration.toFixed(0)}ms`);
+
+      // Create an AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), AUTH_TIMEOUT_MS);
+
+      try {
+        const fetchStart = performance.now();
+        // Use the environment variable for the Payload URL
+        const response = await fetch(`${import.meta.env.PUBLIC_PAYLOAD_URL}/api/users/me`, {
+          headers: {
+            // Forward the cookie to Payload for verification
+            'Cookie': `payload-token=${token}`
+          },
+          signal: controller.signal
+        });
+        const fetchDuration = performance.now() - fetchStart;
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          const parseStart = performance.now();
+          const data = await response.json();
+          const parseDuration = performance.now() - parseStart;
+          user = data.user || data; // Set the user object if the token is valid
+
+          // Cache the auth result (fire and forget - don't await)
+          setCached(authCacheKey, user, CACHE_TTL.AUTH);
+          const authDuration = performance.now() - authStart;
+          console.log(`[SSR Auth] 🌐 Fetched and cached user (${authDuration.toFixed(0)}ms total: ${fetchDuration.toFixed(0)}ms fetch + ${parseDuration.toFixed(0)}ms parse)`);
+        }
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+
+        if (fetchError.name === 'AbortError') {
+          console.warn(`[SSR Auth] ⚠️  Auth check timed out after ${AUTH_TIMEOUT_MS}ms - page will render without user`);
+        } else {
+          throw fetchError;
+        }
       }
-    });
-    if (response.ok) {
-      const data = await response.json();
-      user = data.user || data; // Set the user object if the token is valid
     }
   } catch (error) {
     // Log the error on the server, but don't block the page from rendering
-    console.error('SSR Auth Check Failed:', error);
+    console.error('[SSR Auth] ❌ Auth Check Failed:', error);
   }
 }
 
@@ -69,11 +119,14 @@ const { title } = Astro.props;
   <link rel="icon" type="image/gif" href="/img/SGXPkanDos.gif" />
 </head>
 <body>
-<!-- Pass the 'user' object to the initialUser prop -->
-<SGXPNavbar client:load initialUser={user} baseURL={Astro.url.origin} initialTheme={themeFromCookie} />
+<!-- OPTIMIZATION: Changed from client:load to client:idle to prevent blocking page load -->
+<SGXPNavbar client:idle initialUser={user} baseURL={Astro.url.origin} initialTheme={themeFromCookie} />
 
   <div class="sonic-trigger" title="Click me!"></div>
   <script is:inline src="/js/arkanimation.js"></script>
   <slot>You're not supposed to see this LMAO</slot>
+
+  <!-- OPTIMIZATION: Changed from client:load to client:idle to prevent blocking page load -->
+  <Toaster client:idle />
 </body>
 </html>

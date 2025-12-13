@@ -9,7 +9,7 @@
   --page-color: #393e43;
   --font-color: #F2F6F7;
   --border-color: #27272a;
-  --box-shadow: 20px 20px 20px rgb(0, 0, 0, .7);
+  --box-shadow: 1px 1px 0px color-mix(in srgb, var(--page-color) 20%, black), 2px 2px 0px color-mix(in srgb, var(--page-color) 20%, black), 3px 3px 0px color-mix(in srgb, var(--page-color) 20%, black), 4px 4px 0px color-mix(in srgb, var(--page-color) 20%, black), 5px 5px 0px color-mix(in srgb, var(--page-color) 20%, black), 6px 6px 0px color-mix(in srgb, var(--page-color) 20%, black), 7px 7px 0px color-mix(in srgb, var(--page-color) 20%, black) !important;
   --transition-speed: 0s;
   --font-link-color: rgba(244, 188, 84, 1);
 }
@@ -19,7 +19,6 @@
    ============================================================================= */
 :root[data-theme="style_v7"] {
   --page-bg: #000000;
-  --bg-color: #1D1D20;
   --page-color: #393e43;
   --font-color: #F2F6F7;
   --border-color: #27272a;
@@ -103,7 +102,6 @@
    ============================================================================= */
 :root[data-theme="ark"] {
   --page-bg: #000000;
-  --bg-color: #1D1D20;
   --page-color: #2b3730;
   --font-color: #F2F6F7;
   --border-color: #27272a;
@@ -320,7 +318,6 @@
    ============================================================================= */
 :root[data-theme="snow"] {
   --page-bg: #203f78;
-  --bg-color: #1D1D20;
   --page-color: #203f78;
   --font-color: #c0daee;
   --border-color: #27272a;
@@ -355,7 +352,6 @@
    FIRESIDE THEME (cozy)
    ============================================================================= */
 :root[data-theme="cozy"] {
-  --bg-color: #230e0e;
   --border-color: #000500;
   --page-color: #7a3114;
   --font-color: #ffea9e;
@@ -374,7 +370,6 @@
    BATTLE NETWORK THEME (sbn)
    ============================================================================= */
 :root[data-theme="sbn"] {
-  --bg-color: #001e1e;
   --border-color: #000500;
   --page-color: #004e6b;
   --font-color: #f0f0f0;
@@ -407,7 +402,6 @@
    ============================================================================= */
 :root[data-theme="hpz"] {
   --page-bg: #242424;
-  --bg-color: #24486C;
   --border-color: #000500;
   --page-color: #24486C;
   --font-color: #c6ffe4;
@@ -474,7 +468,6 @@
    MFZ THEME (mfz)
    ============================================================================= */
 :root[data-theme="mfz"] {
-  --bg-color: #05403A;
   --border-color: #000500;
   --page-color: #00271F;
   --font-color: #18ff5d;
@@ -494,7 +487,6 @@
    ============================================================================= */
 :root[data-theme="ssz"] {
   --page-bg: #2448fc;
-  --bg-color: #1F1F3F;
   --border-color: #000500;
   --page-color: #1f1f3f;
   --font-color: #f1f1ff;

@@ -236,8 +236,10 @@
   }
 
   .alert-dialog-button.themed:hover {
-    background: color-mix(in srgb, var(--page-color) 90%, var(--font-color));
     cursor: url('/img/Sonic_Cursor_Spin.gif'), progress;
+    border-color: var(--font-link-color);
+    background: color-mix(in srgb, var(--page-color) 90%, white);
+    transition: all 0.2s ease;
   }
 
   .alert-dialog-button.action.themed {
@@ -251,14 +253,15 @@
   }
 
   .alert-dialog-button.destructive.themed {
-    background: var(--font-link-color);
-    color: var(--page-color);
+    background: var(--page-color);
+    color: var(--font-color);
     border-color: color-mix(in srgb, var(--page-color) 60%, white);
   }
 
   .alert-dialog-button.destructive.themed:hover {
-    background: var(--font-link-color);
-    border-color: color-mix(in srgb, var(--page-color) 60%, white);
+    background: color-mix(in srgb, var(--page-color) 90%, white);
+    border-color: var(--font-link-color);
+    transition: all 0.2s ease;
   }
 
   @keyframes fadeIn {

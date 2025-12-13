@@ -1,9 +1,9 @@
 {
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "github",
     "svelte-docs",
     "astro",
     "shadcn-svelte"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }

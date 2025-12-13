@@ -1,12 +1,10 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
+	import { fade, fly } from 'svelte/transition';
 	import { charMap, altNumberMap } from '../lib/charMap.js';
 
 	// Import from component library
-	import { Button, SearchBar } from '$lib/components';
-
-	// Import shadcn components we don't have wrappers for
-	import * as Select from "$components/ui/select";
+	import { Button, Input, Select, Combobox, Pagination } from '$lib/components';
 
 	import SpriteViewer from './SpriteViewer.svelte';
 
@@ -62,20 +60,50 @@
 		updatedAt: string;
 	}
 
+	// Extended interface with memoized sprite text conversions
+	interface SpriteWithMemoized extends Sprite {
+		_memoized?: {
+			spriteNumber: any[];
+			title: any[];
+			author: any[];
+			gameName: any[];
+			blockType: any[];
+			createdDate: any[];
+			fileSize: any[];
+		};
+	}
+
+	// Props for server-side initial data
+	interface Props {
+		initialSprites?: Sprite[];
+		initialTotalResults?: number;
+	}
+
+	let { initialSprites = [], initialTotalResults = 0 }: Props = $props();
+
+	// OPTIMIZATION: Track if we have server-provided data to prevent double-fetching
+	const hasServerData = initialSprites.length > 0;
+
 	// State using Svelte 5 runes
-	let sprites = $state<Sprite[]>([]);
-	let totalResults = $state(0);
+	// OPTIMIZATION: Don't memoize synchronously - start with raw data
+	let sprites = $state<SpriteWithMemoized[]>(initialSprites as SpriteWithMemoized[]);
+	let totalResults = $state(initialTotalResults);
 	let currentPage = $state(1);
 	let sortBy = $state('createdAt:desc');
 	let gameFilter = $state('all');
 	let typeFilter = $state('all');
+	let authorFilter = $state('all');
 	let isFetchingInProgress = $state(false);
 	let searchTerm = $state('');
+	
+	// OPTIMIZATION: Track if initial memoization is complete
+	let isMemoized = $state(false);
+	// OPTIMIZATION: Track if this is the first render to prevent double-fetch
+	let isInitialRender = true;
 
-	// Modal state
-	let modalOpen = $state(false);
-	let modalSprite = $state<Sprite | null>(null);
-	let modalLoading = $state(false);
+	// Viewer state - replacing modal state
+	let viewingSprite = $state<Sprite | null>(null);
+	let showBrowser = $state(true);
 	let transitioningCardId = $state<number | null>(null);
 
 	// Derived values for select triggers
@@ -98,17 +126,8 @@
 	const authorOptions = [
 		{ value: "all", label: "All Authors" }
 	];
-	const sortTriggerContent = $derived(
-		sortOptions.find((s) => s.value === sortBy)?.label ?? "Newest First"
-	);
-	const gameTriggerContent = $derived(
-		gameOptions.find((g) => g.value === gameFilter)?.label ?? "All Games"
-	);
-	const typeTriggerContent = $derived(
-		typeOptions.find((t) => t.value === typeFilter)?.label ?? "All Types"
-	);
 
-	const API_BASE_URL = "https://cms.sgxp.me/api/sprites";
+	const API_BASE_URL = `${import.meta.env.PUBLIC_PAYLOAD_URL}/api/sprites`;
 	const MOCK_DATA_MULTIPLIER = 1;
 	// Derived values
 	const pageCount = $derived(Math.ceil(totalResults / 21));
@@ -298,12 +317,67 @@
 		return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 	}
 
+	// Memoize text-to-sprite conversions for performance
+	function memoizeSpriteText(sprite: SpriteWithMemoized): void {
+		if (sprite._memoized) return; // Already memoized
+
+		sprite._memoized = {
+			spriteNumber: formattedNumberToAltSprite(count(sprite.id)),
+			title: textToSpriteWithWrapping(sprite.title || '', charMap, 100, 2),
+			author: textToSprite(sprite.author?.displayName || sprite.author?.username || ''),
+			gameName: textToSpriteWithWrapping(sprite.typeOfSheet?.[0]?.game?.name || '', charMap, 150, 1),
+			blockType: textToSprite(sprite.typeOfSheet?.[0]?.blockType || ''),
+			createdDate: textToSprite(sprite.createdAt ? new Date(sprite.createdAt).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : ''),
+			fileSize: textToSprite(sprite.image?.filesize ? formatBytes(sprite.image.filesize) : '0 Bytes')
+		};
+	}
+
+	// OPTIMIZATION: Deferred memoization using requestIdleCallback or setTimeout fallback
+	function memoizeSpritesDeferred(spritesToMemoize: SpriteWithMemoized[]): void {
+		const BATCH_SIZE = 5; // Process 5 sprites at a time
+		let index = 0;
+
+		function processBatch(deadline?: IdleDeadline) {
+			// Process sprites while we have time (or in batches if no IdleDeadline)
+			const endIndex = Math.min(index + BATCH_SIZE, spritesToMemoize.length);
+			
+			while (index < endIndex) {
+				memoizeSpriteText(spritesToMemoize[index]);
+				index++;
+			}
+
+			// If there are more sprites to process, schedule the next batch
+			if (index < spritesToMemoize.length) {
+				if ('requestIdleCallback' in window) {
+					requestIdleCallback(processBatch);
+				} else {
+					setTimeout(() => processBatch(), 0);
+				}
+			} else {
+				// All done - trigger reactivity update
+				isMemoized = true;
+				sprites = [...spritesToMemoize];
+			}
+		}
+
+		// Start processing
+		if ('requestIdleCallback' in window) {
+			requestIdleCallback(processBatch);
+		} else {
+			setTimeout(() => processBatch(), 0);
+		}
+	}
+
 	// Fetching logic - Updated to match React component API
 	async function fetchSprites() {
+		// OPTIMIZATION: Prevent concurrent fetches
+		if (isFetchingInProgress) return;
+		
 		isFetchingInProgress = true;
 		try {
 			const [sortField, sortOrder] = sortBy.split(':');
-			let url = `${API_BASE_URL}?depth=3&draft=false&locale=undefined&trash=false&limit=21&page=${currentPage}&sort=${sortField}`;
+			// OPTIMIZATION: Using depth=2 to populate author.profilePicture (depth=3 was too slow at 667ms)
+			let url = `${API_BASE_URL}?depth=2&draft=false&locale=undefined&trash=false&limit=21&page=${currentPage}&sort=${sortField}`;
 			if (sortOrder === 'desc') {
 				url += `&sort=-${sortField}`;
 			}
@@ -316,9 +390,12 @@
 			if (searchTerm) {
 				url += `&where[title][contains]=${searchTerm}`;
 			}
-			
+
 			const response = await fetch(url);
 			const data = await response.json();
+
+			let fetchedSprites: SpriteWithMemoized[];
+
 			// Multiply the data for testing purposes
 			if (MOCK_DATA_MULTIPLIER > 1 && data.docs && data.docs.length > 0) {
 				const originalSprites = data.docs;
@@ -332,12 +409,16 @@
 					}));
 					multipliedSprites.push(...duplicatedSprites);
 				}
-				sprites = multipliedSprites;
+				fetchedSprites = multipliedSprites;
 				totalResults = data.totalDocs * MOCK_DATA_MULTIPLIER;
 			} else {
-				sprites = data.docs;
+				fetchedSprites = data.docs;
 				totalResults = data.totalDocs;
 			}
+
+			// OPTIMIZATION: Memoize in deferred batches after fetch
+			sprites = fetchedSprites;
+			memoizeSpritesDeferred(fetchedSprites);
 		} catch (error) {
 			console.error('Error fetching sprites:', error);
 			sprites = [];
@@ -352,109 +433,72 @@
 		sortBy = 'createdAt:desc';
 		gameFilter = 'all';
 		typeFilter = 'all';
+		authorFilter = 'all';
 		currentPage = 1;
 	}
 
-	// Helper function to generate visible page numbers
-	function getVisiblePages() {
-		const delta = 2;
-		const range = [];
-		const rangeWithDots: (number | string)[] = [];
-		for (let i = Math.max(2, currentPage - delta); i <= Math.min(pageCount - 1, currentPage + delta); i++) {
-			range.push(i);
-		}
-		if (currentPage - delta > 2) {
-			rangeWithDots.push(1, '...');
-		} else {
-			rangeWithDots.push(1);
-		}
-		rangeWithDots.push(...range);
-		if (currentPage + delta < pageCount - 1) {
-			rangeWithDots.push('...', pageCount);
-		} else if (pageCount > 1) {
-			rangeWithDots.push(pageCount);
-		}
-		return rangeWithDots;
-	}
 
-	// Modal functions
-	async function openSpriteModal(sprite: Sprite, event?: MouseEvent) {
+	// Viewer functions - replacing modal functions
+	async function openSpriteViewer(sprite: Sprite, event?: MouseEvent) {
 		// If this is from a click event, prevent default navigation
 		if (event) {
 			event.preventDefault();
 		}
 
 		transitioningCardId = sprite.id;
-		
-		// Check if View Transitions API is supported
-		const supportsViewTransitions = 'startViewTransition' in document;
-		
-		const openModal = async () => {
-			modalSprite = sprite;
-			modalOpen = true;
-			document.body.style.overflow = 'hidden';
-			
-			// Push state to history
-			history.pushState(
-				{ spriteModal: true, spriteId: sprite.id },
-				'',
-				`/sprites/${sprite.id}`
-			);
-			
-			// Small delay to ensure transition completes
-			await new Promise(resolve => setTimeout(resolve, 100));
-			transitioningCardId = null;
-		};
 
-		if (supportsViewTransitions) {
-			// @ts-ignore - View Transitions API
-			await document.startViewTransition(openModal).finished;
-		} else {
-			await openModal();
-		}
+		// Slide out browser
+		showBrowser = false;
+
+		// Wait for slide out animation
+		await new Promise(resolve => setTimeout(resolve, 200));
+
+		// Set viewing sprite and show viewer
+		viewingSprite = sprite;
+
+		// Scroll to top of page instantly
+		window.scrollTo(0, 0);
+
+		// Push state to history
+		history.pushState(
+			{ spriteViewer: true, spriteId: sprite.id },
+			'',
+			`/sprites/${sprite.id}`
+		);
+
+		transitioningCardId = null;
 	}
 
-	function closeSpriteModal() {
-		const supportsViewTransitions = 'startViewTransition' in document;
-		
-		const closeModal = () => {
-			modalOpen = false;
-			modalSprite = null;
-			document.body.style.overflow = '';
-			transitioningCardId = null;
-		};
+	function closeSpriteViewer() {
+		// Fade out viewer
+		viewingSprite = null;
 
-		if (supportsViewTransitions) {
-			// @ts-ignore - View Transitions API
-			document.startViewTransition(closeModal);
-		} else {
-			closeModal();
-		}
-		
+		// Wait for fade out, then show browser and scroll to top
+		setTimeout(() => {
+			showBrowser = true;
+			// Scroll to top instantly
+			setTimeout(() => {
+				window.scrollTo(0, 0);
+			}, 50);
+		}, 50);
+
 		// Navigate back in history
-		if (history.state?.spriteModal) {
+		if (history.state?.spriteViewer) {
 			history.back();
 		}
 	}
 
 	function handlePopState(event: PopStateEvent) {
-		if (modalOpen && !event.state?.spriteModal) {
-			// User pressed back button, close modal
-			const supportsViewTransitions = 'startViewTransition' in document;
-			
-			const closeModal = () => {
-				modalOpen = false;
-				modalSprite = null;
-				document.body.style.overflow = '';
-				transitioningCardId = null;
-			};
-
-			if (supportsViewTransitions) {
-				// @ts-ignore - View Transitions API
-				document.startViewTransition(closeModal);
-			} else {
-				closeModal();
-			}
+		if (viewingSprite && !event.state?.spriteViewer) {
+			// User pressed back button, close viewer and scroll to top
+			viewingSprite = null;
+			setTimeout(() => {
+				showBrowser = true;
+				// Scroll to top instantly
+				setTimeout(() => {
+					window.scrollTo(0, 0);
+				}, 50);
+			}, 50);
 		}
 	}
 
@@ -464,36 +508,51 @@
 			return; // Let the browser handle it
 		}
 
-		await openSpriteModal(sprite, event);
+		await openSpriteViewer(sprite, event);
 	}
 
-	// Watchers for state changes using Svelte 5 runes
+	// OPTIMIZATION: Separate effect for filter/page changes only
+	// This won't run on initial render if we have server data
 	$effect(() => {
+		// Track all filter dependencies
+		const _sortBy = sortBy;
+		const _gameFilter = gameFilter;
+		const _typeFilter = typeFilter;
+		const _authorFilter = authorFilter;
+		const _searchTerm = searchTerm;
+		const _currentPage = currentPage;
+
+		// Skip the initial render if we have server-provided data
+		if (isInitialRender) {
+			return;
+		}
+
+		// Fetch when filters change (after initial render)
 		fetchSprites();
 	});
 
 	// Initial fetch on mount
 	onMount(() => {
-		fetchSprites();
-		
+		// Mark initial render as complete after this tick
+		tick().then(() => {
+			isInitialRender = false;
+		});
+
+		// If we have server data, start deferred memoization
+		if (hasServerData && sprites.length > 0) {
+			memoizeSpritesDeferred(sprites);
+		} else {
+			// No server data, fetch immediately
+			fetchSprites();
+		}
+
 		// Listen to popstate for browser back/forward
 		window.addEventListener('popstate', handlePopState);
-		
+
 		return () => {
 			window.removeEventListener('popstate', handlePopState);
 		};
 	});
-
-	// Handle filter changes - these will be triggered by bind:value changes
-	$effect(() => {
-		// Reset to page 1 when filters change
-		currentPage = 1;
-	});
-
-	function handleSearchChange(value: string) {
-		searchTerm = value;
-		currentPage = 1;
-	}
 </script>
 
 <svelte:head>
@@ -521,299 +580,252 @@
 	</style>
 </svelte:head>
 
-<div class="flex flex-col items-center justify-start p-4 md:p-8 space-y-8 h-screen w-full">
-	<div class="search-section w-full">
-		<div class="search-header">
-			<div class="search-stats">
-				<span id="totalResults" class="text-sm text-muted-foreground">
-					{isFetchingInProgress ?
-					'Loading...' : `${totalResults} Results`}
-				</span>
-			</div>
-		</div>
-		<div class="search-bar-container">
-			<div class="mb-6">
-				<SearchBar
-					bind:value={searchTerm}
-					placeholder="Search sprites by title, author, or game..."
-					onSearch={handleSearchChange}
-					class="w-full"
-					inputClass="py-3 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-				/>
-			</div>
-		</div>
-		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-			<div class="space-y-2">
-				<label class="text-sm font-medium text-foreground">Sort by</label>
-				<Select.Root type="single" name="sort" bind:value={sortBy}>
-					<Select.Trigger id="sortSelect" class="w-full">
-						{sortTriggerContent}
-					</Select.Trigger>
-					<Select.Content>
-						{#each sortOptions as option (option.value)}
-							<Select.Item value={option.value} label={option.label}>
-								{option.label}
-							</Select.Item>
-						{/each}
-					</Select.Content>
-				</Select.Root>
-			</div>
-			<div class="space-y-2">
-				<label class="text-sm font-medium text-foreground">Game</label>
-				<Select.Root type="single" name="game" bind:value={gameFilter}>
-					<Select.Trigger id="gameFilter" class="w-full">
-						{gameTriggerContent}
-					</Select.Trigger>
-					<Select.Content>
-						{#each gameOptions as option (option.value)}
-							<Select.Item value={option.value} label={option.label}>
-								{option.label}
-							</Select.Item>
-						{/each}
-					</Select.Content>
-				</Select.Root>
-			</div>
-			<div class="space-y-2">
-				<label class="text-sm font-medium text-foreground">Type</label>
-				<Select.Root type="single" name="type" bind:value={typeFilter}>
-					<Select.Trigger id="typeFilter" class="w-full">
-						{typeTriggerContent}
-					</Select.Trigger>
-					<Select.Content>
-						{#each typeOptions as option (option.value)}
-							<Select.Item value={option.value} label={option.label}>
-								{option.label}
-							</Select.Item>
-						{/each}
-					</Select.Content>
-				</Select.Root>
-			</div>
-			<div class="space-y-2">
-				<label class="text-sm font-medium text-foreground">Author</label>
-				<Select.Root 
-					type="single" name="author">
-					<Select.Trigger id="authorFilter" class="w-full">
-						{sortTriggerContent}
-					</Select.Trigger>
-					<Select.Content>
-						{#each authorOptions as option (option.value)}
-							<Select.Item value={option.value} label={option.label}>
-								{option.label}
-							</Select.Item>
-						{/each}
-					</Select.Content>
-				</Select.Root>
-			</div>
-		</div>
-	</div>
-	
-	<div class="sprite-container-group w-full">
-		<div class="sprite-container-title">Sprites</div>
-		
-		<div class="flex items-center justify-center p-4"
-			style="background-color: var(--page-color);
-			border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white); border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);"
-		>
-			<div class="flex items-center space-x-2">
-				<Button
-					variant="outline"
-					size="sm"
-					on:click={() => currentPage > 1 && (currentPage = currentPage - 1)}
-					disabled={currentPage === 1 || isFetchingInProgress || pageCount <= 1}
-				>
-					Previous
-				</Button>
-				
-				{#each getVisiblePages() as page}
-					{#if page === '...'}
-						<span class="px-3 py-2">...</span>
-					{:else}
-						<Button
-							variant={currentPage === page ? "default" : "outline"}
-							size="sm"
-							on:click={() => !isFetchingInProgress && pageCount > 1 && (currentPage = Number(page))}
-							disabled={isFetchingInProgress || pageCount <= 1}
-						>
-							{page}
-						</Button>
-					{/if}
-				{/each}
-				
-				<Button
-					variant="outline"
-					size="sm"
-					on:click={() => currentPage < pageCount && (currentPage = currentPage + 1)}
-					disabled={currentPage >= pageCount ||
-					isFetchingInProgress || pageCount <= 1}
-				>
-					Next
-				</Button>
-			</div>
-		</div>
-		
-		<div id="hello" class="sprite-container">
-			{#if isFetchingInProgress}
-				<div class="w-full flex justify-center items-center h-40">
-					<p class="text-muted-foreground">Loading sprites...</p>
-				</div>
-			{:else if sprites.length > 0}
-				{#each sprites as sprite (sprite.id)}
-					<a 
-						href={`/sprites/${sprite.id}`} 
-						class="sprite-box sprite-glow"
-						style="view-transition-name: {transitioningCardId === sprite.id ? 'sprite-card' : 'none'};"
-						on:click={(e) => handleSpriteClick(sprite, e)}
-					>
-						<div class="sprite-star-container">
-							{#each Array.from({ length: 10 }) as _, index}
-								<div class="sprite-star"></div>
-							{/each}
+<div class="sprite-page-wrapper">
+	{#if showBrowser && !viewingSprite}
+		<div class="browser-container" in:fly={{ x: -100, duration: 200 }} out:fly={{ x: -100, duration: 200 }}>
+			<div class="flex flex-col items-center justify-start p-4 md:p-8 space-y-8 w-full">
+				<div class="search-section w-full">
+					<div class="search-header">
+						<div class="search-stats">
+							<span id="totalResults" class="text-sm" style="color: var(--font-color); opacity: 0.8;">
+								{isFetchingInProgress ?
+								'Loading...' : `${totalResults} Results`}
+							</span>
 						</div>
-						
-						<div class="sprite-number">
-							{#each formattedNumberToAltSprite(count(sprite.id)) as item (item.key)}
-								<span style={item.style}></span>
-							{/each}
-						</div>
-						
-						<div class="sprite-title">
-							<div id="author" class="sprite-text">
-								{#each textToSpriteWithWrapping(sprite.title || '', charMap, 100, 2) as item (item.key)}
-									{#if item.isNewline}
-										<div class="sprite-newline" style="display: block;
-										width: 100%;"></div>
-									{:else}
-										<span style={item.style}></span>
-									{/if}
-								{/each}
-							</div>
-						</div>
-						
-						<div class="sprite-image">
-							<img src={sprite.iconImage?.url || sprite.image?.url || 'https://via.placeholder.com/150'} 
-								 alt={sprite.iconImage?.alt || `Sprite icon for ${sprite.title}`} />
-						</div>
-						
-						<div class="sprite-author">
-							<div class="sprite-text">
-								{#each textToSprite(sprite.author?.displayName || sprite.author?.username || '') as item (item.key)}
-									<span style={item.style}></span>
-								{/each}
-							</div>
-						</div>
-						
-						<div class="sprite-stats">
-							<div class="sprite-text">
-								{#each textToSpriteWithWrapping(sprite.typeOfSheet?.[0]?.game?.name || '', charMap, 150, 1) as item (item.key)}
-									{#if item.isNewline}
-										<div class="sprite-newline" style="display: block;
-										width: 100%;"></div>
-									{:else}
-										<span style={item.style}></span>
-									{/if}
-								{/each}
-							</div>
-						</div>
-						
-						<div class="sprite-stats">
-							<div class="sprite-text">
-								{#each textToSprite(sprite.typeOfSheet?.[0]?.blockType || '') as item (item.key)}
-									<span style={item.style}></span>
-								{/each}
-							</div>
-						</div>
-						
-						<div class="sprite-stats">
-							<div class="sprite-text">
-								{#each textToSprite(sprite.createdAt ? new Date(sprite.createdAt).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : '') as item (item.key)}
-									<span style={item.style}></span>
-								{/each}
-							</div>
-						</div>
-						
-						<div class="sprite-stats">
-							<div class="sprite-text">
-								{#each textToSprite(sprite.image?.filesize ? formatBytes(sprite.image.filesize) : '0 Bytes') as item (item.key)}
-									<span style={item.style}></span>
-								{/each}
-							</div>
-						</div>
-					</a>
-				{/each}
-			{:else}
-				<div class="w-full flex flex-col items-center justify-end p-8 text-center">
-					<div class="text-muted-foreground mb-4">
-						<svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<circle cx="11" cy="11" r="8"></circle>
-							<path d="m21 21-4.35-4.35"></path>
-						</svg>
 					</div>
-					<h3 class="text-lg font-semibold text-foreground mb-2">No sprites found</h3>
-					<p class="text-muted-foreground mb-6">Try adjusting your search terms or filters.</p>
-					<Button
-						on:click={resetAllFilters}
-						class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors"
-					>
-						Reset All Filters
-					</Button>
+					<div class="search-bar-container">
+						<div class="mb-6">
+							<Input
+								bind:value={searchTerm}
+								placeholder="Search sprites by title, author, or game..."
+								themed={true}
+								class="w-full"
+							/>
+						</div>
+					</div>
+					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+						<div class="space-y-2">
+							<label class="text-sm font-medium" style="color: var(--font-color);">Sort by</label>
+							<Select
+								bind:value={sortBy}
+								options={sortOptions}
+								placeholder="Newest First"
+								themed={true}
+								class="w-full"
+							/>
+						</div>
+						<div class="space-y-2">
+							<label class="text-sm font-medium" style="color: var(--font-color);">Game</label>
+							<Combobox
+								bind:value={gameFilter}
+								options={gameOptions}
+								placeholder="All Games"
+								searchPlaceholder="Search games..."
+								themed={true}
+								class="w-full"
+							/>
+						</div>
+						<div class="space-y-2">
+							<label class="text-sm font-medium" style="color: var(--font-color);">Type</label>
+							<Combobox
+								bind:value={typeFilter}
+								options={typeOptions}
+								placeholder="All Types"
+								searchPlaceholder="Search types..."
+								themed={true}
+								class="w-full"
+							/>
+						</div>
+						<div class="space-y-2">
+							<label class="text-sm font-medium" style="color: var(--font-color);">Author</label>
+							<Combobox
+								bind:value={authorFilter}
+								options={authorOptions}
+								placeholder="All Authors"
+								searchPlaceholder="Search authors..."
+								themed={true}
+								class="w-full"
+							/>
+						</div>
+					</div>
 				</div>
-			{/if}
-		</div>
-	</div>
-</div>
 
-{#if modalOpen && modalSprite}
-	<div 
-		class="sprite-modal-overlay"
-		style="view-transition-name: sprite-modal;"
-		on:click={closeSpriteModal}
-		on:keydown={(e) => e.key === 'Escape' && closeSpriteModal()}
-		role="button"
-		tabindex="-1"
-	>
-		<div class="sprite-modal-content" on:click|stopPropagation>
-			<SpriteViewer 
-				spriteId={modalSprite.id.toString()} 
-				initialSprite={modalSprite} 
+				<div class="sprite-container-group w-full">
+					<div class="sprite-container-title" style="color: var(--font-color);">Sprites</div>
+
+					<div class="flex items-center justify-center p-4"
+						style="background-color: var(--page-color);
+						border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white); border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white); box-shadow: var(--box-shadow); position: relative; z-index: 1;"
+					>
+						<Pagination.Root bind:page={currentPage} count={totalResults} perPage={21} siblingCount={2}>
+							{#snippet children({ pages, range })}
+								<Pagination.Content>
+									<Pagination.Item>
+										<Pagination.PrevButton disabled={isFetchingInProgress || pageCount <= 1} />
+									</Pagination.Item>
+									{#each pages as page (page.key)}
+										{#if page.type === 'ellipsis'}
+											<Pagination.Item>
+												<Pagination.Ellipsis />
+											</Pagination.Item>
+										{:else}
+											<Pagination.Item>
+												<Pagination.Link {page} isActive={page.value === currentPage} disabled={isFetchingInProgress || pageCount <= 1} />
+											</Pagination.Item>
+										{/if}
+									{/each}
+									<Pagination.Item>
+										<Pagination.NextButton disabled={isFetchingInProgress || pageCount <= 1} />
+									</Pagination.Item>
+								</Pagination.Content>
+							{/snippet}
+						</Pagination.Root>
+					</div>
+
+					<div id="hello" class="sprite-container">
+						{#if isFetchingInProgress}
+							<div class="w-full flex justify-center items-center h-40">
+								<p class="text-muted-foreground">Loading sprites...</p>
+							</div>
+						{:else if sprites.length > 0}
+							{#each sprites as sprite (sprite.id)}
+								<a
+									href={`/sprites/${sprite.id}`}
+									class="sprite-box sprite-glow"
+									style="view-transition-name: {transitioningCardId === sprite.id ? 'sprite-card' : 'none'};"
+									onclick={(e) => handleSpriteClick(sprite, e)}
+								>
+									<!-- OPTIMIZATION: Reduced from 10 stars to 4 for fewer DOM nodes -->
+									<div class="sprite-star-container">
+										{#each Array.from({ length: 4 }) as _, index}
+											<div class="sprite-star"></div>
+										{/each}
+									</div>
+
+									<div class="sprite-number">
+										{#each sprite._memoized?.spriteNumber || [] as item (item.key)}
+											<span style={item.style}></span>
+										{/each}
+									</div>
+
+									<div class="sprite-title">
+										<div id="author" class="sprite-text">
+											{#each sprite._memoized?.title || [] as item (item.key)}
+												{#if item.isNewline}
+													<div class="sprite-newline" style="display: block;
+													width: 100%;"></div>
+												{:else}
+													<span style={item.style}></span>
+												{/if}
+											{/each}
+										</div>
+									</div>
+
+									<div class="sprite-image">
+										<!-- OPTIMIZATION: Added lazy loading for images -->
+										<img src={sprite.iconImage?.url || sprite.image?.url || 'https://via.placeholder.com/150'}
+											 alt={sprite.iconImage?.alt || `Sprite icon for ${sprite.title}`}
+											 loading="lazy" />
+									</div>
+
+									<div class="sprite-author">
+										<div class="sprite-text">
+											{#each sprite._memoized?.author || [] as item (item.key)}
+												<span style={item.style}></span>
+											{/each}
+										</div>
+									</div>
+
+									<div class="sprite-stats">
+										<div class="sprite-text">
+											{#each sprite._memoized?.gameName || [] as item (item.key)}
+												{#if item.isNewline}
+													<div class="sprite-newline" style="display: block;
+													width: 100%;"></div>
+												{:else}
+													<span style={item.style}></span>
+												{/if}
+											{/each}
+										</div>
+									</div>
+
+									<div class="sprite-stats">
+										<div class="sprite-text">
+											{#each sprite._memoized?.blockType || [] as item (item.key)}
+												<span style={item.style}></span>
+											{/each}
+										</div>
+									</div>
+
+									<div class="sprite-stats">
+										<div class="sprite-text">
+											{#each sprite._memoized?.createdDate || [] as item (item.key)}
+												<span style={item.style}></span>
+											{/each}
+										</div>
+									</div>
+
+									<div class="sprite-stats">
+										<div class="sprite-text">
+											{#each sprite._memoized?.fileSize || [] as item (item.key)}
+												<span style={item.style}></span>
+											{/each}
+										</div>
+									</div>
+								</a>
+							{/each}
+						{:else}
+							<div class="w-full flex flex-col items-center justify-end p-8 text-center">
+								<div class="text-muted-foreground mb-4">
+									<svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<circle cx="11" cy="11" r="8"></circle>
+										<path d="m21 21-4.35-4.35"></path>
+									</svg>
+								</div>
+								<h3 class="text-lg font-semibold text-foreground mb-2">No sprites found</h3>
+								<p class="text-muted-foreground mb-6">Try adjusting your search terms or filters.</p>
+								<Button
+									onclick={resetAllFilters}
+									class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+								>
+									Reset All Filters
+								</Button>
+							</div>
+						{/if}
+					</div>
+				</div>
+			</div>
+		</div>
+	{/if}
+
+	{#if viewingSprite}
+		<div class="viewer-container" in:fly={{ x: 100, duration: 200 }} out:fly={{ x: 100, duration: 200 }}>
+			<SpriteViewer
+				spriteId={viewingSprite.id.toString()}
+				initialSprite={viewingSprite}
 				initialError={null}
-				isModal={true}
-				onClose={closeSpriteModal}
+				isModal={false}
+				onClose={closeSpriteViewer}
 			/>
 		</div>
-	</div>
-{/if}
+	{/if}
+</div>
 
 <style>
-	.sprite-modal-overlay {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background-color: rgba(0, 0, 0, 0.9);
-		z-index: 9999;
+	.sprite-page-wrapper {
+		position: relative;
+		width: 100%;
+	}
+
+	.browser-container,
+	.viewer-container {
+		width: 100%;
+	}
+
+	.viewer-container {
 		display: flex;
-		justify-content: center;
+		flex-direction: column;
 		align-items: center;
-		animation: fadeIn 0.3s ease-out;
-		overflow: hidden;
-	}
-
-	.sprite-modal-content {
-		width: 90%;
-		max-width: 1400px;
-		height: 100vh;
-		overflow: hidden;
-		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-		animation: fadeIn 0.3s ease-out;
-	}
-
-	@keyframes fadeIn {
-		from {
-			opacity: 0;
-		}
-		to {
-			opacity: 1;
-		}
+		justify-content: flex-start;
 	}
 </style>

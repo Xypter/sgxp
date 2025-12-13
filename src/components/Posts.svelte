@@ -1,6 +1,6 @@
 <script>
     import { format, parseISO } from "date-fns";
-    import * as Pagination from "$components/ui/pagination";
+    import { Pagination } from "$lib/components";
     import { MediaQuery } from "svelte/reactivity";
 
     // Reactive state using Svelte's new runes API
@@ -128,7 +128,7 @@
 </script>
 
 {#if totalPages > 1}
-        <div style="margin-bottom: var(--gap); background-color: var(--page-color); border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white); padding: 5px;">
+        <div style="margin-bottom: var(--gap); background-color: var(--page-color); border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white); padding: 5px; box-shadow: var(--box-shadow); position: relative; z-index: 1;">
             <Pagination.Root 
                 count={totalPosts} 
                 perPage={postsPerPage} 
