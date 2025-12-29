@@ -109,7 +109,7 @@ body {
 .sprite-box {
   width: calc(117px * var(--multiplication-factor));
   height: calc(192px * var(--multiplication-factor));
-  background-image: url("/img/spriteicon/icon_image.png");
+  background-image: url("https://cdn.sgxp.me/media/general/35/sprite_icon_image-1766650692338.png");
   user-select: none;
   transition: transform ease-in-out .2s;
   text-decoration: none;
@@ -155,20 +155,6 @@ body {
 .fade-out {
   animation: fadein-bottom .5s; /* Use fade-out animation */
   opacity: 0; /* Set initial opacity to 0 */
-}
-
-.sprite-page-container a {
-  color: white;
-  padding: 0;
-}
-
-.sprite-page-container a:hover {
-  padding: 0;
-  background-image: url("/img/spriteicon/icon_image.png");
-}
-
-.sprite-page-container a:visited {
-  color: white;
 }
 
 .sprite-star-container {

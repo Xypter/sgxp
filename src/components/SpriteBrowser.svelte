@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, tick } from 'svelte';
+	import { onMount, tick, untrack } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { charMap, altNumberMap } from '../lib/charMap.js';
 
@@ -55,6 +55,10 @@
 			id: number;
 			name: string;
 		};
+		section: {
+			id: number;
+			name: string;
+		};
 		typeOfSheet: TypeOfSheet[];
 		createdAt: string;
 		updatedAt: string;
@@ -89,13 +93,16 @@
 	let sprites = $state<SpriteWithMemoized[]>(initialSprites as SpriteWithMemoized[]);
 	let totalResults = $state(initialTotalResults);
 	let currentPage = $state(1);
-	let sortBy = $state('createdAt:desc');
-	let gameFilter = $state('all');
-	let typeFilter = $state('all');
-	let authorFilter = $state('all');
+	let sortBy = $state('newest');
+	let sectionFilter = $state<string>('');
+	let characterFilter = $state<string>(''); // Single character selection
+	let styleSourceType = $state<string>('');
+	let styleSourceId = $state<string>('');
+	let authorFilter = $state<string>('');
 	let isFetchingInProgress = $state(false);
 	let searchTerm = $state('');
-	
+	let activeSearchTerm = $state(''); // The search term that triggers API call
+
 	// OPTIMIZATION: Track if initial memoization is complete
 	let isMemoized = $state(false);
 	// OPTIMIZATION: Track if this is the first render to prevent double-fetch
@@ -106,26 +113,29 @@
 	let showBrowser = $state(true);
 	let transitioningCardId = $state<number | null>(null);
 
-	// Derived values for select triggers
+	// Derived values for select triggers (updated to match Payload CMS search API)
 	const sortOptions = [
-		{ value: "createdAt:desc", label: "Newest First" },
-		{ value: "createdAt:asc", label: "Oldest First" },
-		{ value: "title:asc", label: "Title A-Z" },
-		{ value: "title:desc", label: "Title Z-A" },
-		{ value: "updatedAt:desc", label: "Recently Updated" },
-		{ value: "id:desc", label: "ID (Desc)" },
-		{ value: "id:asc", label: "ID (Asc)" }
-	];
-	const gameOptions = [
-		{ value: "all", label: "All Games" }
+		{ value: "newest", label: "Newest First" },
+		{ value: "oldest", label: "Oldest First" },
+		{ value: "title-asc", label: "Title A-Z" },
+		{ value: "title-desc", label: "Title Z-A" },
+		{ value: "recently-updated", label: "Recently Updated" },
+		{ value: "id-desc", label: "ID (Desc)" },
+		{ value: "id-asc", label: "ID (Asc)" },
+		{ value: "most-liked", label: "Most Liked" },
+		{ value: "most-viewed", label: "Most Viewed" },
+		{ value: "most-commented", label: "Most Commented" }
 	];
 
-	const typeOptions = [
-		{ value: "all", label: "All Types" }
-	];
-	const authorOptions = [
-		{ value: "all", label: "All Authors" }
-	];
+	// Dynamic dropdown options from API
+	let sectionOptions = $state<Array<{ value: string; label: string }>>([]);
+	let characterOptions = $state<Array<{ value: string; label: string; characterType?: 'official' | 'fan' }>>([]);
+	let authorOptions = $state<Array<{ value: string; label: string }>>([]);
+	let styleSourceTypeOptions = $state<Array<{ value: string; label: string }>>([]);
+	let officialGamesOptions = $state<Array<{ value: string; label: string }>>([]);
+	let fanGamesOptions = $state<Array<{ value: string; label: string }>>([]);
+	let seriesOptions = $state<Array<{ value: string; label: string }>>([]);
+	let teamsOptions = $state<Array<{ value: string; label: string }>>([]);
 
 	const API_BASE_URL = `${import.meta.env.PUBLIC_PAYLOAD_URL}/api/sprites`;
 	const MOCK_DATA_MULTIPLIER = 1;
@@ -144,7 +154,7 @@
 			
 			return {
 				key: `${char}-${index}`,
-				style: `display: inline-block; width: ${width}px; height: ${height}px; background-image: url('https://i.imgur.com/DFC6vib.png');
+				style: `display: inline-block; width: ${width}px; height: ${height}px; background-image: url('https://cdn.sgxp.me/media/general/35/DFC6vib-1766650806712.png');
  background-size: 400px 14px; background-position: ${charData.x}px ${charData.y}px; margin-left: ${offsetX}px; margin-right: ${marginRight}; margin-top: ${offsetY}px;`
 			};
 		}
@@ -325,8 +335,8 @@
 			spriteNumber: formattedNumberToAltSprite(count(sprite.id)),
 			title: textToSpriteWithWrapping(sprite.title || '', charMap, 100, 2),
 			author: textToSprite(sprite.author?.displayName || sprite.author?.username || ''),
-			gameName: textToSpriteWithWrapping(sprite.typeOfSheet?.[0]?.game?.name || '', charMap, 150, 1),
-			blockType: textToSprite(sprite.typeOfSheet?.[0]?.blockType || ''),
+			gameName: textToSpriteWithWrapping(sprite.section?.name || '', charMap, 150, 1),
+			blockType: textToSprite(sprite.image?.width && sprite.image?.height ? `${sprite.image.width} X ${sprite.image.height}` : ''),
 			createdDate: textToSprite(sprite.createdAt ? new Date(sprite.createdAt).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : ''),
 			fileSize: textToSprite(sprite.image?.filesize ? formatBytes(sprite.image.filesize) : '0 Bytes')
 		};
@@ -368,57 +378,179 @@
 		}
 	}
 
-	// Fetching logic - Updated to match React component API
+	// Fetch dropdown filter options from API using the new /api/sprites/filters endpoint
+	async function fetchFilterOptions() {
+		try {
+			// Use proxy route to avoid CORS issues
+			const response = await fetch('/api/proxy/sprites/filters');
+
+			if (response.ok) {
+				const data = await response.json();
+				const filters = data.filters;
+
+				// Populate section options
+				if (filters.sections) {
+					sectionOptions = filters.sections.map((section: any) => ({
+						value: section.id.toString(),
+						label: section.name
+					}));
+				}
+
+				// Populate character options
+				if (filters.characters) {
+					characterOptions = filters.characters.map((character: any) => {
+						// Include character type in label for clarity (e.g., "Sonic (Official)" or "Shadow (Fan)")
+						const typeLabel = character.characterType
+							? character.characterType === 'official'
+								? ' (Official)'
+								: ' (Fan)'
+							: '';
+
+						return {
+							value: character.id.toString(),
+							label: `${character.name}${typeLabel}`,
+							characterType: character.characterType // Keep the type for potential filtering
+						};
+					});
+				}
+
+				// Populate author options - note: we'll still fetch from users endpoint for now
+				// since the filters endpoint might not include all users
+				const authorsResponse = await fetch('/api/proxy/users?limit=100&depth=0');
+				if (authorsResponse.ok) {
+					const authorsData = await authorsResponse.json();
+					const authors = authorsData.docs || [];
+					authorOptions = authors.map((author: any) => ({
+						value: author.id.toString(),
+						label: author.displayName || author.username
+					}));
+				}
+
+				// Populate style source type options
+				if (filters.styleSourceTypes) {
+					styleSourceTypeOptions = [
+						...filters.styleSourceTypes.map((type: any) => ({
+							value: type.value,
+							label: type.label
+						})),
+						{ value: 'custom', label: 'Custom' }
+					];
+				}
+
+				// Populate conditional dropdown options
+				if (filters.officialGames) {
+					officialGamesOptions = filters.officialGames.map((game: any) => ({
+						value: game.id.toString(),
+						label: game.name
+					}));
+				}
+
+				if (filters.fanGames) {
+					fanGamesOptions = filters.fanGames.map((game: any) => ({
+						value: game.id.toString(),
+						label: game.name
+					}));
+				}
+
+				if (filters.series) {
+					seriesOptions = filters.series.map((series: any) => ({
+						value: series.id.toString(),
+						label: series.name
+					}));
+				}
+
+				if (filters.teams) {
+					teamsOptions = filters.teams.map((team: any) => ({
+						value: team.id.toString(),
+						label: team.name
+					}));
+				}
+			}
+		} catch (error) {
+			console.error('Error fetching filter options:', error);
+		}
+	}
+
+	// Fetching logic - Updated to use new /api/sprites/search endpoint
 	async function fetchSprites() {
 		// OPTIMIZATION: Prevent concurrent fetches
-		if (isFetchingInProgress) return;
-		
+		if (isFetchingInProgress) {
+			return;
+		}
+
 		isFetchingInProgress = true;
 		try {
-			const [sortField, sortOrder] = sortBy.split(':');
-			// OPTIMIZATION: Using depth=2 to populate author.profilePicture (depth=3 was too slow at 667ms)
-			let url = `${API_BASE_URL}?depth=2&draft=false&locale=undefined&trash=false&limit=21&page=${currentPage}&sort=${sortField}`;
-			if (sortOrder === 'desc') {
-				url += `&sort=-${sortField}`;
-			}
-			if (gameFilter !== 'all') {
-				url += `&where[game][equals]=${gameFilter}`;
-			}
-			if (typeFilter !== 'all') {
-				url += `&where[type][equals]=${typeFilter}`;
-			}
-			if (searchTerm) {
-				url += `&where[title][contains]=${searchTerm}`;
+			const params = new URLSearchParams();
+
+			// Add keyword search
+			if (activeSearchTerm) {
+				params.set('q', activeSearchTerm);
 			}
 
+			// Add sort
+			params.set('sortBy', sortBy);
+
+			// Add pagination
+			params.set('page', currentPage.toString());
+			params.set('limit', '21');
+
+			// Add filters
+			if (authorFilter) {
+				params.set('author', authorFilter);
+			}
+
+			if (sectionFilter) {
+				params.set('section', sectionFilter);
+			}
+
+			if (characterFilter) {
+				params.set('characters', characterFilter);
+			}
+
+			if (styleSourceType) {
+				params.set('styleSourceType', styleSourceType);
+			}
+
+			if (styleSourceId) {
+				params.set('styleSourceId', styleSourceId);
+			}
+
+			// Use proxy route to avoid CORS issues
+			const url = `/api/proxy/sprites/search?${params.toString()}`;
 			const response = await fetch(url);
 			const data = await response.json();
 
 			let fetchedSprites: SpriteWithMemoized[];
 
-			// Multiply the data for testing purposes
-			if (MOCK_DATA_MULTIPLIER > 1 && data.docs && data.docs.length > 0) {
-				const originalSprites = data.docs;
-				const multipliedSprites = [];
-				for (let i = 0; i < MOCK_DATA_MULTIPLIER; i++) {
-					const duplicatedSprites = originalSprites.map((sprite: Sprite, index: number) => ({
-						...sprite,
-						id: sprite.id + (i * 1000) + index, // Ensure unique IDs
-						title: `${sprite.title} (Copy ${i + 1})`,
-						views: sprite.views + Math.floor(Math.random() * 100), // Add some variation
-					}));
-					multipliedSprites.push(...duplicatedSprites);
+			// Check if the API call was successful
+			if (data.success && data.docs) {
+				// Multiply the data for testing purposes
+				if (MOCK_DATA_MULTIPLIER > 1 && data.docs.length > 0) {
+					const originalSprites = data.docs;
+					const multipliedSprites = [];
+					for (let i = 0; i < MOCK_DATA_MULTIPLIER; i++) {
+						const duplicatedSprites = originalSprites.map((sprite: Sprite, index: number) => ({
+							...sprite,
+							id: sprite.id + (i * 1000) + index, // Ensure unique IDs
+							title: `${sprite.title} (Copy ${i + 1})`,
+							views: sprite.views + Math.floor(Math.random() * 100), // Add some variation
+						}));
+						multipliedSprites.push(...duplicatedSprites);
+					}
+					fetchedSprites = multipliedSprites;
+					totalResults = data.totalDocs * MOCK_DATA_MULTIPLIER;
+				} else {
+					fetchedSprites = data.docs;
+					totalResults = data.totalDocs;
 				}
-				fetchedSprites = multipliedSprites;
-				totalResults = data.totalDocs * MOCK_DATA_MULTIPLIER;
-			} else {
-				fetchedSprites = data.docs;
-				totalResults = data.totalDocs;
-			}
 
-			// OPTIMIZATION: Memoize in deferred batches after fetch
-			sprites = fetchedSprites;
-			memoizeSpritesDeferred(fetchedSprites);
+				// OPTIMIZATION: Memoize in deferred batches after fetch
+				sprites = fetchedSprites;
+				memoizeSpritesDeferred(fetchedSprites);
+			} else {
+				sprites = [];
+				totalResults = 0;
+			}
 		} catch (error) {
 			console.error('Error fetching sprites:', error);
 			sprites = [];
@@ -428,12 +560,20 @@
 		}
 	}
 
+	function handleSearch() {
+		activeSearchTerm = searchTerm;
+		currentPage = 1; // Reset to first page when searching
+	}
+
 	function resetAllFilters() {
 		searchTerm = '';
-		sortBy = 'createdAt:desc';
-		gameFilter = 'all';
-		typeFilter = 'all';
-		authorFilter = 'all';
+		activeSearchTerm = '';
+		sortBy = 'newest';
+		sectionFilter = '';
+		characterFilter = '';
+		styleSourceType = '';
+		styleSourceId = '';
+		authorFilter = '';
 		currentPage = 1;
 	}
 
@@ -511,24 +651,71 @@
 		await openSpriteViewer(sprite, event);
 	}
 
-	// OPTIMIZATION: Separate effect for filter/page changes only
-	// This won't run on initial render if we have server data
+	// Single effect to handle all filter changes and fetching
+	// Use a closure to track previous values without triggering reactivity
+	let prevFilterValues = {
+		sortBy: '',
+		sectionFilter: '',
+		characterFilter: '',
+		styleSourceType: '',
+		styleSourceId: '',
+		authorFilter: '',
+		activeSearchTerm: '',
+		currentPage: 1
+	};
+
 	$effect(() => {
-		// Track all filter dependencies
-		const _sortBy = sortBy;
-		const _gameFilter = gameFilter;
-		const _typeFilter = typeFilter;
-		const _authorFilter = authorFilter;
-		const _searchTerm = searchTerm;
-		const _currentPage = currentPage;
+		// Track current values
+		const current = {
+			sortBy,
+			sectionFilter,
+			characterFilter,
+			styleSourceType,
+			styleSourceId,
+			authorFilter,
+			activeSearchTerm,
+			currentPage
+		};
 
 		// Skip the initial render if we have server-provided data
 		if (isInitialRender) {
+			prevFilterValues = current;
 			return;
 		}
 
-		// Fetch when filters change (after initial render)
-		fetchSprites();
+		// Reset styleSourceId if styleSourceType changed
+		if (prevFilterValues.styleSourceType !== current.styleSourceType) {
+			if (current.styleSourceId !== '') {
+				styleSourceId = '';
+				prevFilterValues = { ...current, styleSourceId: '' };
+				return;
+			}
+		}
+
+		// Check if filters changed (not page)
+		const filtersChanged =
+			prevFilterValues.sortBy !== current.sortBy ||
+			prevFilterValues.sectionFilter !== current.sectionFilter ||
+			prevFilterValues.characterFilter !== current.characterFilter ||
+			prevFilterValues.styleSourceType !== current.styleSourceType ||
+			prevFilterValues.styleSourceId !== current.styleSourceId ||
+			prevFilterValues.authorFilter !== current.authorFilter ||
+			prevFilterValues.activeSearchTerm !== current.activeSearchTerm;
+
+		// If filters changed, reset page to 1
+		if (filtersChanged && current.currentPage !== 1) {
+			prevFilterValues = current;
+			currentPage = 1;
+			return;
+		}
+
+		// Update tracked values and fetch
+		prevFilterValues = current;
+
+		// Use untrack to prevent fetchSprites from triggering this effect again
+		untrack(() => {
+			fetchSprites();
+		});
 	});
 
 	// Initial fetch on mount
@@ -537,6 +724,9 @@
 		tick().then(() => {
 			isInitialRender = false;
 		});
+
+		// Fetch filter options for dropdowns
+		fetchFilterOptions();
 
 		// If we have server data, start deferred memoization
 		if (hasServerData && sprites.length > 0) {
@@ -594,18 +784,32 @@
 						</div>
 					</div>
 					<div class="search-bar-container">
-						<div class="mb-6">
+						<div class="mb-6 flex gap-2">
 							<Input
 								bind:value={searchTerm}
 								placeholder="Search sprites by title, author, or game..."
 								themed={true}
-								class="w-full"
+								class="flex-1"
+								onkeydown={(e) => {
+									if (e.key === 'Enter') {
+										handleSearch();
+									}
+								}}
 							/>
+							<Button
+								onclick={handleSearch}
+								themed={true}
+								disabled={isFetchingInProgress}
+								class="px-6"
+							>
+								Search
+							</Button>
 						</div>
 					</div>
-					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+						<!-- Sort By -->
 						<div class="space-y-2">
-							<label class="text-sm font-medium" style="color: var(--font-color);">Sort by</label>
+							<div class="text-sm font-medium" style="color: var(--font-color);">Sort by</div>
 							<Select
 								bind:value={sortBy}
 								options={sortOptions}
@@ -614,30 +818,10 @@
 								class="w-full"
 							/>
 						</div>
+
+						<!-- Author Filter -->
 						<div class="space-y-2">
-							<label class="text-sm font-medium" style="color: var(--font-color);">Game</label>
-							<Combobox
-								bind:value={gameFilter}
-								options={gameOptions}
-								placeholder="All Games"
-								searchPlaceholder="Search games..."
-								themed={true}
-								class="w-full"
-							/>
-						</div>
-						<div class="space-y-2">
-							<label class="text-sm font-medium" style="color: var(--font-color);">Type</label>
-							<Combobox
-								bind:value={typeFilter}
-								options={typeOptions}
-								placeholder="All Types"
-								searchPlaceholder="Search types..."
-								themed={true}
-								class="w-full"
-							/>
-						</div>
-						<div class="space-y-2">
-							<label class="text-sm font-medium" style="color: var(--font-color);">Author</label>
+							<div class="text-sm font-medium" style="color: var(--font-color);">Author</div>
 							<Combobox
 								bind:value={authorFilter}
 								options={authorOptions}
@@ -647,6 +831,104 @@
 								class="w-full"
 							/>
 						</div>
+
+						<!-- Section Filter -->
+						<div class="space-y-2">
+							<div class="text-sm font-medium" style="color: var(--font-color);">Section</div>
+							<Combobox
+								bind:value={sectionFilter}
+								options={sectionOptions}
+								placeholder="All Sections"
+								searchPlaceholder="Search sections..."
+								themed={true}
+								class="w-full"
+							/>
+						</div>
+
+						<!-- Character Filter -->
+						<div class="space-y-2">
+							<div class="text-sm font-medium" style="color: var(--font-color);">Character</div>
+							<Combobox
+								bind:value={characterFilter}
+								options={characterOptions}
+								placeholder="All Characters"
+								searchPlaceholder="Search characters..."
+								themed={true}
+								class="w-full"
+							/>
+						</div>
+
+						<!-- Style Source Type Filter -->
+						<div class="space-y-2">
+							<div class="text-sm font-medium" style="color: var(--font-color);">Style Source Type</div>
+							<Select
+								bind:value={styleSourceType}
+								options={styleSourceTypeOptions}
+								placeholder="Any Style Source"
+								themed={true}
+								class="w-full"
+							/>
+						</div>
+
+						<!-- Conditional Style Source Dropdown - Official Game -->
+						{#if styleSourceType === 'officialGame'}
+							<div class="space-y-2">
+								<div class="text-sm font-medium" style="color: var(--font-color);">Official Game</div>
+								<Combobox
+									bind:value={styleSourceId}
+									options={officialGamesOptions}
+									placeholder="Select Official Game..."
+									searchPlaceholder="Search games..."
+									themed={true}
+									class="w-full"
+								/>
+							</div>
+						{/if}
+
+						<!-- Conditional Style Source Dropdown - Fan Game -->
+						{#if styleSourceType === 'fanGame'}
+							<div class="space-y-2">
+								<div class="text-sm font-medium" style="color: var(--font-color);">Fan Game</div>
+								<Combobox
+									bind:value={styleSourceId}
+									options={fanGamesOptions}
+									placeholder="Select Fan Game..."
+									searchPlaceholder="Search games..."
+									themed={true}
+									class="w-full"
+								/>
+							</div>
+						{/if}
+
+						<!-- Conditional Style Source Dropdown - Series -->
+						{#if styleSourceType === 'series'}
+							<div class="space-y-2">
+								<div class="text-sm font-medium" style="color: var(--font-color);">Series</div>
+								<Combobox
+									bind:value={styleSourceId}
+									options={seriesOptions}
+									placeholder="Select Series..."
+									searchPlaceholder="Search series..."
+									themed={true}
+									class="w-full"
+								/>
+							</div>
+						{/if}
+
+						<!-- Conditional Style Source Dropdown - Team -->
+						{#if styleSourceType === 'team'}
+							<div class="space-y-2">
+								<div class="text-sm font-medium" style="color: var(--font-color);">Team</div>
+								<Combobox
+									bind:value={styleSourceId}
+									options={teamsOptions}
+									placeholder="Select Team..."
+									searchPlaceholder="Search teams..."
+									themed={true}
+									class="w-full"
+								/>
+							</div>
+						{/if}
 					</div>
 				</div>
 

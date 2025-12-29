@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { Image, ChevronRight, Loader2 } from 'lucide-svelte';
-  import { Button } from '$lib/components';
+  import { Image, Loader2 } from 'lucide-svelte';
+  import { Pagination } from '$lib/components';
+  import { charMap, altNumberMap } from '../../lib/charMap.js';
 
   // Props
   let {
@@ -11,15 +12,183 @@
     username: string;
   } = $props();
 
+  // Extended interface with memoized sprite text conversions
+  interface SpriteWithMemoized {
+    id: number;
+    title: string;
+    author: any;
+    iconImage?: any;
+    image?: any;
+    section?: any;
+    typeOfSheet?: any[];
+    createdAt: string;
+    _memoized?: {
+      spriteNumber: any[];
+      title: any[];
+      author: any[];
+      gameName: any[];
+      blockType: any[];
+      createdDate: any[];
+      fileSize: any[];
+    };
+  }
+
   // State
-  let sprites = $state<any[]>([]);
+  let sprites = $state<SpriteWithMemoized[]>([]);
   let loading = $state(true);
   let error = $state<string | null>(null);
   let totalSprites = $state(0);
-  let showAll = $state(false);
+  let currentPage = $state(1);
 
-  const INITIAL_DISPLAY_COUNT = 7;
+  const SPRITES_PER_PAGE = 8;
   const API_BASE_URL = "https://cms.sgxp.me/api/sprites";
+
+  // Helper function to create individual character sprite
+  function createCharacterSprite(char: string, characterMap: any, isAltNumberMap: boolean, index: number) {
+    if (characterMap[char]) {
+      const charData = characterMap[char];
+      const width = charData.width;
+      const height = charData.height;
+      const offsetX = charData.offsetX || 0;
+      const offsetY = charData.offsetY || 0;
+      const marginRight = isAltNumberMap ? '0px' : '1px';
+
+      return {
+        key: `${char}-${index}`,
+        style: `display: inline-block; width: ${width}px; height: ${height}px; background-image: url('https://i.imgur.com/DFC6vib.png'); background-size: 400px 14px; background-position: ${charData.x}px ${charData.y}px; margin-left: ${offsetX}px; margin-right: ${marginRight}; margin-top: ${offsetY}px;`
+      };
+    }
+    return null;
+  }
+
+  // Helper function to generate sprite for a string of text
+  function textToSprite(text: string | null | undefined) {
+    if (!text || typeof text !== 'string') {
+      return [];
+    }
+    const characters = text.toUpperCase().split('');
+    return characters
+      .map((char, index) => createCharacterSprite(char, charMap, false, index))
+      .filter((item): item is NonNullable<ReturnType<typeof createCharacterSprite>> => item !== null);
+  }
+
+  // Helper function for formatting sprite count
+  function count(number: number) {
+    if (number <= 9) {
+      return '0000' + number;
+    } else if (number > 9 && number <= 99) {
+      return '000' + number;
+    } else if (number > 99 && number <= 999) {
+      return '00' + number;
+    } else if (number > 999 && number <= 9999) {
+      return '0' + number;
+    } else {
+      return number.toString();
+    }
+  }
+
+  // Helper function to generate sprite for a formatted number string
+  function formattedNumberToAltSprite(numString: string | null | undefined) {
+    if (!numString || typeof numString !== 'string') {
+      return [];
+    }
+    const digits = numString.split('');
+    return digits
+      .map((digit, index) => createCharacterSprite(digit, altNumberMap, true, index))
+      .filter((item): item is NonNullable<ReturnType<typeof createCharacterSprite>> => item !== null);
+  }
+
+  // Format bytes for display
+  function formatBytes(bytes: number, decimals: number = 2) {
+    if (!+bytes) return '0 Bytes';
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+  }
+
+  // Enhanced text to sprite with word wrapping and truncation
+  function textToSpriteWithWrapping(text: string | null | undefined, characterMap: any, maxWidth: number | null = null, maxLines: number | null = null) {
+    if (!text || typeof text !== 'string') {
+      return [];
+    }
+    const input = text.toString().toUpperCase();
+    const isAltNumberMap = characterMap === altNumberMap;
+
+    if (!maxWidth) {
+      const characters = input.split('');
+      return characters
+        .map((char, index) => createCharacterSprite(char, characterMap, isAltNumberMap, index))
+        .filter((item): item is NonNullable<ReturnType<typeof createCharacterSprite>> => item !== null);
+    }
+
+    const words = input.split(' ');
+    const result: any[] = [];
+    let currentLineWidth = 0;
+    let currentLine = 0;
+
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      const wordChars = word.split('');
+      let wordWidth = 0;
+
+      for (const char of wordChars) {
+        const charData = characterMap[char];
+        if (charData) {
+          wordWidth += charData.width + (isAltNumberMap ? 0 : 1);
+        }
+      }
+
+      const spaceWidth = characterMap[' ']?.width || 3;
+      const needsSpace = i > 0 && currentLineWidth > 0;
+      const totalWidth = wordWidth + (needsSpace ? spaceWidth : 0);
+
+      if (currentLineWidth + totalWidth > maxWidth && currentLineWidth > 0) {
+        if (maxLines && currentLine >= maxLines - 1) {
+          break;
+        }
+        result.push({ isNewline: true, key: `newline-${currentLine}` });
+        currentLine++;
+        currentLineWidth = 0;
+      } else if (needsSpace) {
+        const spaceSprite = createCharacterSprite(' ', characterMap, isAltNumberMap, result.length);
+        if (spaceSprite) {
+          result.push(spaceSprite);
+          currentLineWidth += spaceWidth;
+        }
+      }
+
+      for (let j = 0; j < wordChars.length; j++) {
+        const char = wordChars[j];
+        const sprite = createCharacterSprite(char, characterMap, isAltNumberMap, result.length);
+        if (sprite) {
+          result.push(sprite);
+          const charData = characterMap[char];
+          if (charData) {
+            currentLineWidth += charData.width + (isAltNumberMap ? 0 : 1);
+          }
+        }
+      }
+    }
+
+    return result;
+  }
+
+  // Memoize text-to-sprite conversions for performance
+  function memoizeSpriteText(sprite: SpriteWithMemoized): void {
+    if (sprite._memoized) return;
+
+    sprite._memoized = {
+      spriteNumber: formattedNumberToAltSprite(count(sprite.id)),
+      title: textToSpriteWithWrapping(sprite.title || '', charMap, 100, 2),
+      author: textToSprite(sprite.author?.displayName || sprite.author?.username || ''),
+      gameName: textToSpriteWithWrapping(sprite.section?.name || '', charMap, 150, 1),
+      blockType: textToSprite(sprite.image?.width && sprite.image?.height ? `${sprite.image.width} X ${sprite.image.height}` : ''),
+      createdDate: textToSprite(sprite.createdAt ? new Date(sprite.createdAt).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : ''),
+      fileSize: textToSprite(sprite.image?.filesize ? formatBytes(sprite.image.filesize) : '0 Bytes')
+    };
+  }
 
   // Fetch user's sprites
   async function loadSprites() {
@@ -27,15 +196,18 @@
     error = null;
 
     try {
-      // Fetch sprites where the user is a contributor
+      // Fetch sprites where the user is the author with pagination
       const response = await fetch(
-        `${API_BASE_URL}?where[contributors][in]=${userId}&depth=1&limit=50&sort=-createdAt`
+        `${API_BASE_URL}?where[author][equals]=${userId}&depth=1&limit=${SPRITES_PER_PAGE}&page=${currentPage}&sort=-createdAt`
       );
 
       if (response.ok) {
         const data = await response.json();
         sprites = data.docs || [];
-        totalSprites = data.totalDocs || sprites.length;
+        totalSprites = data.totalDocs || 0;
+
+        // Memoize sprites for charMap rendering
+        sprites.forEach(sprite => memoizeSpriteText(sprite));
       } else {
         error = 'Failed to load sprites';
       }
@@ -47,58 +219,13 @@
     }
   }
 
-  // Displayed sprites (limited or all)
-  const displayedSprites = $derived(
-    showAll ? sprites : sprites.slice(0, INITIAL_DISPLAY_COUNT)
-  );
+  // Derived values
+  const pageCount = $derived(Math.ceil(totalSprites / SPRITES_PER_PAGE));
 
-  // Get sprite icon URL
-  function getSpriteIconUrl(sprite: any): string | null {
-    if (sprite?.iconImage?.url) {
-      return sprite.iconImage.url;
-    }
-    if (sprite?.image?.url) {
-      return sprite.image.url;
-    }
-    return null;
-  }
-
-  // Get game name
-  function getGameName(sprite: any): string {
-    if (sprite?.styleGame?.name) return sprite.styleGame.name;
-    if (sprite?.sourceGame?.name) return sprite.sourceGame.name;
-    return 'Unknown';
-  }
-
-  // Get author name
-  function getAuthorName(sprite: any): string {
-    if (sprite?.author?.displayName) return sprite.author.displayName;
-    if (sprite?.author?.username) return sprite.author.username;
-    return 'Unknown';
-  }
-
-  // Format date short
-  function formatDateShort(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: '2-digit'
-    });
-  }
-
-  // Navigate to sprite page
-  function viewSprite(spriteId: number, event: MouseEvent) {
-    event.preventDefault();
-    window.location.href = `/sprites?view=${spriteId}`;
-  }
-
-  // View all sprites
-  function viewAllSprites() {
-    window.location.href = `/sprites?contributor=${userId}`;
-  }
-
+  // Load sprites when component mounts or page changes
   $effect(() => {
+    // Re-run when currentPage changes
+    currentPage;
     loadSprites();
   });
 </script>
@@ -112,12 +239,6 @@
         <span class="sprite-count">({totalSprites})</span>
       {/if}
     </div>
-    {#if totalSprites > INITIAL_DISPLAY_COUNT}
-      <button class="view-all-btn" onclick={viewAllSprites}>
-        View All
-        <ChevronRight class="w-4 h-4" />
-      </button>
-    {/if}
   </div>
 
   <div class="profile-sprites-box">
@@ -137,11 +258,10 @@
       </div>
     {:else}
       <div class="sprites-container">
-        {#each displayedSprites as sprite (sprite.id)}
+        {#each sprites as sprite (sprite.id)}
           <a
             href={`/sprites/${sprite.id}`}
             class="sprite-box sprite-glow"
-            onclick={(e) => viewSprite(sprite.id, e)}
           >
             <!-- Star rating -->
             <div class="sprite-star-container">
@@ -152,63 +272,110 @@
 
             <!-- Sprite number -->
             <div class="sprite-number">
-              #{sprite.id}
+              {#each sprite._memoized?.spriteNumber || [] as item (item.key)}
+                <span style={item.style}></span>
+              {/each}
             </div>
 
             <!-- Sprite title -->
             <div class="sprite-title">
-              <div class="sprite-text">
-                {sprite.title}
+              <div id="author" class="sprite-text">
+                {#each sprite._memoized?.title || [] as item (item.key)}
+                  {#if item.isNewline}
+                    <div class="sprite-newline" style="display: block; width: 100%;"></div>
+                  {:else}
+                    <span style={item.style}></span>
+                  {/if}
+                {/each}
               </div>
             </div>
 
             <!-- Sprite image -->
             <div class="sprite-image">
-              {#if getSpriteIconUrl(sprite)}
-                <img
-                  src={getSpriteIconUrl(sprite)}
-                  alt={sprite.title}
-                  loading="lazy"
-                />
-              {:else}
-                <div class="sprite-no-image">
-                  <Image class="w-8 h-8" />
-                </div>
-              {/if}
+              <img
+                src={sprite.iconImage?.url || sprite.image?.url || 'https://via.placeholder.com/150'}
+                alt={sprite.iconImage?.alt || `Sprite icon for ${sprite.title}`}
+                loading="lazy"
+              />
             </div>
 
             <!-- Author -->
             <div class="sprite-author">
               <div class="sprite-text">
-                {getAuthorName(sprite)}
+                {#each sprite._memoized?.author || [] as item (item.key)}
+                  <span style={item.style}></span>
+                {/each}
               </div>
             </div>
 
             <!-- Game name -->
             <div class="sprite-stats">
               <div class="sprite-text">
-                {getGameName(sprite)}
+                {#each sprite._memoized?.gameName || [] as item (item.key)}
+                  {#if item.isNewline}
+                    <div class="sprite-newline" style="display: block; width: 100%;"></div>
+                  {:else}
+                    <span style={item.style}></span>
+                  {/if}
+                {/each}
+              </div>
+            </div>
+
+            <!-- Block type -->
+            <div class="sprite-stats">
+              <div class="sprite-text">
+                {#each sprite._memoized?.blockType || [] as item (item.key)}
+                  <span style={item.style}></span>
+                {/each}
               </div>
             </div>
 
             <!-- Date -->
             <div class="sprite-stats">
               <div class="sprite-text">
-                {formatDateShort(sprite.createdAt)}
+                {#each sprite._memoized?.createdDate || [] as item (item.key)}
+                  <span style={item.style}></span>
+                {/each}
+              </div>
+            </div>
+
+            <!-- File size -->
+            <div class="sprite-stats">
+              <div class="sprite-text">
+                {#each sprite._memoized?.fileSize || [] as item (item.key)}
+                  <span style={item.style}></span>
+                {/each}
               </div>
             </div>
           </a>
         {/each}
       </div>
 
-      {#if sprites.length > INITIAL_DISPLAY_COUNT && !showAll}
-        <div class="sprites-more">
-          <Button
-            themed
-            onclick={() => showAll = true}
-          >
-            Show {sprites.length - INITIAL_DISPLAY_COUNT} More
-          </Button>
+      {#if pageCount > 1}
+        <div class="sprites-pagination">
+          <Pagination.Root bind:page={currentPage} count={totalSprites} perPage={SPRITES_PER_PAGE} siblingCount={1}>
+            {#snippet children({ pages })}
+              <Pagination.Content>
+                <Pagination.Item>
+                  <Pagination.PrevButton disabled={loading || currentPage === 1} />
+                </Pagination.Item>
+                {#each pages as page (page.key)}
+                  {#if page.type === 'ellipsis'}
+                    <Pagination.Item>
+                      <Pagination.Ellipsis />
+                    </Pagination.Item>
+                  {:else}
+                    <Pagination.Item>
+                      <Pagination.Link {page} isActive={page.value === currentPage} disabled={loading} />
+                    </Pagination.Item>
+                  {/if}
+                {/each}
+                <Pagination.Item>
+                  <Pagination.NextButton disabled={loading || currentPage === pageCount} />
+                </Pagination.Item>
+              </Pagination.Content>
+            {/snippet}
+          </Pagination.Root>
         </div>
       {/if}
     {/if}
@@ -245,28 +412,9 @@
   }
 
   .sprite-count {
-    font-weight: 600;
-    font-size: 14px;
-    opacity: 0.7;
+    font-weight: 800;
+    font-size: 18px;
     margin-left: 8px;
-  }
-
-  .view-all-btn {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    background: none;
-    border: none;
-    font-family: 'saira';
-    font-weight: 700;
-    font-size: 12px;
-    color: var(--font-link-color);
-    cursor: pointer;
-    transition: opacity 0.2s ease;
-  }
-
-  .view-all-btn:hover {
-    opacity: 0.8;
   }
 
   .profile-sprites-box {
@@ -289,200 +437,6 @@
     grid-gap: 20px;
     justify-content: center;
     align-content: flex-start;
-  }
-
-  /* Sprite Box Card - matches SpriteBrowser style */
-  .sprite-box {
-    --multiplication-factor: 1;
-    width: calc(117px * var(--multiplication-factor));
-    height: calc(192px * var(--multiplication-factor));
-    background-image: url("/img/spriteicon/icon_image.png");
-    user-select: none;
-    transition: transform ease-in-out .2s;
-    text-decoration: none;
-    border-radius: 4px;
-    box-shadow: var(--box-shadow);
-    animation: fadein-top .5s;
-    transform: translateY(calc(-.1px * var(--multiplication-factor)));
-    position: relative;
-    display: block;
-  }
-
-  .sprite-box::before {
-    content: "";
-    position: absolute;
-    top: -1px;
-    left: -1px;
-    right: -1px;
-    bottom: -1px;
-    border-radius: 4px;
-    box-shadow:
-      1px 0px 0 #22ff80,
-      1px 1px 0 #22ff80,
-      0px 1px 0 #22ff80,
-      -1px 0px 0 #22ff80,
-      -1px -1px 0 #22ff80,
-      0px -1px 0 #22ff80,
-      1px -1px 0 #22ff80,
-      -1px 1px 0 #22ff80;
-    opacity: 0;
-    transition: opacity .1s ease-in-out;
-    pointer-events: none;
-    z-index: -1;
-  }
-
-  .sprite-box:hover::before {
-    opacity: 1;
-  }
-
-  .sprite-box:hover {
-    transform: translateY(-3px);
-  }
-
-  /* Star container */
-  .sprite-star-container {
-    display: flex;
-    margin-left: calc(6px * var(--multiplication-factor));
-    margin-top: calc(3px * var(--multiplication-factor));
-    margin-bottom: calc(-9px * var(--multiplication-factor));
-    width: calc(70px * var(--multiplication-factor));
-  }
-
-  .sprite-star {
-    background-image: url("/img/spriteicon/star.svg");
-    height: calc(6px * var(--multiplication-factor));
-    width: calc(7px * var(--multiplication-factor));
-  }
-
-  .sprite-star:nth-child(n + 2) {
-    margin-left: calc(-1px * var(--multiplication-factor));
-  }
-
-  /* Sprite number */
-  .sprite-number {
-    font-family: 'saira';
-    font-weight: 700;
-    font-style: normal;
-    font-size: calc(9px * var(--multiplication-factor));
-    user-select: none;
-    display: flex;
-    justify-content: right;
-    line-height: 1;
-    margin-right: calc(5px * var(--multiplication-factor));
-    margin-top: calc(3px * var(--multiplication-factor));
-    color: white;
-    text-shadow: 1px 0px #002806, 0px 1px #002806, 1px 1px #002806;
-  }
-
-  /* Sprite text */
-  .sprite-text {
-    font-family: 'saira';
-    font-weight: 500;
-    font-style: normal;
-    user-select: none;
-    font-size: calc(10px * var(--multiplication-factor));
-    line-height: calc(8px * var(--multiplication-factor));
-    text-align: center;
-    color: white;
-    text-shadow: 1px 0px #4b4b54, 0px 1px #4b4b54, 1px 1px #4b4b54;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  /* Sprite title */
-  .sprite-title {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding-top: calc(4px * var(--multiplication-factor));
-    margin-left: calc(5px * var(--multiplication-factor));
-    margin-right: calc(10px * var(--multiplication-factor));
-    height: calc(15px * var(--multiplication-factor));
-    width: calc(109px * var(--multiplication-factor));
-    overflow: hidden;
-  }
-
-  /* Sprite image */
-  .sprite-image {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    image-rendering: pixelated;
-    margin-top: calc(7px * var(--multiplication-factor));
-    margin-left: calc(7px * var(--multiplication-factor));
-    margin-right: calc(7px * var(--multiplication-factor));
-    object-fit: cover;
-    overflow: hidden;
-    width: calc(103px * var(--multiplication-factor));
-    height: calc(85px * var(--multiplication-factor));
-    background: url("/img/spriteicon/white-bg.png"),
-                linear-gradient(0deg,#002705 0%, #12a740 100%);
-    background-blend-mode: overlay;
-    background-position: left 0px bottom 0px;
-  }
-
-  .sprite-box:hover .sprite-image {
-    animation: 200s grid-para infinite linear;
-  }
-
-  @keyframes grid-para {
-    100% {
-      background-position: left -3000px bottom 0px;
-    }
-  }
-
-  .sprite-image img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    filter: drop-shadow(10px 10px 0px rgba(0,0,0,0.7));
-    image-rendering: pixelated;
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
-  }
-
-  .sprite-no-image {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    color: white;
-    opacity: 0.5;
-  }
-
-  /* Sprite author */
-  .sprite-author {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: calc(0px * var(--multiplication-factor));
-    margin-left: calc(13px * var(--multiplication-factor));
-    margin-right: calc(12px * var(--multiplication-factor));
-    margin-bottom: calc(0px * var(--multiplication-factor));
-    height: calc(18px * var(--multiplication-factor));
-    width: calc(93px * var(--multiplication-factor));
-    overflow: hidden;
-  }
-
-  /* Sprite stats */
-  .sprite-stats {
-    display: flex;
-    justify-content: flex-start;
-    align-items: flex-start;
-    margin-top: calc(5px * var(--multiplication-factor));
-    margin-left: calc(24px * var(--multiplication-factor));
-    margin-right: calc(3px * var(--multiplication-factor));
-    width: calc(90px * var(--multiplication-factor));
-    height: calc(10px * var(--multiplication-factor));
-    overflow: hidden;
-  }
-
-  @keyframes fadein-top {
-    0% { opacity: 0; transform: translateY(-20px);}
-    50% { opacity: 0; transform: translateY(-20px);}
-    100% { opacity: 1; transform: translateY(0); }
   }
 
   /* States */
@@ -529,8 +483,8 @@
     margin: 0;
   }
 
-  /* More Button */
-  .sprites-more {
+  /* Pagination */
+  .sprites-pagination {
     display: flex;
     justify-content: center;
     padding-top: 15px;

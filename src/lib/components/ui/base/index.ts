@@ -9,7 +9,9 @@ export { default as Textarea } from './Textarea.svelte';
 export { default as Select } from './Select.svelte';
 export { default as Combobox } from './Combobox.svelte';
 export { default as Switch } from './Switch.svelte';
+export { default as Checkbox } from './Checkbox.svelte';
 export { default as Progress } from './Progress.svelte';
+export { default as DataTable } from './DataTable.svelte';
 
 // Compound components (namespace exports with theme support)
 export * as Card from './Card.svelte';

@@ -25,9 +25,29 @@
     return LinkIcon;
   }
 
+  // Map platform values to display names
+  function getPlatformDisplayName(platform: string): string {
+    const displayNames: Record<string, string> = {
+      discord: 'Discord',
+      x: 'X (Twitter)',
+      twitter: 'X (Twitter)',
+      facebook: 'Facebook',
+      instagram: 'Instagram',
+      deviantart: 'DeviantArt',
+      bluesky: 'Bluesky',
+      youtube: 'YouTube',
+      reddit: 'Reddit',
+      twitch: 'Twitch',
+      steam: 'Steam',
+      website: 'Website',
+      other: 'Other'
+    };
+    return displayNames[platform?.toLowerCase()] || platform;
+  }
+
   // Get display name for URL
   function getDisplayName(link: any): string {
-    if (link.platform) return link.platform;
+    if (link.platform) return getPlatformDisplayName(link.platform);
     try {
       const url = new URL(link.url);
       return url.hostname.replace('www.', '');
@@ -145,13 +165,13 @@
     color: var(--font-color);
   }
 
-  .social-link-external {
+  .social-link-item :global(.social-link-external) {
     color: var(--font-color);
     opacity: 0.4;
     transition: opacity 0.2s ease;
   }
 
-  .social-link-item:hover .social-link-external {
+  .social-link-item:hover :global(.social-link-external) {
     opacity: 0.8;
   }
 

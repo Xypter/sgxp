@@ -5,6 +5,7 @@
   import ProfileSprites from './ProfileSprites.svelte';
   import ProfileSocialLinks from './ProfileSocialLinks.svelte';
   import ProfileFavorites from './ProfileFavorites.svelte';
+  import EditProfileModal from './EditProfileModal.svelte';
 
   // Props
   let {
@@ -23,6 +24,7 @@
   let user = $state(initialUser);
   let loading = $state(!initialUser && !initialError);
   let error = $state(initialError);
+  let editModalOpen = $state(false);
 
   const API_BASE_URL = "https://cms.sgxp.me/api";
 
@@ -60,27 +62,6 @@
     });
   }
 
-  // Get role display name
-  function getRoleDisplay(role: string): string {
-    const roles: Record<string, string> = {
-      'admin': 'Administrator',
-      'moderator': 'Moderator',
-      'contributor': 'Contributor',
-      'user': 'Member'
-    };
-    return roles[role] || role;
-  }
-
-  // Get role badge color
-  function getRoleBadgeColor(role: string): string {
-    const colors: Record<string, string> = {
-      'admin': '#ff6b6b',
-      'moderator': '#ffd93d',
-      'contributor': 'var(--font-link-color)'
-    };
-    return colors[role] || 'var(--font-link-color)';
-  }
-
   // Check if user should display role badge instead of prestige
   function shouldShowRoleBadge(role: string): boolean {
     return role === 'admin' || role === 'moderator';
@@ -100,21 +81,24 @@
     return name.charAt(0).toUpperCase();
   }
 
+  // Handle profile save
+  async function handleProfileSave(updatedUserData: any) {
+    console.log('[ProfileViewer] Received updated user data:', updatedUserData);
+
+    // Handle both response formats: { doc: {...} } or direct user object
+    const updatedUser = updatedUserData.doc || updatedUserData;
+
+    // Update the local state
+    user = updatedUser;
+
+    console.log('[ProfileViewer] Updated local user state:', user);
+
+    // Force page reload to ensure all caches are cleared and fresh data is loaded
+    window.location.href = `/profile?id=${user.id}&refresh=1`;
+  }
+
   $effect(() => {
     loadUser();
-  });
-
-  // Debug logging for user data
-  $effect(() => {
-    if (user) {
-      console.log('[ProfileViewer] User data:', {
-        id: user.id,
-        displayName: user.displayName,
-        hasHeaderImage: !!user.headerImage,
-        headerImageUrl: user.headerImage?.url,
-        headerImageData: user.headerImage
-      });
-    }
   });
 </script>
 
@@ -147,9 +131,12 @@
         </div>
         <div class="profile-identity">
           <h1 class="profile-name" title={user.displayName || user.username}>{user.displayName || user.username}</h1>
+          {#if user.username}
+            <p class="profile-username">@{user.username}</p>
+          {/if}
         </div>
         {#if isOwnProfile}
-          <button class="edit-profile-btn">
+          <button class="edit-profile-btn" onclick={() => editModalOpen = true}>
             <Pencil class="w-4 h-4" />
             <span>Edit Profile</span>
           </button>
@@ -185,9 +172,14 @@
               <Shield class="w-4 h-4" />
               Role
             </span>
-            <span class="info-value role-badge" data-role={user.role}>
-              {getRoleDisplay(user.role)}
-            </span>
+            <div class="info-value">
+              <Badge
+                themed
+                color={user.roleColor || '#888888'}
+              >
+                {user.role}
+              </Badge>
+            </div>
           </div>
 
           <div class="info-item">
@@ -228,6 +220,11 @@
         <ProfileFavorites userId={user.id} username={user.displayName || user.username} />
       </div>
     </div>
+
+    <!-- Edit Profile Modal -->
+    {#if isOwnProfile}
+      <EditProfileModal bind:open={editModalOpen} {user} onSave={handleProfileSave} />
+    {/if}
   {:else}
     <div class="profile-content-title">Not Found</div>
     <div class="profile-content-box">
@@ -255,7 +252,7 @@
     align-items: flex-start;
     gap: 20px;
     padding: 0 0 0 20px;
-    margin-bottom: -50px; /* Half of avatar height to create overlap */
+    margin-bottom: -48px; /* Half of avatar height to create overlap */
     position: relative;
     z-index: 2;
   }
@@ -301,14 +298,35 @@
     font-weight: 800;
     font-size: 32px;
     color: var(--font-color);
-    margin: 0;
+    margin: -10px 0 -14px -12px;
     text-shadow:
-      calc(2px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 0 var(--bg-color),
-      calc(2px * var(--multiply-factor)) calc(2px * var(--multiply-factor)) 0 var(--bg-color),
-      calc(0px * var(--multiply-factor)) calc(2px * var(--multiply-factor)) 0 var(--bg-color);
+      calc(2px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 2px var(--bg-color),
+      calc(2px * var(--multiply-factor)) calc(2px * var(--multiply-factor)) 2px var(--bg-color),
+      calc(0px * var(--multiply-factor)) calc(2px * var(--multiply-factor)) 2px var(--bg-color),
+      calc(-2px * var(--multiply-factor)) calc(2px * var(--multiply-factor)) 2px var(--bg-color),
+      calc(-2px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 2px var(--bg-color),
+      calc(-2px * var(--multiply-factor)) calc(-2px * var(--multiply-factor)) 2px var(--bg-color),
+      calc(0px * var(--multiply-factor)) calc(-2px * var(--multiply-factor)) 2px var(--bg-color),
+      calc(2px * var(--multiply-factor)) calc(-2px * var(--multiply-factor)) 2px var(--bg-color);
     max-width: 400px;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .profile-username {
+    font-family: 'saira';
+    font-weight: 400;
+    color: var(--font-color);
+    margin: -3px 0 0px -13px;
+    text-shadow:
+      calc(1px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 1px var(--bg-color),
+      calc(1px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 1px var(--bg-color),
+      calc(0px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 1px var(--bg-color),
+      calc(-1px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 1px var(--bg-color),
+      calc(-1px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 1px var(--bg-color),
+      calc(-1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 1px var(--bg-color),
+      calc(0px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 1px var(--bg-color),
+      calc(1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 1px var(--bg-color);
   }
 
   .edit-profile-btn {
@@ -351,7 +369,7 @@
   }
 
   .profile-header-banner {
-    width: 1200px;
+    width: 1202px;
     height: 150px;
     overflow: hidden;
     border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
@@ -467,21 +485,9 @@
     padding-left: 22px;
   }
 
-  .role-badge {
-    color: var(--font-link-color);
-  }
-
-  .role-badge[data-role="admin"] {
-    color: #ff6b6b;
-  }
-
-  .role-badge[data-role="moderator"] {
-    color: #ffd93d;
-  }
-
   /* About Box */
   .profile-about-box {
-    min-height: 80px;
+    min-height: 40px;
   }
 
   .bio-text {
@@ -564,6 +570,10 @@
     .profile-name {
       font-size: 24px;
       max-width: 280px;
+    }
+
+    .profile-username {
+      font-size: 16px;
     }
 
     .edit-profile-btn {

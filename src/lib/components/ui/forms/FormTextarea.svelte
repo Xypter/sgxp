@@ -79,7 +79,7 @@
   <Textarea
     id={name}
     {name}
-    {value}
+    bind:value={value}
     {placeholder}
     {required}
     {disabled}
@@ -87,8 +87,8 @@
     maxlength={maxLength}
     {themed}
     class="form-textarea {textareaClass || ''} {error ? 'border-destructive' : ''}"
-    on:input={handleInput}
-    on:change={handleChange}
+    oninput={handleInput}
+    onchange={handleChange}
   />
 
   {#if error}

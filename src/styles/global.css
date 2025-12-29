@@ -438,26 +438,31 @@
   }
 
   .news-date {
-    padding-bottom: 8px;
-    padding-top: 2px;
-    opacity: 1;
+    font-family: 'saira';
+    font-size: 12px;
     color: var(--font-color);
-    text-shadow:
-      calc(1px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 0 var(--bg-color),
-      calc(1px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 0 var(--bg-color),
-      calc(0px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 0 var(--bg-color);
+    opacity: 0.7;
+    margin: 2px 0 0 0;
   }
 
+  .news-user-info { flex: 1; }
+  .news-user-row { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; flex-wrap: wrap; line-height: 1; }
   .news-user {
     font-family: 'saira';
     font-size: 16px;
     font-weight: 700;
-    color: var(--font-color);
+    color: var(--font-link-color);
+    margin: 0;
     text-shadow:
       calc(2px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 0 var(--bg-color),
       calc(2px * var(--multiply-factor)) calc(2px * var(--multiply-factor)) 0 var(--bg-color),
       calc(0px * var(--multiply-factor)) calc(2px * var(--multiply-factor)) 0 var(--bg-color);
   }
+  .news-author-link { color: var(--font-link-color); text-decoration: none; }
+  .news-author-link:hover { opacity: 0.9; }
+  .news-badges { display: flex; align-items: center; gap: 6px; line-height: 1; }
+  .news-username { font-family: 'saira'; font-size: 13px; color: var(--font-color); opacity: 0.8; font-weight: 400; margin: 2px 0; line-height: 8px; }
+  .news-role-badge, .news-prestige-badge { text-transform: capitalize; }
 
   .news-content {
     display: block;
@@ -575,6 +580,10 @@
   }
 
   @media (max-width: 800px) {
+    .body {
+      background-image: none;
+      background-color: var(--bg-color);
+    }
     .container:not(.ignore-main) {
       display: flex;
       flex-flow: wrap;
@@ -690,14 +699,18 @@ body {
 }
 
 .author-details { flex: 1; }
+.author-name-row { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; flex-wrap: wrap; line-height: 1; }
 .author-name {
-  font-family: 'saira'; font-weight: 800; font-size: 20px; color: var(--font-link-color); margin-bottom: 4px;
+  font-family: 'saira'; font-weight: 800; font-size: 20px; color: var(--font-link-color); margin: 0;
   text-shadow: calc(1px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 0 var(--bg-color), calc(1px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 0 var(--bg-color), calc(0px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 0 var(--bg-color);
 }
-.author-meta { font-family: 'saira'; font-size: 14px; color: var(--font-color); opacity: 0.8; }
+.author-badges { display: flex; align-items: center; gap: 6px; line-height: 1; }
+.author-username { font-family: 'saira'; font-size: 14px; color: var(--font-color); opacity: 0.8; font-weight: 400; margin: 4px 0 2px 0; line-height: 8px; }
+.author-role-badge, .author-prestige-badge { text-transform: capitalize; }
+.author-meta { font-family: 'saira'; font-size: 14px; color: var(--font-color); opacity: 0.8; margin-top: 2px; }
 
 /* Grids & Contributors */
-.details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+.details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; margin-bottom: 20px; }
 .detail-item h4 {
   font-family: 'saira'; font-weight: 800; font-size: 12px; text-transform: uppercase; color: var(--font-link-color); margin-bottom: 4px;
   text-shadow: calc(1px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 0 var(--bg-color);
@@ -718,6 +731,21 @@ body {
 .description-section { margin-bottom: 20px; }
 .description-section h4 { font-family: 'saira'; font-weight: 800; font-size: 14px; text-transform: uppercase; color: var(--font-link-color); margin-bottom: 12px; }
 .description-text { font-family: 'saira'; font-size: 14px; line-height: 1.6; color: var(--font-color); white-space: pre-wrap; }
+
+/* Terms of Use */
+.terms-section { margin-bottom: 20px; padding-top: 20px; border-top: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 70%, white); }
+.terms-section h4 { font-family: 'saira'; font-weight: 800; font-size: 14px; text-transform: uppercase; color: var(--font-link-color); margin-bottom: 12px; }
+.terms-list { display: flex; flex-direction: column; gap: 12px; }
+.terms-item {
+  display: flex; align-items: flex-start; gap: 12px; padding: 12px;
+  background: color-mix(in srgb, var(--page-color) 80%, black);
+  border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 70%, white);
+}
+.terms-label { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.terms-title { font-family: 'saira'; font-weight: 700; font-size: 14px; color: var(--font-color); }
+.terms-description { font-family: 'saira'; font-size: 12px; color: color-mix(in srgb, var(--font-color) 70%, transparent); line-height: 1.4; }
+.terms-item :global(.theme-checkbox) { margin-top: 2px; cursor: default !important; opacity: 1 !important; }
+.terms-item :global(.theme-checkbox[disabled]) { opacity: 0.7 !important; }
 
 /* States & Prompts */
 .loading-state, .error-state, .not-found-state { text-align: center; padding: 40px 20px; font-family: 'saira'; font-size: 14px; color: var(--font-color); }
@@ -849,7 +877,11 @@ body {
 /* Comments Text & Layout */
 .comment-header { display: flex; align-items: flex-start; gap: 12px; }
 .comment-meta { flex: 1; min-width: 0; }
-.comment-author { font-family: 'saira'; font-weight: 800; font-size: 16px; color: var(--font-link-color); margin: 0 0 2px 0; text-shadow: calc(1px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 0 var(--bg-color); }
+.comment-author-row { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; flex-wrap: wrap; line-height: 1; }
+.comment-author { font-family: 'saira'; font-weight: 800; font-size: 16px; color: var(--font-link-color); margin: 0; line-height: 1.2; text-shadow: calc(1px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 0 var(--bg-color); }
+.comment-badges { display: flex; align-items: center; gap: 6px; line-height: 1; }
+.comment-username { font-family: 'saira'; font-size: 13px; color: var(--font-color); opacity: 0.8; font-weight: 400; margin: 2px 0; line-height: 8px; }
+.comment-role-badge, .comment-prestige-badge { text-transform: capitalize; }
 .comment-date { font-family: 'saira'; font-size: 12px; color: var(--font-color); opacity: 0.7; margin: 2px 0 0 0; }
 .edited-badge { font-style: italic; opacity: 0.6; }
 

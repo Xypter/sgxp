@@ -1,7 +1,8 @@
 <script>
     import { format, parseISO } from "date-fns";
-    import { Pagination } from "$lib/components";
+    import { Pagination, Badge } from "$lib/components";
     import { MediaQuery } from "svelte/reactivity";
+    import { getDisplayName, getUsername } from '$lib/spriteUtils';
 
     // Reactive state using Svelte's new runes API
     let posts = $state([]);
@@ -92,17 +93,16 @@
                 const title = post.title || 'Untitled';
                 const content = convertRichTextToHTML(post.content);
                 const author = post.author || {};
-              
-                const authorName = author.displayName || author.username || 'Unknown Author';
+
                 const profilePicture = author.profilePicture;
                 const authorAvatar = profilePicture?.url || profilePicture?.sizes?.profilePicture?.url;
                 const publishDate = post.publishedAt || post.createdAt;
-                
+
                 return {
                     id: post.id,
                     title: title,
                     content: content,
-                    authorName: authorName,
+                    author: author, // Preserve full author object
                     authorAvatar: authorAvatar || '/img/default-avatar.png',
                     publishDate: publishDate,
                     formattedDate: format(parseISO(publishDate), "LLLL do yyyy 'at' h:mm aa")
@@ -177,12 +177,44 @@
             <div class="news">
                 <div class="news-info-container">
                     <div class="news-img">
-                        <img src={post.authorAvatar} alt={post.authorName}>
+                        <img src={post.authorAvatar} alt={getDisplayName(post.author)}>
                     </div>
-                    <div class="news-user">{post.authorName}</div>
+                    <div class="news-user-info">
+                        <div class="news-user-row">
+                            <div class="news-user">
+                                <a href="/profile?id={post.author?.id}" class="news-author-link">
+                                    {getDisplayName(post.author)}
+                                </a>
+                            </div>
+                            <div class="news-badges">
+                                {#if post.author?.role && post.author.role !== 'user'}
+                                    <!-- Show role badge only if role is NOT 'user' -->
+                                    <Badge
+                                        themed
+                                        color={post.author.roleColor || '#888888'}
+                                        class="news-role-badge"
+                                    >
+                                        {post.author.role}
+                                    </Badge>
+                                {:else if post.author?.prestigeRole}
+                                    <!-- Show prestige badge only if role IS 'user' -->
+                                    <Badge
+                                        themed
+                                        color={post.author.prestigeColor || '#888888'}
+                                        class="news-prestige-badge"
+                                    >
+                                        {post.author.prestigeRole}
+                                    </Badge>
+                                {/if}
+                            </div>
+                        </div>
+                        {#if getUsername(post.author)}
+                            <div class="news-username">{getUsername(post.author)}</div>
+                        {/if}
+                    </div>
                     <div class="news-date">{post.formattedDate}</div>
                 </div>
-                
+
                 <div class="news-content">
                     {@html post.content}
                 </div>

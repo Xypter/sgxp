@@ -7,22 +7,6 @@
 
   const API_BASE_URL = "https://cms.sgxp.me/api";
 
-  // Calculate stats (some are mock data for now)
-  const stats = $derived([
-    {
-      icon: Image,
-      label: 'Sprites',
-      value: user?.approvedSubmissions || 0,
-      color: 'var(--font-link-color)'
-    },
-    {
-      icon: MessageSquare,
-      label: 'Comments',
-      value: 0, // TODO: Get from API
-      color: '#6bafff'
-    }
-  ]);
-
   // Prestige role progress state
   let roleProgress = $state<any>(null);
   let loadingProgress = $state(true);
@@ -44,21 +28,54 @@
     }
   }
 
-  // Prestige info derived from API data
+  // Calculate days ago for last online
+  function getRelativeTime(dateString: string): string {
+    const date = new Date(dateString);
+    const today = new Date();
+
+    // Reset time to midnight for accurate day comparison
+    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+    const diffTime = todayOnly.getTime() - dateOnly.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+      return '(Today)';
+    } else if (diffDays === 1) {
+      return '(Yesterday)';
+    } else {
+      return `(${diffDays} days ago)`;
+    }
+  }
+
+  // Calculate stats (some are mock data for now)
+  const stats = $derived([
+    {
+      icon: Image,
+      label: 'Sprites',
+      value: user?.approvedSubmissions || 0,
+      color: 'var(--font-link-color)'
+    },
+    {
+      icon: MessageSquare,
+      label: 'Comments',
+      value: user?.commentCount || 0,
+      color: '#6bafff'
+    }
+  ]);
+
+  // Prestige info derived from API data with fallbacks to user object
   const prestigeInfo = $derived({
     role: roleProgress?.current?.name || user?.prestigeRole || 'Newcomer',
     color: roleProgress?.current?.color || user?.prestigeColor || '#888888',
     nextRole: roleProgress?.next?.name || null,
     progress: Number(roleProgress?.progressPercent) || 0,
-    submissionsNeeded: roleProgress?.submissionsNeeded || 0
+    submissionsNeeded: roleProgress?.submissionsNeeded || 0,
+    isPerfectChaos: (roleProgress?.current?.name || user?.prestigeRole) === 'Perfect Chaos'
   });
 
-  // Debug logging
-  $effect(() => {
-    console.log('Role Progress Data:', roleProgress);
-    console.log('Prestige Info:', prestigeInfo);
-  });
-
+  // Load role progress on mount
   $effect(() => {
     loadRoleProgress();
   });
@@ -76,10 +93,21 @@
         <Award class="w-5 h-5" style="color: {prestigeInfo.color}" />
         <span class="prestige-label">Prestige</span>
       </div>
-      <div class="prestige-current" style="color: {prestigeInfo.color}">
+      <div
+        class="prestige-current"
+        class:prestige-glow={prestigeInfo.isPerfectChaos}
+        style="color: {prestigeInfo.color}"
+      >
         {prestigeInfo.role}
       </div>
-      {#if prestigeInfo.nextRole}
+      {#if prestigeInfo.isPerfectChaos}
+        <div class="prestige-progress-container prestige-progress-glow" style="--prestige-glow-color: {prestigeInfo.color}">
+          <Progress themed value={100} max={100} color={prestigeInfo.color} />
+          <div class="prestige-next prestige-complete">
+            Maximum Prestige Achieved!
+          </div>
+        </div>
+      {:else if prestigeInfo.nextRole}
         <div class="prestige-progress-container">
           <Progress themed value={prestigeInfo.progress} max={100} color={prestigeInfo.color} />
           <div class="prestige-next">
@@ -120,8 +148,9 @@
       <div class="activity-value">
         {#if user?.hideLastOnline}
           <span class="activity-hidden">Hidden</span>
-        {:else if user?.lastOnline}
-          {new Date(user.lastOnline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+        {:else if user?.updatedAt}
+          {new Date(user.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+          <span class="activity-relative">{getRelativeTime(user.updatedAt)}</span>
         {:else}
           <span class="activity-placeholder">Unknown</span>
         {/if}
@@ -288,6 +317,12 @@
     padding: 8px 0;
   }
 
+  .activity-relative {
+    margin-left: 6px;
+    opacity: 0.7;
+    font-size: 12px;
+  }
+
   .activity-hidden {
     opacity: 0.5;
     font-style: italic;
@@ -296,6 +331,57 @@
   .activity-placeholder {
     opacity: 0.5;
     font-style: italic;
+  }
+
+  /* Perfect Chaos Glow Effects */
+  .prestige-glow {
+    animation: prestige-pulse 2s ease-in-out infinite;
+    text-shadow:
+      0 0 3px currentColor,
+      0 0 8px currentColor;
+  }
+
+  .prestige-progress-glow :global(.theme-progress) {
+    animation: progress-glow-pulse 2s ease-in-out infinite;
+    box-shadow:
+      0 0 5px var(--prestige-glow-color),
+      0 0 12px var(--prestige-glow-color);
+  }
+
+  .prestige-progress-glow :global([data-slot="progress-indicator"]) {
+    box-shadow:
+      0 0 8px var(--prestige-glow-color),
+      0 0 15px var(--prestige-glow-color);
+  }
+
+  .prestige-complete {
+    font-weight: 700 !important;
+    opacity: 1 !important;
+    font-style: italic;
+  }
+
+  @keyframes prestige-pulse {
+    0%, 100% {
+      filter: brightness(1);
+      text-shadow:
+        0 0 3px currentColor,
+        0 0 8px currentColor;
+    }
+    50% {
+      filter: brightness(1.15);
+      text-shadow:
+        0 0 6px currentColor,
+        0 0 12px currentColor;
+    }
+  }
+
+  @keyframes progress-glow-pulse {
+    0%, 100% {
+      filter: brightness(1) drop-shadow(0 0 3px var(--prestige-glow-color));
+    }
+    50% {
+      filter: brightness(1.1) drop-shadow(0 0 8px var(--prestige-glow-color));
+    }
   }
 
   /* Responsive */

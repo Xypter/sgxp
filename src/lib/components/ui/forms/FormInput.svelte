@@ -12,6 +12,7 @@
     disabled?: boolean;
     error?: string;
     helperText?: string;
+    maxLength?: number;
     themed?: boolean;
     class?: string;
     inputClass?: string;
@@ -29,12 +30,16 @@
     disabled = false,
     error,
     helperText,
+    maxLength,
     themed = false,
     class: className,
     inputClass,
     onInput,
     onChange
   }: FormInputProps = $props();
+
+  const characterCount = $derived(value?.length || 0);
+  const showCharCount = maxLength !== undefined;
 
   function handleInput(event: Event) {
     const target = event.target as HTMLInputElement;
@@ -52,29 +57,38 @@
 </script>
 
 <div class="form-field {className || ''}">
-  <Label
-    for={name}
-    {themed}
-    class="form-label"
-  >
-    {label}
-    {#if required}
-      <span class="text-destructive">*</span>
+  <div class="label-row">
+    <Label
+      for={name}
+      {themed}
+      class="form-label"
+    >
+      {label}
+      {#if required}
+        <span class="text-destructive">*</span>
+      {/if}
+    </Label>
+
+    {#if showCharCount}
+      <span class="char-count {themed ? 'theme-description' : ''}">
+        {characterCount}/{maxLength}
+      </span>
     {/if}
-  </Label>
+  </div>
 
   <Input
     id={name}
     {name}
     {type}
-    {value}
+    bind:value={value}
     {placeholder}
     {required}
     {disabled}
+    maxlength={maxLength}
     {themed}
     class="form-input {inputClass || ''} {error ? 'border-destructive' : ''}"
-    on:input={handleInput}
-    on:change={handleChange}
+    oninput={handleInput}
+    onchange={handleChange}
   />
 
   {#if error}
@@ -98,8 +112,19 @@
     margin-bottom: 1rem;
   }
 
+  .label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
   .form-label {
     display: block;
+  }
+
+  .char-count {
+    font-size: 0.75rem;
+    opacity: 0.7;
   }
 
   .form-input {

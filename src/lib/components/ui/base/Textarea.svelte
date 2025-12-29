@@ -23,7 +23,7 @@
   :global(.theme-textarea) {
     background: color-mix(in srgb, var(--page-color) 60%, black) !important;
     border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white) !important;
-    border-radius: 4px !important; /* Slight rounding for modern feel, set to 0px if you prefer hard edges */
+    border-radius: 0px !important; /* Slight rounding for modern feel, set to 0px if you prefer hard edges */
     color: var(--font-color) !important;
     font-family: 'saira', monospace !important;
     font-size: 14px !important;

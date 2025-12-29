@@ -45,7 +45,7 @@
     {placeholder}
     {themed}
     class="search-input {inputClass}"
-    on:input={handleInput}
+    oninput={handleInput}
   />
 </div>
 

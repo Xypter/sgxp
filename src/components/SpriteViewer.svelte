@@ -9,6 +9,7 @@
     import CommentSection from './comments/CommentSection.svelte';
     import SpriteImageViewer from './sprite/SpriteImageViewer.svelte';
     import SpriteInfo from './sprite/SpriteInfo.svelte';
+    import SpriteActions from './sprite/SpriteActions.svelte';
 
     // OPTIMIZATION: Simple in-memory cache for client-side related data
     // This persists across sprite views within the same session
@@ -52,10 +53,11 @@
 
     const API_BASE_URL = `${import.meta.env.PUBLIC_PAYLOAD_URL}/api`;
 
-    // Check user authentication
+    // Check user authentication and fetch profile picture
     async function checkUserAuth() {
         try {
-            const response = await fetch('/api/users/me', {
+            // Include depth=2 to populate profilePicture
+            const response = await fetch('/api/users/me?depth=2', {
                 credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
@@ -70,6 +72,7 @@
                 user = null;
             }
         } catch (err) {
+            console.error('[SpriteViewer] Auth check error:', err);
             user = null;
         }
     }
@@ -395,6 +398,8 @@
                 <div class="sprite-sheet-section">
                     {#if sprite.image}
                         <div class="sprite-sheet-container">
+                            <!-- svelte-ignore a11y_click_events_have_key_events -->
+                            <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
                             <img
                                 src={sprite.image.url}
                                 alt={sprite.image.alt || sprite.title}
@@ -409,6 +414,9 @@
                                 <span>Click to view fullscreen</span>
                             </button>
                         </div>
+
+                        <!-- Sprite Actions (Like/Favorite) -->
+                        <SpriteActions {spriteId} {sprite} {user} />
                     {:else}
                         <div class="sprite-sheet-container no-image">
                             <p>No image available for this sprite.</p>
@@ -455,6 +463,8 @@
             <div class="sprite-sheet-section">
                 {#if sprite.image}
                     <div class="sprite-sheet-container">
+                        <!-- svelte-ignore a11y_click_events_have_key_events -->
+                        <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
                         <img
                             src={sprite.image.url}
                             alt={sprite.image.alt || sprite.title}
@@ -469,6 +479,9 @@
                             <span>Click to view fullscreen</span>
                         </button>
                     </div>
+
+                    <!-- Sprite Actions (Like/Favorite) -->
+                    <SpriteActions {spriteId} {sprite} {user} />
                 {:else}
                     <div class="sprite-sheet-container no-image">
                         <p>No image available for this sprite.</p>
@@ -568,7 +581,7 @@
         background: color-mix(in srgb, var(--page-color) 90%, white) !important;
     }
 
-    .sprite-modal-close-btn {
+    :global(.sprite-modal-close-btn) {
         flex-shrink: 0;
         background-color: #dc2626 !important;
         border-color: #dc2626 !important;
@@ -576,7 +589,7 @@
         padding: 8px 12px;
     }
 
-    .sprite-modal-close-btn:hover {
+    :global(.sprite-modal-close-btn:hover) {
         background-color: #b91c1c !important;
         border-color: #b91c1c !important;
     }
@@ -647,7 +660,7 @@
         opacity: 1;
     }
 
-    .overlay-icon {
+    .sprite-sheet-overlay :global(.overlay-icon) {
         width: 48px;
         height: 48px;
     }

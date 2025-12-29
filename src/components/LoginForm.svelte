@@ -20,6 +20,7 @@
 	// Register form state
 	let registerFormData = $state({
 		username: '',
+		displayName: '',
 		email: '',
 		password: '',
 		confirmPassword: ''
@@ -38,30 +39,28 @@
     // Async function to check auth status
     const checkInitialAuth = async () => {
     try {
-        const response = await fetch('https://cms.sgxp.me/api/users/me', {
+        // Use local API route instead of calling Payload CMS directly
+        const response = await fetch('/api/users/me', {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include'
         });
-        
+
         if (response.ok) {
             const data = await response.json();
-            
+
             // Check if we actually have user data
-            if (data && (data.user || data.id || data.email)) {
-                console.log('User already logged in, redirecting to home...');
+            if (data && (data.id || data.email)) {
                 window.location.href = '/';
                 return;
             } else {
-                console.log('No user data found, showing login form');
                 isCheckingAuth = false;
             }
         } else {
-            console.log('Auth check failed, showing login form');
             isCheckingAuth = false;
         }
     } catch (err) {
-        console.log('Error checking auth, showing login form:', err);
+        console.error('Error checking auth:', err);
         isCheckingAuth = false;
     }
 };
@@ -93,10 +92,22 @@
 		}
 		return '';
 	}
-	
+
+	// Function to validate the display name
+	function validateDisplayName(displayName: string): string {
+		if (!displayName) return '';
+		if (displayName.length < 3) return 'Display name must be at least 3 characters';
+		if (displayName.length > 40) return 'Display name must be less than 40 characters';
+		return '';
+	}
+
 	// Create derived state for real-time validation feedback
 	let usernameValidationError = $derived(
 		registerFormData.username ? validateUsername(registerFormData.username) : ''
+	);
+
+	let displayNameValidationError = $derived(
+		registerFormData.displayName ? validateDisplayName(registerFormData.displayName) : ''
 	);
 
 	// Handler for login form submission
@@ -115,18 +126,14 @@
                 }),
                 });
 
-            console.log('Response headers:', response.headers);
-            console.log('Response status:', response.status);
-
             const data = await response.json();
-            console.log('Response data:', data);
 
             if (response.ok) {
             success = true;
-            
+
             // Dispatch event for navbar to update
             window.dispatchEvent(new CustomEvent('userLogin'));
-            
+
             setTimeout(() => {
                 window.location.href = '/';
             }, 500);
@@ -159,13 +166,20 @@
 			return;
 		}
 
+		if (displayNameValidationError) {
+			registerError = displayNameValidationError;
+			isRegisterLoading = false;
+			return;
+		}
+
 		try {
 			const response = await fetch('https://cms.sgxp.me/api/users', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                credentials: 'include', // Add this line
+                credentials: 'include',
                 body: JSON.stringify({
                     username: registerFormData.username.toLowerCase().trim(),
+                    displayName: registerFormData.displayName.trim(),
                     email: registerFormData.email,
                     password: registerFormData.password,
                 }),
@@ -175,7 +189,7 @@
 
 			if (response.ok) {
 				registrationSuccess = true;
-				registerFormData = { username: '', email: '', password: '', confirmPassword: '' };
+				registerFormData = { username: '', displayName: '', email: '', password: '', confirmPassword: '' };
 			} else {
 				const errorMessage = data.errors?.[0]?.message || data.message || 'Registration failed. Please try again.';
 				registerError = errorMessage;
@@ -243,7 +257,7 @@
 						We've sent you a verification email. Please check your inbox and click the verification link
                         to activate your account before you can log in.
 					</Card.Description>
-					<Button on:click={handleSwitchToLogin} class="theme-button">
+					<Button onclick={handleSwitchToLogin} class="theme-button">
 						Back to Login
 					</Button>
 				</div>
@@ -264,7 +278,7 @@
 						<Card.Description class="text-center theme-description"> Welcome back! </Card.Description>
 					</Card.Header>
 					<Card.Content>
-						<form on:submit|preventDefault={handleLoginSubmit} class="space-y-4">
+						<form onsubmit={(e) => { e.preventDefault(); handleLoginSubmit(); }} class="space-y-4">
 							<div class="space-y-2">
 								<Label for="login-email" class="theme-label">Email</Label>
 								<Input
@@ -272,7 +286,7 @@
 									type="email"
 									placeholder="sonic@hedgehog.net"
 									bind:value={loginFormData.email}
-									on:input={() => (loginError = '')}
+									oninput={() => (loginError = '')}
 									required
 									disabled={isLoginLoading}
 									autocomplete="email"
@@ -289,7 +303,7 @@
 									type="password"
 									placeholder="Enter your password"
 									bind:value={loginFormData.password}
-									on:input={() => (loginError = '')}
+									oninput={() => (loginError = '')}
 									required
 									disabled={isLoginLoading}
 									autocomplete="current-password"
@@ -313,7 +327,7 @@
 						<div class="text-center mt-4">
 							<p class="text-sm theme-description">
 								Don't have an account?{' '}
-								<a href="#" on:click={handleSwitchToRegister} class="theme-link"> Sign up </a>
+								<button type="button" onclick={handleSwitchToRegister} class="theme-link"> Sign up </button>
 							</p>
 						</div>
 					</Card.Content>
@@ -328,7 +342,7 @@
 						</Card.Description>
 					</Card.Header>
 					<Card.Content>
-						<form on:submit|preventDefault={handleRegisterSubmit} class="space-y-4">
+						<form onsubmit={(e) => { e.preventDefault(); handleRegisterSubmit(); }} class="space-y-4">
 							<div class="space-y-2">
 								<Label for="register-username" class="theme-label">Username</Label>
 								<Input
@@ -336,7 +350,7 @@
 									type="text"
 									placeholder="sonic_the_hedgehog"
 									bind:value={registerFormData.username}
-									on:input={() => (registerError = '')}
+									oninput={() => (registerError = '')}
 									required
 									disabled={isRegisterLoading}
 									autocomplete="username"
@@ -348,7 +362,29 @@
 									<p class="text-sm text-red-500 theme-error-text">{usernameValidationError}</p>
 								{/if}
 								<p class="text-xs theme-description opacity-70">
-									3-20 characters, letters, numbers, underscores and hyphens only
+									Your permanent username. Choose wisely! 3-20 characters, letters, numbers, underscores and hyphens only.
+								</p>
+							</div>
+							<div class="space-y-2">
+								<Label for="register-displayname" class="theme-label">Display Name</Label>
+								<Input
+									id="register-displayname"
+									type="text"
+									placeholder="Sonic the Hedgehog"
+									bind:value={registerFormData.displayName}
+									oninput={() => (registerError = '')}
+									required
+									disabled={isRegisterLoading}
+									autocomplete="name"
+									class={`theme-input ${displayNameValidationError ? 'border-red-500' : ''}`}
+									minlength={3}
+									maxlength={40}
+								/>
+								{#if displayNameValidationError}
+									<p class="text-sm text-red-500 theme-error-text">{displayNameValidationError}</p>
+								{/if}
+								<p class="text-xs theme-description opacity-70">
+									The name that will be displayed on your profile. This can be changed later. 3-40 characters
 								</p>
 							</div>
 							<div class="space-y-2">
@@ -358,7 +394,7 @@
 									type="email"
 									placeholder="sonic@hedgehog.net"
 									bind:value={registerFormData.email}
-									on:input={() => (registerError = '')}
+									oninput={() => (registerError = '')}
 									required
 									disabled={isRegisterLoading}
 									autocomplete="email"
@@ -372,7 +408,7 @@
 									type="password"
 									placeholder="Create a password"
 									bind:value={registerFormData.password}
-									on:input={() => (registerError = '')}
+									oninput={() => (registerError = '')}
 									required
 									disabled={isRegisterLoading}
 									autocomplete="new-password"
@@ -387,7 +423,7 @@
 									type="password"
 									placeholder="Confirm your password"
 									bind:value={registerFormData.confirmPassword}
-									on:input={() => (registerError = '')}
+									oninput={() => (registerError = '')}
 									required
 									disabled={isRegisterLoading}
 									autocomplete="new-password"
@@ -399,7 +435,7 @@
 									<Alert.Description class="theme-alert-text">{registerError}</Alert.Description>
 								</Alert.Root>
 							{/if}
-							<Button type="submit" class="w-full theme-button" disabled={isRegisterLoading || !!usernameValidationError}>
+							<Button type="submit" class="w-full theme-button" disabled={isRegisterLoading || !!usernameValidationError || !!displayNameValidationError}>
 								{#if isRegisterLoading}
 									<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
 									Creating account...
@@ -411,7 +447,7 @@
 						<div class="text-center mt-4">
 							<p class="text-sm theme-description">
 								Already have an account?{' '}
-								<a href="#" on:click={handleSwitchToLogin} class="theme-link"> Sign in </a>
+								<button type="button" onclick={handleSwitchToLogin} class="theme-link"> Sign in </button>
 							</p>
 						</div>
 					</Card.Content>
@@ -424,7 +460,7 @@
 <style>
 	.theme-compatible-login {
 		margin: auto;
-		margin-top: 200px;
+		margin-top: 100px;
 		width: 100%;
 		max-width: 400px;
 	}
@@ -465,20 +501,20 @@
 		border-left: none;
 	}
 
-	.theme-title {
+	.theme-compatible-login :global(.theme-title) {
 		color: var(--font-color);
 		font-family: 'saira', monospace;
 		font-weight: 800;
 		text-shadow: 1px 0px 0 var(--bg-color), 1px 1px 0 var(--bg-color), 0px 1px 0 var(--bg-color);
 	}
-	
-	.theme-description {
+
+	.theme-compatible-login :global(.theme-description) {
 		color: var(--font-color);
 		font-family: 'saira', monospace;
 		opacity: 0.8;
 	}
-	
-	.theme-label {
+
+	.theme-compatible-login :global(.theme-label) {
 		color: var(--font-color);
 		font-family: 'saira', monospace;
 		font-weight: 600;
@@ -509,7 +545,7 @@
 	
 	.theme-compatible-login :global(.theme-button) {
 		background: var(--font-link-color);
-		color: var(--page-color);
+		color: var(--font-color);
 		border: none;
 		border-radius: 0px;
 		font-family: 'saira', monospace;
@@ -518,6 +554,7 @@
 		transition: all var(--transition-speed, 200ms) ease-in-out;
 		cursor: url('/img/Sonic_Cursor.png'), pointer;
 		box-shadow: var(--box-shadow);
+		text-shadow: none !important;
 	}
 	
 	.theme-compatible-login :global(.theme-button:hover:not(:disabled)) {
@@ -537,7 +574,7 @@
 		border-radius: 0px;
 	}
 	
-	.theme-alert-text {
+	.theme-compatible-login :global(.theme-alert-text) {
 		color: var(--font-link-color);
 		font-family: 'saira', monospace;
 		font-size: 14px;
@@ -555,8 +592,12 @@
 		font-family: 'saira', monospace;
 		font-weight: 600;
 		transition: all var(--transition-speed, 200ms) ease-in-out;
+		background: none;
+		border: none;
+		padding: 0;
+		cursor: pointer;
 	}
-	
+
 	.theme-link:hover {
 		color: color-mix(in srgb, var(--font-link-color) 80%, white);
 		cursor: url('/img/Sonic_Cursor_Spin.gif'), progress;

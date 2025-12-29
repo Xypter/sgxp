@@ -30,6 +30,7 @@
     "@spotlightjs/astro": "^3.2.6",
     "@supabase/supabase-js": "^2.47.10",
     "@tailwindcss/vite": "^4.1.12",
+    "@tanstack/table-core": "^8.21.3",
     "@types/dotenv": "^8.2.3",
     "astro": "^5.14.8",
     "astro-mcp": "^0.4.2",

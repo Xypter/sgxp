@@ -1,4 +1,10 @@
 {
+  "permissions": {
+    "allow": [
+      "mcp__shadcn-svelte__get_directory_structure",
+      "mcp__typescript__get_diagnostics"
+    ]
+  },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "github",

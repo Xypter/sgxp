@@ -1,4 +1,7 @@
 <script>
+  // Import Svelte utilities
+  import { untrack } from 'svelte';
+
   // Import shadcn components
   import { AlertDialog } from '$lib/components';
   import ReportDialog from '$lib/components/ui/layout/ReportDialog.svelte';
@@ -68,41 +71,53 @@
     if (ids.length === 0) return;
 
     try {
-      // Payload "in" query to check multiple IDs at once
-      const idsParam = ids.join(',');
-      const response = await fetch(
-        `${API_BASE_URL}/likes?where[user][equals]=${user.id}&where[comment][in]=${idsParam}&limit=${ids.length}`,
-        { credentials: 'include' }
-      );
+      // Query all comment likes for this user
+      // Note: Payload doesn't support querying nested polymorphic fields with [in] operator
+      // So we fetch all comment likes for the user and filter client-side
+      const url = `${API_BASE_URL}/likes?where[user][equals]=${user.id}&limit=1000&depth=0`;
+
+      const response = await fetch(url, { credentials: 'include' });
 
       if (response.ok) {
         const data = await response.json();
 
         // Create a Set of comment IDs that the user has liked
+        // Filter to only include comments (not other liked items) and only the IDs we're checking
+        const idsSet = new Set(ids);
         const likedCommentIds = new Set(
-          data.docs.map(like => typeof like.comment === 'object' ? like.comment.id : like.comment)
+          data.docs
+            .filter(like => {
+              // Only include likes for comments
+              if (like.likedItem?.relationTo !== 'comments') return false;
+              // Extract the comment ID
+              const commentId = typeof like.likedItem.value === 'object' ? like.likedItem.value.id : like.likedItem.value;
+              // Only include if it's one of the comments we're checking
+              return idsSet.has(commentId);
+            })
+            .map(like => {
+              return typeof like.likedItem.value === 'object' ? like.likedItem.value.id : like.likedItem.value;
+            })
         );
 
-        // Update comments state to set userHasLiked = true
+        // Update comments state to set userHasLiked property
         comments = comments.map(c => {
           let updatedC = { ...c };
 
-          // Check top-level comment
-          if (likedCommentIds.has(c.id)) {
-            updatedC.userHasLiked = true;
-          }
+          // Check top-level comment - explicitly set true or false
+          updatedC.userHasLiked = likedCommentIds.has(c.id);
 
           // Check replies if they exist within this comment structure
           if (c.replies && Array.isArray(c.replies)) {
-            updatedC.replies = c.replies.map(r => {
-              if (likedCommentIds.has(r.id)) {
-                return { ...r, userHasLiked: true };
-              }
-              return r;
-            });
+            updatedC.replies = c.replies.map(r => ({
+              ...r,
+              userHasLiked: likedCommentIds.has(r.id)
+            }));
           }
           return updatedC;
         });
+      } else {
+        const errorText = await response.text();
+        console.error('[checkLikesForComments] API Error:', response.status, response.statusText, errorText);
       }
     } catch (e) {
       console.error("Failed to check existing likes:", e);
@@ -147,13 +162,9 @@
 
     try {
       const url = `${API_BASE_URL}/comments?where[parentComment][equals]=${parentCommentId}&depth=2&sort=createdAt`;
-      console.log('[loadReplies] Fetching replies for comment:', parentCommentId);
-      console.log('[loadReplies] URL:', url);
 
       // Matches Step 2 of Ideal API Flow: Replies to specific parent
       const response = await fetch(url, { credentials: 'include' });
-
-      console.log('[loadReplies] Response status:', response.status, response.statusText);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -162,7 +173,6 @@
       }
 
       const responseText = await response.text();
-      console.log('[loadReplies] Success response body (length):', responseText.length);
 
       let data;
       try {
@@ -173,7 +183,6 @@
       }
 
       const loadedReplies = data.docs || [];
-      console.log('[loadReplies] Loaded replies count:', loadedReplies.length);
 
       // Update the specific comment with its replies
       comments = comments.map(comment => {
@@ -189,26 +198,36 @@
       if (user && loadedReplies.length > 0) {
         const replyIds = loadedReplies.map(r => r.id).filter(Boolean);
         if (replyIds.length > 0) {
-          const idsParam = replyIds.join(',');
           try {
+            // Query all comment likes for this user and filter client-side
             const likesResponse = await fetch(
-              `${API_BASE_URL}/likes?where[user][equals]=${user.id}&where[comment][in]=${idsParam}&limit=${replyIds.length}`,
+              `${API_BASE_URL}/likes?where[user][equals]=${user.id}&limit=1000&depth=0`,
               { credentials: 'include' }
             );
             if (likesResponse.ok) {
               const likesData = await likesResponse.json();
+              const replyIdsSet = new Set(replyIds);
               const likedReplyIds = new Set(
-                likesData.docs.map(like => typeof like.comment === 'object' ? like.comment.id : like.comment)
+                likesData.docs
+                  .filter(like => {
+                    if (like.likedItem?.relationTo !== 'comments') return false;
+                    const commentId = typeof like.likedItem.value === 'object' ? like.likedItem.value.id : like.likedItem.value;
+                    return replyIdsSet.has(commentId);
+                  })
+                  .map(like => {
+                    return typeof like.likedItem.value === 'object' ? like.likedItem.value.id : like.likedItem.value;
+                  })
               );
-              
-              // Update replies with like status
+
+              // Update replies with like status - explicitly set true or false
               comments = comments.map(comment => {
                 if (comment.id === parentCommentId && comment.replies) {
                   return {
                     ...comment,
-                    replies: comment.replies.map(r => 
-                      likedReplyIds.has(r.id) ? { ...r, userHasLiked: true } : r
-                    )
+                    replies: comment.replies.map(r => ({
+                      ...r,
+                      userHasLiked: likedReplyIds.has(r.id)
+                    }))
                   };
                 }
                 return comment;
@@ -254,8 +273,6 @@
       isPending: true, // Flag to show pending state
     };
 
-    console.log('[submitComment] Adding optimistic comment:', optimisticComment);
-
     // OPTIMISTIC UPDATE: Immediately add comment to UI
     comments = [optimisticComment, ...comments];
     newCommentText = '';
@@ -269,19 +286,12 @@
         // Note: author is auto-injected by the backend from authenticated user
       };
 
-      console.log('[submitComment] Sending request:', {
-        url: `${API_BASE_URL}/comments`,
-        body: requestBody
-      });
-
       const response = await fetch(`${API_BASE_URL}/comments?depth=2`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(requestBody),
       });
-
-      console.log('[submitComment] Response status:', response.status, response.statusText);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -298,7 +308,6 @@
       }
 
       const responseText = await response.text();
-      console.log('[submitComment] Success response body:', responseText);
 
       let responseData;
       try {
@@ -310,7 +319,6 @@
 
       // Handle case where Payload wraps response in { doc: ... } or returns doc directly
       const newComment = responseData.doc || responseData;
-      console.log('[submitComment] New comment from server:', newComment);
 
       // Ensure author is fully populated - preserve from optimistic if needed
       if (!newComment.author || typeof newComment.author === 'string' || typeof newComment.author === 'number') {
@@ -389,19 +397,12 @@
         // Note: author is auto-injected by the backend from authenticated user
       };
 
-      console.log('[submitReply] Sending request:', {
-        url: `${API_BASE_URL}/comments`,
-        body: requestBody
-      });
-
       const response = await fetch(`${API_BASE_URL}/comments?depth=2`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(requestBody),
       });
-
-      console.log('[submitReply] Response status:', response.status, response.statusText);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -418,7 +419,6 @@
       }
 
       const responseText = await response.text();
-      console.log('[submitReply] Success response body:', responseText);
 
       let responseData;
       try {
@@ -429,7 +429,6 @@
       }
 
       const newReply = responseData.doc || responseData;
-      console.log('[submitReply] New reply from server:', newReply);
 
       // Ensure author is fully populated - preserve from optimistic if needed
       if (!newReply.author || typeof newReply.author === 'string' || typeof newReply.author === 'number') {
@@ -513,8 +512,6 @@
     submittingComment = true;
 
     try {
-      console.log('[updateComment] Updating comment:', commentId, 'with text:', newText);
-
       const response = await fetch(`${API_BASE_URL}/comments/${commentId}?depth=2`, {
         method: 'PATCH',
         headers: {
@@ -526,8 +523,6 @@
         }),
       });
 
-      console.log('[updateComment] Update response status:', response.status);
-
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error('[updateComment] API Error Response:', errorData);
@@ -535,17 +530,26 @@
       }
 
       const responseData = await response.json();
-      console.log('[updateComment] Updated comment from server:', responseData);
-      
+
       // Handle Payload's response format
       const updatedComment = responseData.doc || responseData;
+
+      // Ensure author is fully populated - preserve from local state if needed
+      if (!updatedComment.author || typeof updatedComment.author === 'string' || typeof updatedComment.author === 'number') {
+        // Find the original comment to get the author
+        const originalComment = comments.find(c => c.id === commentId) ||
+          comments.flatMap(c => c.replies || []).find(r => r.id === commentId);
+        if (originalComment?.author) {
+          updatedComment.author = originalComment.author;
+        }
+      }
 
       // Replace with server response and remove isEditing flag
       comments = comments.map(comment => {
         if (comment.id === commentId) {
           // Preserve replies and other local state
-          return { 
-            ...updatedComment, 
+          return {
+            ...updatedComment,
             isEditing: false,
             replies: comment.replies,
             replyCount: comment.replyCount,
@@ -557,8 +561,8 @@
           return {
             ...comment,
             replies: comment.replies.map(reply =>
-              reply.id === commentId 
-                ? { ...updatedComment, isEditing: false, userHasLiked: reply.userHasLiked } 
+              reply.id === commentId
+                ? { ...updatedComment, isEditing: false, userHasLiked: reply.userHasLiked }
                 : reply
             )
           };
@@ -618,14 +622,10 @@
     }
 
     try {
-      console.log('[deleteComment] Deleting comment:', commentId);
-
       const response = await fetch(`${API_BASE_URL}/comments/${commentId}`, {
         method: 'DELETE',
         credentials: 'include',
       });
-
-      console.log('[deleteComment] Delete response status:', response.status);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -696,8 +696,6 @@
 
   // Like/Unlike a comment with optimistic UI updates
   async function likeComment(commentId, isReply = false, parentCommentId = null) {
-    console.log('[likeComment] Called with:', { commentId, isReply, parentCommentId });
-
     if (!user) {
       toast.error('Please log in to like comments');
       return;
@@ -717,8 +715,6 @@
       return;
     }
 
-    console.log('[likeComment] Current comment:', currentComment);
-
     // Store previous state for potential rollback (use JSON for better browser compatibility)
     const previousComments = JSON.parse(JSON.stringify(comments));
 
@@ -726,8 +722,6 @@
     const wasLiked = currentComment.userHasLiked || false;
     const newLikeStatus = !wasLiked;
     const likeChange = newLikeStatus ? 1 : -1;
-
-    console.log('[likeComment] Optimistic update:', { wasLiked, newLikeStatus, likeChange });
 
     // OPTIMISTIC UPDATE: Immediately update UI before API call
     if (isReply && parentCommentId) {
@@ -755,8 +749,9 @@
     // Now perform the actual API call in the background
     try {
       // Check current server status to determine what action to take
+      // Query all likes for this user and filter client-side
       const checkResponse = await fetch(
-        `${API_BASE_URL}/likes?where[user][equals]=${user.id}&where[comment][equals]=${commentId}`,
+        `${API_BASE_URL}/likes?where[user][equals]=${user.id}&limit=1000&depth=0`,
         { credentials: 'include' }
       );
 
@@ -765,7 +760,15 @@
       }
 
       const checkData = await checkResponse.json();
-      const isLikedOnServer = checkData.totalDocs > 0;
+
+      // Find if this specific comment is liked
+      const existingLike = checkData.docs.find(like => {
+        if (like.likedItem?.relationTo !== 'comments') return false;
+        const likedCommentId = typeof like.likedItem.value === 'object' ? like.likedItem.value.id : like.likedItem.value;
+        return likedCommentId === commentId;
+      });
+
+      const isLikedOnServer = !!existingLike;
 
       // Perform the action that matches our optimistic update
       if (newLikeStatus && !isLikedOnServer) {
@@ -774,7 +777,13 @@
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user: user.id, comment: commentId }),
+          body: JSON.stringify({
+            user: user.id,
+            likedItem: {
+              relationTo: 'comments',
+              value: commentId
+            }
+          }),
         });
 
         if (!response.ok) {
@@ -784,7 +793,7 @@
 
       } else if (!newLikeStatus && isLikedOnServer) {
         // We want to unlike it and it's liked on server - DELETE
-        const likeId = checkData.docs[0].id;
+        const likeId = existingLike.id;
         const response = await fetch(`${API_BASE_URL}/likes/${likeId}`, {
           method: 'DELETE',
           credentials: 'include',
@@ -798,12 +807,10 @@
       } else if (newLikeStatus && isLikedOnServer) {
         // Server already shows it as liked - local state was out of sync
         // Keep the optimistic update (no API call needed, state is now correct)
-        console.log('Like already exists on server, local state updated to match');
 
       } else if (!newLikeStatus && !isLikedOnServer) {
         // Server already shows it as not liked - local state was out of sync
         // Keep the optimistic update (no API call needed, state is now correct)
-        console.log('Like already removed on server, local state updated to match');
       }
 
     } catch (err) {
@@ -843,19 +850,12 @@
         details: details || undefined
       };
 
-      console.log('[executeReport] Sending request:', {
-        url: `${API_BASE_URL}/reports`,
-        body: requestBody
-      });
-
       const response = await fetch(`${API_BASE_URL}/reports`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody)
       });
-
-      console.log('[executeReport] Response status:', response.status, response.statusText);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -871,8 +871,7 @@
         throw new Error(errData.message || 'Failed to submit report');
       }
 
-      const responseText = await response.text();
-      console.log('[executeReport] Success response body:', responseText);
+      await response.text();
       toast.success('Comment reported successfully', {
         description: 'Thank you for helping keep our community safe.'
       });
@@ -891,6 +890,27 @@
     if (spriteId) {
       loadComments();
     }
+  });
+
+  // Track previous user to detect when user becomes available
+  let previousUser = $state(user);
+
+  // Re-check likes when user changes (e.g., user logs in or auth loads)
+  $effect(() => {
+    // Track user dependency only
+    const currentUser = user;
+
+    // Only re-check likes if user changed from null/undefined to a user object
+    // This prevents re-checking on every comment update
+    if (currentUser && !previousUser) {
+      // Use untrack to access comments without creating a reactive dependency
+      const currentComments = untrack(() => comments);
+      if (currentComments.length > 0) {
+        checkLikesForComments(currentComments);
+      }
+    }
+
+    previousUser = currentUser;
   });
 </script>
 
@@ -924,12 +944,6 @@
       <div class="error-state">
         <p>Failed to load comments. Please try again.</p>
       </div>
-    {:else if comments.length === 0}
-      {#if !user}
-        <div class="login-prompt">
-          <p>Please <a href="/login">log in</a> to be the first to comment!</p>
-        </div>
-      {/if}
     {:else}
       <div class="comments-list">
         {#each comments as comment (comment.id)}

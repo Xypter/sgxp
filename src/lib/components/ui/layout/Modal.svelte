@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { fade, fly } from 'svelte/transition';
+
   interface ModalProps {
     open: boolean;
     onClose?: () => void;
@@ -53,12 +55,14 @@
     onclick={handleBackdropClick}
     onkeydown={(e) => e.key === 'Enter' && handleBackdropClick()}
     tabindex="-1"
+    transition:fade={{ duration: 200 }}
   >
     <div
       class="modal-content {className || ''}"
       onclick={(e) => e.stopPropagation()}
       onkeydown={(e) => e.stopPropagation()}
       role="presentation"
+      transition:fly={{ y: 20, duration: 300 }}
     >
       {@render children?.()}
     </div>
@@ -77,14 +81,12 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    animation: fadeIn 0.2s ease-out;
   }
 
   .modal-content {
     max-width: 90vw;
     max-height: 90vh;
     overflow: auto;
-    animation: slideUp 0.3s ease-out;
   }
 
   .themed-modal .modal-content {
@@ -92,25 +94,5 @@
     border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
     border-radius: 0px;
     box-shadow: var(--box-shadow);
-  }
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  @keyframes slideUp {
-    from {
-      transform: translateY(20px);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
   }
 </style>

@@ -306,11 +306,20 @@
 </script>
 
 {#if isOpen && image}
-    <div class="viewer-modal" transition:fade={{ duration: 200 }} onclick={(e) => e.target === e.currentTarget && handleClose()}>
+    <div
+        class="viewer-modal"
+        transition:fade={{ duration: 200 }}
+        onclick={(e) => e.target === e.currentTarget && handleClose()}
+        onkeydown={(e) => e.key === 'Escape' && handleClose()}
+        role="dialog"
+        aria-modal="true"
+        tabindex="-1"
+    >
         <div class="viewer-container">
             <div class="viewer-image-container" onwheel={handleWheel}>
                 <div class="image-wrapper">
                     <div class="image-with-grid">
+                        <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
                         <img
                             src={image.url}
                             alt={image.alt || 'Sprite image'}
@@ -324,10 +333,12 @@
                                 width: {image.width}px;
                                 height: {image.height}px;
                                 image-rendering: pixelated;
+                                cursor: grab;
                             "
                             onmousedown={handleMouseDown}
                             draggable="false"
                             loading="eager"
+                            aria-label="Sprite viewer - click and drag to pan"
                         />
 
                             {#if showGrid && zoom >= 2}
@@ -561,18 +572,18 @@
         margin: 0 4px;
     }
 
-    .viewer-controls .active {
+    .viewer-controls :global(.active) {
         background-color: color-mix(in srgb, var(--page-color) 70%, white);
         color: var(--font-color);
     }
 
-    .viewer-controls .close-btn {
+    .viewer-controls :global(.close-btn) {
         background-color: #dc2626 !important;
         border-color: #dc2626 !important;
         color: white !important;
     }
 
-    .viewer-controls .close-btn:hover {
+    .viewer-controls :global(.close-btn:hover) {
         background-color: #b91c1c !important;
         border-color: #b91c1c !important;
     }

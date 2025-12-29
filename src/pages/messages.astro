@@ -1,0 +1,52 @@
+---
+import FrontPageLayout from '../layouts/FrontPageLayout.astro';
+import MessageList from '$components/messages/MessageList.svelte';
+
+// Auth check (same pattern as settings.astro)
+const token = Astro.cookies.get('payload-token')?.value;
+
+if (!token) {
+  return Astro.redirect('/login?redirect=/messages');
+}
+
+// Verify token with Payload CMS
+let currentUser = null;
+try {
+  const payloadUrl = import.meta.env.PAYLOAD_URL;
+  const response = await fetch(`${payloadUrl}/api/users/me`, {
+    headers: { 'Cookie': `payload-token=${token}` }
+  });
+
+  if (response.ok) {
+    const data = await response.json();
+    currentUser = data.user || data;
+  } else {
+    return Astro.redirect('/login?redirect=/messages');
+  }
+} catch (error) {
+  console.error('[Messages SSR] Auth check failed:', error);
+  return Astro.redirect('/login?redirect=/messages');
+}
+---
+
+<FrontPageLayout title="Messages - SGXP">
+  <div class="messages-page-container">
+    <!-- @ts-ignore - Astro doesn't infer Svelte component props -->
+    <MessageList user={currentUser} client:only="svelte" />
+  </div>
+</FrontPageLayout>
+
+<style>
+  .messages-page-container {
+    width: 1202px;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 50px 20px;
+  }
+
+  @media (max-width: 1250px) {
+    .messages-page-container {
+      padding: 30px 15px;
+    }
+  }
+</style>

@@ -1,29 +1,20 @@
 {
   "mcpServers": {
-    "github": {
-      "type": "http",
-      "url": "https://mcp.github.com"
-    },
-    "svelte-docs": {
-      "type": "http",
-      "url": "https://svelte-llm.stanislav.garden/mcp/mcp"
-    },
     "astro": {
       "type": "sse",
       "url": "http://localhost:4321/__mcp/sse"
     },
-    "shadcn-svelte": {
-      "type": "stdio",
-      "command": "cmd",
+    "typescript": {
+      "command": "npx",
       "args": [
-        "/c",
-        "npx",
-        "-y",
-        "@jpisnice/shadcn-ui-mcp-server@latest"
-      ],
-      "env": {
-        "FRAMEWORK": "svelte"
-      }
+        "mcp-typescript-server"
+      ]
+    },
+    "eslint": {
+      "command": "npx",
+      "args": [
+        "@eslint/mcp@latest"
+      ]
     }
   }
 }

@@ -99,9 +99,9 @@
 
 <style>
   :global(.theme-combobox-trigger) {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
     background: color-mix(in srgb, var(--page-color) 60%, black) !important;
     border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white) !important;
     border-radius: 0px !important;
@@ -109,6 +109,8 @@
     font-family: 'saira', monospace !important;
     font-size: 14px !important;
     padding: 8px 12px !important;
+    min-height: 42px !important;
+    height: 42px !important;
     transition: all var(--transition-speed, 200ms) ease-in-out !important;
     text-shadow: 1px 0px 0 var(--bg-color), 1px 1px 0 var(--bg-color), 0px 1px 0 var(--bg-color) !important;
     min-width: 150px;

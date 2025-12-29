@@ -31,6 +31,8 @@
   let user = $state<User | null>(initialUser);
   let isLoggedIn = $state<boolean>(!!initialUser);
   let isCheckingAuth = $state(true);
+  let uploadCount = $state<number>(0);
+  // let unreadMessageCount = $state<number>(0);
 
   // Constants that don't need to be reactive
   const themes: { value: ThemeValue; label: string }[] = [
@@ -57,18 +59,67 @@ async function checkAuthStatus(): Promise<void> {
       const userData = await response.json();
       user = userData;
       isLoggedIn = true;
+      fetchUploadCount();
+      // fetchUnreadMessageCount();
     } else {
       user = null;
       isLoggedIn = false;
+      uploadCount = 0;
+      // unreadMessageCount = 0;
     }
   } catch (error) {
     console.error('Error checking authentication status:', error);
     user = null;
     isLoggedIn = false;
+    uploadCount = 0;
+    // unreadMessageCount = 0;
   } finally {
     isCheckingAuth = false;
   }
 }
+
+  // Function to fetch user's upload count
+  async function fetchUploadCount(): Promise<void> {
+    if (!user?.id) return;
+
+    try {
+      const params = new URLSearchParams({
+        'where[author][equals]': user.id.toString(),
+        'limit': '0'
+      });
+
+      const response = await fetch(`/api/sprites?${params.toString()}`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        uploadCount = data.totalDocs || 0;
+      }
+    } catch (error) {
+      console.error('Error fetching upload count:', error);
+    }
+  }
+
+  // Function to fetch unread message count
+  // async function fetchUnreadMessageCount(): Promise<void> {
+  //   if (!user?.id) return;
+
+  //   try {
+  //     const response = await fetch('/api/messages/unread-count', {
+  //       method: 'GET',
+  //       credentials: 'include',
+  //     });
+
+  //     if (response.ok) {
+  //       const data = await response.json();
+  //       unreadMessageCount = data.unreadCount || 0;
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching unread message count:', error);
+  //   }
+  // }
 
   // Function to handle logout
   async function handleLogout(): Promise<void> {
@@ -149,6 +200,9 @@ async function checkAuthStatus(): Promise<void> {
       if (now - lastAuthCheck >= AUTH_CHECK_DEBOUNCE_MS) {
         lastAuthCheck = now;
         checkAuthStatus();
+        // if (user?.id) {
+        //   fetchUnreadMessageCount();
+        // }
       }
     }
   };
@@ -161,6 +215,8 @@ async function checkAuthStatus(): Promise<void> {
   const handleUserLogout = () => {
     user = null;
     isLoggedIn = false;
+    uploadCount = 0;
+    // unreadMessageCount = 0;
   };
 
   document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -170,6 +226,8 @@ async function checkAuthStatus(): Promise<void> {
   // OPTIMIZATION: Skip initial check if SSR already provided user data
   if (initialUser) {
     isCheckingAuth = false;
+    fetchUploadCount();
+    // fetchUnreadMessageCount();
   } else {
     checkAuthStatus();
     lastAuthCheck = Date.now();
@@ -247,7 +305,7 @@ async function checkAuthStatus(): Promise<void> {
           }
         }}
       >
-        SGXP
+        THE SGXP
       </div>
 
       <NavigationMenu.Root>
@@ -565,6 +623,71 @@ async function checkAuthStatus(): Promise<void> {
                   e.currentTarget.style.backgroundColor = 'transparent';
                 }
               }}
+              onclick={() => (window.location.href = '/profile/uploads')}
+            >
+              Uploads ({uploadCount})
+            </DropdownMenu.Item>
+            <!-- Temporarily commented out for debugging -->
+            <!-- <DropdownMenu.Item
+              class="cursor-pointer focus:outline-none no-theme-styles"
+              style="
+                padding-bottom: 10px;
+                color: var(--font-color);
+                font-family: nav;
+                font-size: 16px;
+                line-height: 12px;
+                text-shadow:
+                  -1px -1px 0 var(--bg-color),
+                  0px -1px 0 var(--bg-color),
+                  1px -1px 0 var(--bg-color),
+                  1px 0px 0 var(--bg-color),
+                  1px 1px 0 var(--bg-color),
+                  0px 1px 0 var(--bg-color),
+                  -1px 1px 0 var(--bg-color),
+                  -1px 0px 0 var(--bg-color);
+              "
+              onmouseenter={(e: MouseEvent) => {
+                if (e.currentTarget instanceof HTMLElement) {
+                  e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+                }
+              }}
+              onmouseleave={(e: MouseEvent) => {
+                if (e.currentTarget instanceof HTMLElement) {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }
+              }}
+              onclick={() => (window.location.href = '/messages')}
+            >
+              Messages {#if unreadMessageCount > 0}({unreadMessageCount}){/if}
+            </DropdownMenu.Item> -->
+            <DropdownMenu.Item
+              class="cursor-pointer focus:outline-none no-theme-styles"
+              style="
+                padding-bottom: 10px;
+                color: var(--font-color);
+                font-family: nav;
+                font-size: 16px;
+                line-height: 12px;
+                text-shadow:
+                  -1px -1px 0 var(--bg-color),
+                  0px -1px 0 var(--bg-color),
+                  1px -1px 0 var(--bg-color),
+                  1px 0px 0 var(--bg-color),
+                  1px 1px 0 var(--bg-color),
+                  0px 1px 0 var(--bg-color),
+                  -1px 1px 0 var(--bg-color),
+                  -1px 0px 0 var(--bg-color);
+              "
+              onmouseenter={(e: MouseEvent) => {
+                if (e.currentTarget instanceof HTMLElement) {
+                  e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+                }
+              }}
+              onmouseleave={(e: MouseEvent) => {
+                if (e.currentTarget instanceof HTMLElement) {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }
+              }}
               onclick={() => (window.location.href = '/settings')}
             >
               Settings
@@ -604,6 +727,42 @@ async function checkAuthStatus(): Promise<void> {
             </DropdownMenu.Item>
           </DropdownMenu.Content>
         </DropdownMenu.Root>
+        <Button
+          variant="ghost"
+          class={cn(
+            "h-12 px-4 font-medium no-theme-styles ml-2"
+          )}
+          style="
+            color: var(--font-color);
+            background-color: transparent;
+            font-family: nav;
+            font-size: 16px;
+            text-shadow:
+              -1px -1px 0 var(--bg-color),
+              0px -1px 0 var(--bg-color),
+              1px -1px 0 var(--bg-color),
+              1px 0px 0 var(--bg-color),
+              1px 1px 0 var(--bg-color),
+              0px 1px 0 var(--bg-color),
+              -1px 1px 0 var(--bg-color),
+              -1px 0px 0 var(--bg-color);
+          "
+          onmouseenter={(e: MouseEvent) => {
+            if (e.currentTarget instanceof HTMLElement) {
+              e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+            }
+          }}
+          onmouseleave={(e: MouseEvent) => {
+            if (e.currentTarget instanceof HTMLElement) {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }
+          }}
+          onclick={() => {
+            window.location.href = '/upload';
+          }}
+        >
+          Upload
+        </Button>
       {:else}
         <Button
           variant="ghost"
@@ -854,6 +1013,69 @@ async function checkAuthStatus(): Promise<void> {
               >
                 Profile
               </a>
+              <a
+                href="/profile/uploads"
+                class="block no-theme-styles py-2 px-4 rounded-md transition-colors"
+                style="
+                  color: var(--font-color);
+                  font-family: nav;
+                  font-size: 14px;
+                  text-shadow:
+                    -1px -1px 0 var(--bg-color),
+                    0px -1px 0 var(--bg-color),
+                    1px -1px 0 var(--bg-color),
+                    1px 0px 0 var(--bg-color),
+                    1px 1px 0 var(--bg-color),
+                    0px 1px 0 var(--bg-color),
+                    -1px 1px 0 var(--bg-color),
+                    -1px 0px 0 var(--bg-color);
+                "
+                onclick={() => (isMobileMenuOpen = false)}
+                onmouseenter={(e: MouseEvent) => {
+                  if (e.currentTarget instanceof HTMLElement) {
+                    e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+                  }
+                }}
+                onmouseleave={(e: MouseEvent) => {
+                  if (e.currentTarget instanceof HTMLElement) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
+              >
+                Uploads ({uploadCount})
+              </a>
+              <!-- Temporarily commented out for debugging -->
+              <!-- <a
+                href="/messages"
+                class="block no-theme-styles py-2 px-4 rounded-md transition-colors"
+                style="
+                  color: var(--font-color);
+                  font-family: nav;
+                  font-size: 14px;
+                  text-shadow:
+                    -1px -1px 0 var(--bg-color),
+                    0px -1px 0 var(--bg-color),
+                    1px -1px 0 var(--bg-color),
+                    1px 0px 0 var(--bg-color),
+                    1px 1px 0 var(--bg-color),
+                    0px 1px 0 var(--bg-color),
+                    -1px 1px 0 var(--bg-color),
+                    -1px 0px 0 var(--bg-color);
+                "
+                onclick={() => (isMobileMenuOpen = false)}
+                onmouseenter={(e: MouseEvent) => {
+                  if (e.currentTarget instanceof HTMLElement) {
+                    e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+                  }
+                }}
+                onmouseleave={(e: MouseEvent) => {
+                  if (e.currentTarget instanceof HTMLElement) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
+              >
+                Messages {#if unreadMessageCount > 0}({unreadMessageCount}){/if}
+              </a> -->
               <a
                 href="/settings"
                 class="block no-theme-styles py-2 px-4 rounded-md transition-colors"

@@ -2,7 +2,7 @@
 import type { APIRoute } from 'astro';
 import { getCached, setCached, cacheKey, hashString, CACHE_TTL } from '$lib/redis';
 
-export const GET: APIRoute = async ({ cookies }) => {
+export const GET: APIRoute = async ({ cookies, url }) => {
   // Get the token from the secure, HttpOnly cookie sent by the browser
   const token = cookies.get('payload-token')?.value;
 
@@ -15,9 +15,13 @@ export const GET: APIRoute = async ({ cookies }) => {
   }
 
   try {
+    // Extract depth parameter from query string
+    const depth = url.searchParams.get('depth');
+
     // OPTIMIZATION: Try Redis cache first
+    // Include depth in cache key to cache different depth levels separately
     const tokenHash = hashString(token);
-    const authCacheKey = cacheKey.auth(tokenHash);
+    const authCacheKey = depth ? `${cacheKey.auth(tokenHash)}:depth${depth}` : cacheKey.auth(tokenHash);
     const cachedUser = await getCached<any>(authCacheKey);
 
     if (cachedUser) {
@@ -32,7 +36,12 @@ export const GET: APIRoute = async ({ cookies }) => {
     // We forward the user's token to your Payload CMS to verify it.
     const payloadUrl = import.meta.env.PAYLOAD_URL;
 
-    const response = await fetch(`${payloadUrl}/api/users/me`, {
+    // Build URL with depth parameter if provided
+    const payloadMeUrl = depth
+      ? `${payloadUrl}/api/users/me?depth=${depth}`
+      : `${payloadUrl}/api/users/me`;
+
+    const response = await fetch(payloadMeUrl, {
       headers: {
         // Forward the cookie to the Payload API for authentication
         'Cookie': `payload-token=${token}`

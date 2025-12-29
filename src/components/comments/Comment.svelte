@@ -1,13 +1,13 @@
 <script>
   // Import shadcn components
-  import { Card, Avatar, Button } from '$lib/components';
+  import { Card, Avatar, Button, Badge } from '$lib/components';
   import { Separator } from '$components/ui/separator';
 
   // Import Lucide icons
   import { Reply, Edit2, Trash2, Heart, Flag } from 'lucide-svelte';
 
   // Import utility functions
-  import { formatDate, getDisplayName, getProfilePicture, renderCommentText } from '$lib/spriteUtils';
+  import { formatDate, getDisplayName, getUsername, getProfilePicture, renderCommentText } from '$lib/spriteUtils';
 
   // Import child components
   import CommentForm from './CommentForm.svelte';
@@ -69,9 +69,37 @@
     </Avatar.Root>
 
     <div class="comment-meta">
-      <h4 class="comment-author">
-        {getDisplayName(comment.author)}
-      </h4>
+      <div class="comment-author-row">
+        <h4 class="comment-author">
+          <a href="/profile?id={comment.author?.id}" class="author-link">
+            {getDisplayName(comment.author)}
+          </a>
+        </h4>
+        <div class="comment-badges">
+          {#if comment.author?.role && comment.author.role !== 'user'}
+            <!-- Show role badge only if role is NOT 'user' -->
+            <Badge
+              themed
+              color={comment.author.roleColor || '#888888'}
+              class="comment-role-badge"
+            >
+              {comment.author.role}
+            </Badge>
+          {:else if comment.author?.prestigeRole}
+            <!-- Show prestige badge only if role IS 'user' -->
+            <Badge
+              themed
+              color={comment.author.prestigeColor || '#888888'}
+              class="comment-prestige-badge"
+            >
+              {comment.author.prestigeRole}
+            </Badge>
+          {/if}
+        </div>
+      </div>
+      {#if getUsername(comment.author)}
+        <p class="comment-username">{getUsername(comment.author)}</p>
+      {/if}
       <p class="comment-date">
         {formatDate(comment.createdAt)}
         {#if comment.isEdited}

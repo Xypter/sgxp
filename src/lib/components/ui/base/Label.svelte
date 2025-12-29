@@ -1,10 +1,11 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { Label as ShadcnLabel } from '$components/ui/label';
-  import type { LabelProps as ShadcnLabelProps } from '$components/ui/label';
+  import { Label as LabelPrimitive } from 'bits-ui';
 
-  interface LabelProps extends ShadcnLabelProps {
+  interface LabelProps extends LabelPrimitive.RootProps {
     themed?: boolean;
+    class?: string;
     children?: Snippet;
   }
 

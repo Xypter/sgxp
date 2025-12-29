@@ -2,15 +2,17 @@
   import { Button, Input, Label, Switch } from '$lib/components';
   import { Toaster } from '$lib/components';
   import { toast } from 'svelte-sonner';
-  import { Settings, User, Lock, Save, Loader2, Eye, EyeOff, Shield } from 'lucide-svelte';
+  import { Settings, Lock, Save, Loader2, Eye, EyeOff, Shield } from 'lucide-svelte';
 
   // Props
   let {
     initialUser = null,
-    initialError = null
+    initialError = null,
+    authToken = null
   }: {
     initialUser?: any;
     initialError?: string | null;
+    authToken?: string | null;
   } = $props();
 
   const API_BASE_URL = "https://cms.sgxp.me/api";
@@ -20,70 +22,19 @@
   let error = $state(initialError);
 
   // Form states
-  let displayName = $state(initialUser?.displayName || '');
-  let currentPassword = $state('');
   let newPassword = $state('');
   let confirmPassword = $state('');
   let hideLastOnline = $state(initialUser?.hideLastOnline || false);
 
   // UI states
-  let savingDisplayName = $state(false);
   let savingPassword = $state(false);
   let savingPrivacy = $state(false);
-  let showCurrentPassword = $state(false);
   let showNewPassword = $state(false);
   let showConfirmPassword = $state(false);
-
-  // Update display name
-  async function updateDisplayName() {
-    if (!displayName.trim()) {
-      toast.error('Display name cannot be empty');
-      return;
-    }
-
-    if (displayName === user?.displayName) {
-      toast.info('No changes to save');
-      return;
-    }
-
-    savingDisplayName = true;
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/users/${user.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          displayName: displayName.trim()
-        })
-      });
-
-      if (response.ok) {
-        const updatedUser = await response.json();
-        user = updatedUser.doc || updatedUser;
-        toast.success('Display name updated successfully!');
-      } else {
-        const errorData = await response.json();
-        toast.error(errorData.message || 'Failed to update display name');
-      }
-    } catch (err) {
-      console.error('Error updating display name:', err);
-      toast.error('An error occurred. Please try again.');
-    } finally {
-      savingDisplayName = false;
-    }
-  }
 
   // Update password
   async function updatePassword() {
     // Validation
-    if (!currentPassword) {
-      toast.error('Please enter your current password');
-      return;
-    }
-
     if (!newPassword) {
       toast.error('Please enter a new password');
       return;
@@ -102,11 +53,19 @@
     savingPassword = true;
 
     try {
+      // Prepare headers with authentication
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      // Add authorization header if token is available
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
+
       const response = await fetch(`${API_BASE_URL}/users/${user.id}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         credentials: 'include',
         body: JSON.stringify({
           password: newPassword
@@ -116,12 +75,13 @@
       if (response.ok) {
         toast.success('Password updated successfully!');
         // Clear password fields
-        currentPassword = '';
         newPassword = '';
         confirmPassword = '';
       } else {
         const errorData = await response.json();
-        toast.error(errorData.message || 'Failed to update password');
+        // Payload CMS returns errors in an errors array
+        const errorMessage = errorData.errors?.[0]?.message || errorData.message || 'Failed to update password';
+        toast.error(errorMessage);
       }
     } catch (err) {
       console.error('Error updating password:', err);
@@ -136,11 +96,19 @@
     savingPrivacy = true;
 
     try {
+      // Prepare headers with authentication
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      // Add authorization header if token is available
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
+
       const response = await fetch(`${API_BASE_URL}/users/${user.id}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         credentials: 'include',
         body: JSON.stringify({
           hideLastOnline
@@ -153,7 +121,9 @@
         toast.success('Privacy settings updated successfully!');
       } else {
         const errorData = await response.json();
-        toast.error(errorData.message || 'Failed to update privacy settings');
+        // Payload CMS returns errors in an errors array
+        const errorMessage = errorData.errors?.[0]?.message || errorData.message || 'Failed to update privacy settings';
+        toast.error(errorMessage);
       }
     } catch (err) {
       console.error('Error updating privacy settings:', err);
@@ -164,12 +134,6 @@
   }
 
   // Handle keyboard submission
-  function handleDisplayNameKeydown(event: KeyboardEvent) {
-    if (event.key === 'Enter') {
-      updateDisplayName();
-    }
-  }
-
   function handlePasswordKeydown(event: KeyboardEvent) {
     if (event.key === 'Enter') {
       updatePassword();
@@ -192,48 +156,6 @@
       <h1>Account Settings</h1>
     </div>
 
-    <!-- Display Name Section -->
-    <div class="settings-content-title">
-      <User class="w-5 h-5 inline-block mr-2" />
-      Display Name
-    </div>
-    <div class="settings-content-box">
-      <div class="settings-description">
-        This is the name that will be displayed on your profile and next to your contributions.
-      </div>
-
-      <div class="form-group">
-        <Label for="displayName" class="form-label">Display Name</Label>
-        <div class="input-with-button">
-          <Input
-            id="displayName"
-            type="text"
-            bind:value={displayName}
-            placeholder="Enter your display name"
-            onkeydown={handleDisplayNameKeydown}
-            class="settings-input"
-          />
-          <Button
-            themed
-            onclick={updateDisplayName}
-            disabled={savingDisplayName}
-            class="save-btn"
-          >
-            {#if savingDisplayName}
-              <Loader2 class="w-4 h-4 mr-2 animate-spin" />
-              Saving...
-            {:else}
-              <Save class="w-4 h-4 mr-2" />
-              Save
-            {/if}
-          </Button>
-        </div>
-        <div class="form-hint">
-          Current: <strong>{user.displayName || user.username}</strong>
-        </div>
-      </div>
-    </div>
-
     <!-- Password Section -->
     <div class="settings-content-title">
       <Lock class="w-5 h-5 inline-block mr-2" />
@@ -245,31 +167,7 @@
       </div>
 
       <div class="form-group">
-        <Label for="currentPassword" class="form-label">Current Password</Label>
-        <div class="password-input-wrapper">
-          <Input
-            id="currentPassword"
-            type={showCurrentPassword ? 'text' : 'password'}
-            bind:value={currentPassword}
-            placeholder="Enter your current password"
-            class="settings-input"
-          />
-          <button
-            type="button"
-            class="password-toggle"
-            onclick={() => showCurrentPassword = !showCurrentPassword}
-          >
-            {#if showCurrentPassword}
-              <EyeOff class="w-4 h-4" />
-            {:else}
-              <Eye class="w-4 h-4" />
-            {/if}
-          </button>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <Label for="newPassword" class="form-label">New Password</Label>
+        <Label class="form-label">New Password</Label>
         <div class="password-input-wrapper">
           <Input
             id="newPassword"
@@ -293,7 +191,7 @@
       </div>
 
       <div class="form-group">
-        <Label for="confirmPassword" class="form-label">Confirm New Password</Label>
+        <Label class="form-label">Confirm New Password</Label>
         <div class="password-input-wrapper">
           <Input
             id="confirmPassword"
@@ -468,12 +366,6 @@
     margin-bottom: 8px !important;
   }
 
-  .input-with-button {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-  }
-
   :global(.settings-input) {
     flex: 1;
     background: color-mix(in srgb, var(--page-color) 80%, black) !important;
@@ -523,18 +415,6 @@
 
   .password-toggle:hover {
     opacity: 1;
-  }
-
-  .form-hint {
-    font-family: 'saira';
-    font-size: 12px;
-    color: var(--font-color);
-    opacity: 0.6;
-    margin-top: 8px;
-  }
-
-  .form-hint strong {
-    color: var(--font-link-color);
   }
 
   .form-actions {
@@ -605,10 +485,6 @@
 
   /* Responsive */
   @media (max-width: 600px) {
-    .input-with-button {
-      flex-direction: column;
-    }
-
     :global(.save-btn) {
       width: 100%;
       justify-content: center;

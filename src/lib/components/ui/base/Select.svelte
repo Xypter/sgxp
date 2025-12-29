@@ -15,6 +15,7 @@
     class?: string;
     children?: Snippet;
     onValueChange?: (value: string) => void;
+    portal?: string | HTMLElement;
   }
 
   let {
@@ -24,7 +25,8 @@
     themed = false,
     class: className,
     children,
-    onValueChange
+    onValueChange,
+    portal = 'body'
   }: SelectProps = $props();
 
   const triggerClass = themed
@@ -41,7 +43,7 @@
   }
 </script>
 
-<SelectPrimitive.Root type="single" bind:value={value} onSelectedChange={handleValueChange}>
+<SelectPrimitive.Root type="single" bind:value={value} onValueChange={handleValueChange}>
   <SelectPrimitive.Trigger class={triggerClass}>
     {#if children}
       {@render children()}
@@ -49,7 +51,7 @@
       {options.find(opt => opt.value === value)?.label || placeholder}
     {/if}
   </SelectPrimitive.Trigger>
-  <SelectPrimitive.Content class={contentClass}>
+  <SelectPrimitive.Content class={contentClass} portalProps={{ to: portal }}>
     {#each options as option (option.value)}
       <SelectPrimitive.Item value={option.value} label={option.label} class={itemClass}>
         {option.label}
@@ -60,6 +62,8 @@
 
 <style>
   :global(.theme-select-trigger) {
+    display: flex !important;
+    align-items: center !important;
     background: color-mix(in srgb, var(--page-color) 60%, black) !important;
     border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white) !important;
     border-radius: 0px !important;
@@ -67,6 +71,8 @@
     font-family: 'saira', monospace !important;
     font-size: 14px !important;
     padding: 8px 12px !important;
+    min-height: 42px !important;
+    height: 42px !important;
     transition: all var(--transition-speed, 200ms) ease-in-out !important;
     text-shadow: 1px 0px 0 var(--bg-color), 1px 1px 0 var(--bg-color), 0px 1px 0 var(--bg-color) !important;
     min-width: 150px;
@@ -93,6 +99,9 @@
     padding: 4px !important;
     box-shadow: var(--box-shadow, 20px 20px 20px rgba(0, 0, 0, 0.7)) !important;
     width: var(--bits-select-trigger-width) !important;
+    z-index: 99999 !important;
+    max-height: 300px !important;
+    overflow-y: auto !important;
   }
 
   :global(.theme-select-item) {

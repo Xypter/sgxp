@@ -36,7 +36,21 @@
     font-family: 'saira', monospace !important;
     font-weight: 600 !important;
     font-size: 12px !important;
-    padding: 2px 8px 4px !important;
-    text-shadow: none;
+    padding: 3px 8px 4px 8px !important;
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transform: translateZ(0) !important;
+    text-transform: capitalize !important;
+    text-shadow:
+      calc(1px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 0px color-mix(in srgb, var(--badge-color, var(--font-link-color)) 70%, black 30%),
+      calc(1px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 0px color-mix(in srgb, var(--badge-color, var(--font-link-color)) 70%, black 30%),
+      calc(0px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 0px color-mix(in srgb, var(--badge-color, var(--font-link-color)) 70%, black 30%),
+      calc(-1px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 0px color-mix(in srgb, var(--badge-color, var(--font-link-color)) 70%, black 30%),
+      calc(-1px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 0px color-mix(in srgb, var(--badge-color, var(--font-link-color)) 70%, black 30%),
+      calc(-1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0px color-mix(in srgb, var(--badge-color, var(--font-link-color)) 70%, black 30%),
+      calc(0px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0px color-mix(in srgb, var(--badge-color, var(--font-link-color)) 70%, black 30%),
+      calc(1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 0px color-mix(in srgb, var(--badge-color, var(--font-link-color)) 70%, black 30%);
   }
 </style>

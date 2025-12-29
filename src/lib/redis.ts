@@ -23,6 +23,9 @@ export const CACHE_TTL = {
   SECTIONS: 60 * 60,      // 1 hour for sections
   CHARACTERS: 60 * 30,    // 30 minutes for characters
   USERS: 60 * 15,         // 15 minutes for user profiles
+  MESSAGES_LIST: 60 * 1,      // 1 minute for message lists
+  MESSAGE_CONVERSATION: 60 * 2, // 2 minutes for conversation threads
+  MESSAGE_UNREAD_COUNT: 30,    // 30 seconds for unread count
 };
 
 /**
@@ -211,6 +214,14 @@ export const cacheKey = {
   section: (id: string | number) => `sections:${id}`,
   character: (id: string | number) => `characters:${id}`,
   user: (id: string | number) => `users:${id}`,
+  messagesInbox: (userId: string, page: number, filters: string) =>
+    `messages:inbox:${userId}:${page}:${filters}`,
+  messagesSent: (userId: string, page: number, filters: string) =>
+    `messages:sent:${userId}:${page}:${filters}`,
+  messageConversation: (conversationId: string) =>
+    `messages:conversation:${conversationId}`,
+  messageUnreadCount: (userId: string) =>
+    `messages:unread:${userId}`,
 };
 
 /**
@@ -294,4 +305,44 @@ export async function invalidateUserCache(userId: string | number, token?: strin
   }
 
   console.log(`[Cache Invalidation] User ${userId} cache invalidated`);
+}
+
+/**
+ * Invalidate all sprite-related cache
+ * Call this when a sprite is created, updated, or status changes (e.g., approved)
+ */
+export async function invalidateSpriteCache(spriteId?: string | number): Promise<void> {
+  console.log(`[Cache Invalidation] Invalidating sprite cache${spriteId ? ` for sprite ${spriteId}` : ''}`);
+
+  // Delete all sprite list caches (all pages, sorts, filters)
+  await deleteCached('sprites:list:*');
+
+  // Delete specific sprite detail if ID provided
+  if (spriteId) {
+    await deleteCached(cacheKey.spriteDetail(spriteId));
+  }
+
+  console.log(`[Cache Invalidation] Sprite cache invalidated`);
+}
+
+/**
+ * Invalidate all message-related cache for a user
+ * Call this when messages are created, read, or deleted
+ */
+export async function invalidateMessageCache(userId: string, conversationId?: string): Promise<void> {
+  console.log(`[Cache Invalidation] Invalidating message cache for user ${userId}`);
+
+  // Delete all inbox and sent caches for user
+  await deleteCached(`messages:inbox:${userId}:*`);
+  await deleteCached(`messages:sent:${userId}:*`);
+
+  // Delete unread count cache
+  await deleteCached(cacheKey.messageUnreadCount(userId));
+
+  // Delete specific conversation cache if provided
+  if (conversationId) {
+    await deleteCached(cacheKey.messageConversation(conversationId));
+  }
+
+  console.log(`[Cache Invalidation] Message cache invalidated`);
 }

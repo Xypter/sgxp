@@ -22,12 +22,40 @@ try {
   fetchError = 'Failed to load sprite';
   console.error('Server-side fetch error:', error);
 }
+
+// Get the auth token from cookies and fetch user data with profile picture
+let user = null;
+const token = Astro.cookies.get('payload-token')?.value;
+
+if (token) {
+  try {
+    // depth=2 to ensure profilePicture is fully populated
+    const userResponse = await fetch(`${import.meta.env.PUBLIC_PAYLOAD_URL}/api/users/me?depth=2`, {
+      headers: {
+        'Cookie': `payload-token=${token}`
+      }
+    });
+
+    if (userResponse.ok) {
+      const userData = await userResponse.json();
+      user = userData.user || userData;
+      console.log('[Sprite Page] User data fetched:', {
+        id: user?.id,
+        username: user?.username,
+        hasProfilePicture: !!user?.profilePicture,
+        profilePictureUrl: user?.profilePicture?.url
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+  }
+}
 ---
 
 <FrontPageLayout title={`Sprite Sheet Viewer`}>
   <div class="sprite-viewer-page-container">
-    <div class="flex flex-col items-center justify-start w-full h-screen">
-      <SpriteViewer spriteId={id} initialSprite={sprite} initialError={fetchError} client:only="svelte" />
+    <div class="flex flex-col items-center justify-start w-full min-h-screen">
+      <SpriteViewer spriteId={id} initialSprite={sprite} initialError={fetchError} user={user} client:only="svelte" />
     </div>
   </div>
 </FrontPageLayout>

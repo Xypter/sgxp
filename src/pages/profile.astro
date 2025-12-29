@@ -3,11 +3,12 @@ import FrontPageLayout from "../layouts/FrontPageLayout.astro";
 import ProfileViewer from "../components/profile/ProfileViewer.svelte";
 
 // OPTIMIZATION: Import Redis caching utilities
-import { getCached, setCached, cacheKey, CACHE_TTL } from '../lib/redis';
+import { getCached, setCached, cacheKey, CACHE_TTL, deleteCached } from '../lib/redis';
 
 // Get user ID from query params (e.g., /profile?id=35)
 // If no ID provided, show the logged-in user's profile
 const userId = Astro.url.searchParams.get('id');
+const forceRefresh = Astro.url.searchParams.get('refresh') === '1';
 
 let profileUser = null;
 let initialError = null;
@@ -24,9 +25,16 @@ try {
   if (userId) {
     // Fetch specific user profile
     const userCacheKey = cacheKey.user(parseInt(userId));
+
+    // Invalidate cache if refresh is requested
+    if (forceRefresh) {
+      console.log(`[Profile SSR] Force refresh requested for user ${userId}`);
+      await deleteCached(userCacheKey);
+    }
+
     const cachedUser = await getCached<any>(userCacheKey);
 
-    if (cachedUser) {
+    if (cachedUser && !forceRefresh) {
       console.log(`[Profile SSR] Cache HIT for user ${userId}`, {
         hasHeaderImage: !!cachedUser.headerImage,
         headerImageUrl: cachedUser.headerImage?.url

@@ -29,9 +29,9 @@ export function formatDate(dateString) {
   const date = new Date(dateString);
   const now = new Date();
   const diffTime = Math.abs(now - date);
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-  if (diffDays < 1) return 'Today';
+  if (diffDays === 0) return 'Today';
   if (diffDays === 1) return 'Yesterday';
   if (diffDays < 7) return `${diffDays} days ago`;
   if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
@@ -52,6 +52,17 @@ export function getDisplayName(author) {
   if (!author) return 'Unknown User';
   if (typeof author === 'string') return author;
   return author.displayName || author.username || author.name || 'Unknown User';
+}
+
+/**
+ * Get username from user object
+ * @param {Object|string|null} author - User object, string, or null
+ * @returns {string|null} Username with @ prefix or null
+ */
+export function getUsername(author) {
+  if (!author) return null;
+  if (typeof author === 'string') return null;
+  return author.username ? `@${author.username}` : null;
 }
 
 /**
