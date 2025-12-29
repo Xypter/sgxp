@@ -1,0 +1,616 @@
+/* =============================================================================
+   SGXP Consolidated Themes - All themes in one file using CSS custom properties
+   ============================================================================= */
+
+/* Default theme (can be overridden by specific themes) */
+:root {
+  --page-bg: #000000;
+  --bg-color: #1D1D20;
+  --page-color: #393e43;
+  --font-color: #F2F6F7;
+  --border-color: #27272a;
+  --box-shadow: 1px 1px 0px color-mix(in srgb, var(--page-color) 20%, black), 2px 2px 0px color-mix(in srgb, var(--page-color) 20%, black), 3px 3px 0px color-mix(in srgb, var(--page-color) 20%, black), 4px 4px 0px color-mix(in srgb, var(--page-color) 20%, black), 5px 5px 0px color-mix(in srgb, var(--page-color) 20%, black), 6px 6px 0px color-mix(in srgb, var(--page-color) 20%, black), 7px 7px 0px color-mix(in srgb, var(--page-color) 20%, black) !important;
+  --transition-speed: 0s;
+  --font-link-color: rgba(244, 188, 84, 1);
+}
+
+/* =============================================================================
+   DOOMSDAY ZONE THEME (style_v7)
+   ============================================================================= */
+:root[data-theme="style_v7"] {
+  --page-bg: #000000;
+  --page-color: #393e43;
+  --font-color: #F2F6F7;
+  --border-color: #27272a;
+  --font-link-color: rgba(244, 188, 84, 1);
+}
+
+:root[data-theme="style_v7"] body {
+  image-rendering: pixelated;
+  background-attachment: fixed;
+  background-color: var(--page-bg);
+  background-image:
+    /*rocks 5*/ url("https://cdn.sgxp.me/themes/ddz/rocks5.png"),
+    /*rocks 4*/ url("https://cdn.sgxp.me/themes/ddz/rocks4.png"),
+    /*rocks 3*/ url("https://cdn.sgxp.me/themes/ddz/rocks3.png"),
+    /*sonic*/ url("https://cdn.sgxp.me/themes/ddz/supersonic.gif"),
+    /*eggman*/ url("https://cdn.sgxp.me/themes/ddz/eggmanboss.gif"),
+    /*rocks 2*/ url("https://cdn.sgxp.me/themes/ddz/rocks2.png"),
+    /*rocks 1*/ url("https://cdn.sgxp.me/themes/ddz/rocks1.png"),
+    /*world 7*/ url("https://cdn.sgxp.me/themes/ddz/world7.png"),
+    /*world 6*/ url("https://cdn.sgxp.me/themes/ddz/world6.png"),
+    /*world 5*/ url("https://cdn.sgxp.me/themes/ddz/world5.png"),
+    /*world 4*/ url("https://cdn.sgxp.me/themes/ddz/world4.png"),
+    /*world 3*/ url("https://cdn.sgxp.me/themes/ddz/world3.png"),
+    /*world 2*/ url("https://cdn.sgxp.me/themes/ddz/world2.png"),
+    /*world 1*/ url("https://cdn.sgxp.me/themes/ddz/world1.png"),
+    /*stars 2*/ url("https://cdn.sgxp.me/themes/ddz/stars2.gif"),
+    /*stars 1*/ url("https://cdn.sgxp.me/themes/ddz/stars1.gif");
+  background-repeat: repeat-x;
+  background-position:
+    /*rocks 5*/ left 0px bottom 0px,
+    /*rocks 4*/ left 0px bottom 0px,
+    /*rocks 3*/ left 0px bottom 50px,
+    /*sonic*/ left -2200px bottom 100px,
+    /*eggman*/ left -2000px bottom 50px,
+    /*rocks 2*/ left 0px bottom 50px,
+    /*rocks 1*/ left 0px bottom 50px,
+    /*world 7*/ left 0px bottom 200px,
+    /*world 6*/ left 0px bottom 192px,
+    /*world 5*/ left 0px bottom 184px,
+    /*world 4*/ left 0px bottom 168px,
+    /*world 3*/ left 0px bottom 144px,
+    /*world 2*/ left 0px bottom 96px,
+    /*world 1*/ left 0px bottom 0px,
+    /*stars 2*/ 0 0,
+    /*stars 1*/ 0 0;
+  animation: 200s ddz-para infinite linear;
+  transition: var(--transition-speed);
+}
+
+@keyframes ddz-para {
+  100% {
+    background-position:
+      /*rocks 5*/ left -5000px bottom 50px,
+      /*rocks 4*/ left -6000px bottom 50px,
+      /*rocks 3*/ left -7000px bottom 0px,
+      /*sonic*/ left 80000px bottom 100px,
+      /*eggman*/ left 80000px bottom 50px,
+      /*rocks 2*/ left -5000px bottom -50px,
+      /*rocks 1*/ left -4000px bottom -100px,
+      /*world 7*/ left 1500px bottom 200px,
+      /*world 6*/ left 2000px bottom 192px,
+      /*world 5*/ left 2500px bottom 184px,
+      /*world 4*/ left 3000px bottom 168px,
+      /*world 3*/ left 3500px bottom 144px,
+      /*world 2*/ left 4000px bottom 96px,
+      /*world 1*/ left 4500px bottom 0px,
+      /*stars 2*/ 0px 0,
+      /*stars 1*/ 0px 0;
+  }
+}
+
+@media (max-width: 800px) {
+  :root[data-theme="style_v7"] body {
+    background-color: var(--bg-color);
+    background-image: none;
+  }
+}
+
+/* =============================================================================
+   SPACE COLONY ARK THEME (ark)
+   ============================================================================= */
+:root[data-theme="ark"] {
+  --page-bg: #000000;
+  --page-color: #2b3730;
+  --font-color: #F2F6F7;
+  --border-color: #27272a;
+  --font-link-color: #ffa8a8;
+  --zoom: 1;
+  --zoom2: 3;
+}
+
+:root[data-theme="ark"] body {
+  image-rendering: pixelated;
+  background-attachment: fixed;
+  background-color: var(--page-bg);
+  background-image:
+    /*sonic*/ url("/themes/ark/sonic.png"),
+    /*interior*/ url("/themes/ark/interior.png"),
+    /*world 7*/ url("https://cdn.sgxp.me/themes/ddz/world7.png"), 
+    /*world 6*/ url("https://cdn.sgxp.me/themes/ddz/world6.png"), 
+    /*world 5*/ url("https://cdn.sgxp.me/themes/ddz/world5.png"), 
+    /*world 4*/ url("https://cdn.sgxp.me/themes/ddz/world4.png"),
+    /*world 3*/ url("https://cdn.sgxp.me/themes/ddz/world3.png"), 
+    /*world 2*/ url("https://cdn.sgxp.me/themes/ddz/world2.png"), 
+    /*world 1*/ url("https://cdn.sgxp.me/themes/ddz/world1.png"), 
+    /*stars 2*/ url("https://cdn.sgxp.me/themes/ddz/stars2.gif"), 
+    /*stars 1*/ url("https://cdn.sgxp.me/themes/ddz/stars1.gif");
+  background-repeat:
+    /*sonic*/ no-repeat,
+    /*interior*/ repeat-x,
+    /*world 7*/ repeat-x,
+    /*world 6*/ repeat-x,
+    /*world 5*/ repeat-x,
+    /*world 4*/ repeat-x,
+    /*world 3*/ repeat-x,
+    /*world 2*/ repeat-x,
+    /*world 1*/ repeat-x,
+    /*stars 2*/ repeat-x,
+    /*stars 1*/ repeat-x;
+  background-position:
+    /*sonic*/ left 46px bottom 74px,
+    /*interior*/ left 0px bottom 0px,
+    /*world 7*/ left 0px bottom 200px, 
+    /*world 6*/ left 0px bottom 192px, 
+    /*world 5*/ left 0px bottom 184px, 
+    /*world 4*/ left 0px bottom 168px, 
+    /*world 3*/ left 0px bottom 144px,
+    /*world 2*/ left 0px bottom 96px, 
+    /*world 1*/ left 0px bottom 0px, 
+    /*stars 2*/ 0 0, 
+    /*stars 1*/ 0 0;
+  animation: 200s ark-para infinite linear;
+  transition: var(--transition-speed);
+}
+
+@keyframes ark-para {
+  100% {
+    background-position:
+      /*sonic*/ left 46px bottom 74px,
+      /*interior*/ left 0px bottom 0px,
+      /*world 7*/ left 1000px bottom 200px, 
+      /*world 6*/ left 1500px bottom 192px, 
+      /*world 5*/ left 2000px bottom 184px, 
+      /*world 4*/ left 2500px bottom 168px,
+      /*world 3*/ left 3000px bottom 144px, 
+      /*world 2*/ left 4000px bottom 96px, 
+      /*world 1*/ left 5000px bottom 0px, 
+      /*stars 2*/ 0px 0, 
+      /*stars 1*/ 0px 0;
+  }
+}
+
+@keyframes sonicZoomIn {
+  0% {
+    background-size: 
+      /* sonic */ calc(52px * var(--zoom)),
+      /* interior */ calc(2042px * var(--zoom)),
+      /* world 7 */ auto,
+      /* world 6 */ auto,
+      /* world 5 */ auto,
+      /* world 4 */ auto,
+      /* world 3 */ auto,
+      /* world 2 */ auto,
+      /* world 1 */ auto,
+      /* stars 2 */ auto,
+      /* stars 1 */ auto;
+    background-position:
+      /* sonic */ left 46px bottom 74px,
+      /* interior */ left 0px bottom 0px,
+      /* world 7 */ left 0px bottom 200px,
+      /* world 6 */ left 0px bottom 192px,
+      /* world 5 */ left 0px bottom 184px,
+      /* world 4 */ left 0px bottom 168px,
+      /* world 3 */ left 0px bottom 144px,
+      /* world 2 */ left 0px bottom 96px,
+      /* world 1 */ left 0px bottom 0px,
+      /* stars 2 */ 0 0,
+      /* stars 1 */ 0 0;
+  }
+  100% {
+    background-size: 
+      /* sonic */ calc(52px * var(--zoom2)),
+      /* interior */ calc(2042px * var(--zoom2)),
+      /* world 7 */ auto,
+      /* world 6 */ auto,
+      /* world 5 */ auto,
+      /* world 4 */ auto,
+      /* world 3 */ auto,
+      /* world 2 */ auto,
+      /* world 1 */ auto,
+      /* stars 2 */ auto,
+      /* stars 1 */ auto;
+    background-position:
+      /* sonic */ left 46px bottom 74px,
+      /* interior */ left -85px bottom -148px,
+      /*world 7*/ left 200px bottom 200px, 
+      /*world 6*/ left 300px bottom 192px, 
+      /*world 5*/ left 400px bottom 184px, 
+      /*world 4*/ left 500px bottom 168px,
+      /*world 3*/ left 600px bottom 144px, 
+      /*world 2*/ left 800px bottom 96px, 
+      /*world 1*/ left 1000px bottom 0px, 
+      /* stars 2 */ 0 0,
+      /* stars 1 */ 0 0;
+  }
+}
+
+:root[data-theme="ark"] .zoom-to-sonic {
+  animation: sonicZoomIn 10s forwards;
+  animation-delay: 0s;
+}
+
+:root[data-theme="ark"] body.zoom-to-sonic {
+  animation: sonicZoomIn 10s forwards;
+  animation-delay: 0s;
+}
+
+:root[data-theme="ark"] .sonic-trigger {
+  position: fixed;
+  width: 52px;
+  height: 86px;
+  bottom: 74px;
+  left: 46px;
+  z-index: 1000;
+  cursor: pointer;
+}
+
+:root[data-theme="ark"] .sonic-trigger:hover {
+  cursor: url('/img/Sonic_Cursor_Spin.gif'), progress;
+  animation-name: cursor;
+  animation-duration: 1.5s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+:root[data-theme="ark"] .final-image {
+  position: fixed;
+  bottom: 250px;
+  left: 325px;
+  transform: translate(-50%, -50%);
+  max-width: 80%;
+  max-height: 80%;
+  z-index: 2000;
+  opacity: 0;
+  animation: fadeIn 2s forwards;
+}
+
+:root[data-theme="ark"] .typing-text {
+  position: fixed;
+  bottom: 310px;
+  left: 325px;
+  transform: translateX(-50%);
+  font-family: 'typing';
+  font-size: 32px;
+  color: black;
+  z-index: 2001;
+  white-space: pre-wrap;
+  text-align: center;
+  opacity: 0;
+  animation: fadeIn 2s forwards 2s;
+  text-shadow: none;
+  line-height: 20px;
+}
+
+:root[data-theme="ark"] .shadow-image {
+  position: fixed;
+  top: 40px;
+  left: 800px;
+  height: auto;
+  z-index: 1001;
+  opacity: 0;
+  transition: opacity 2s ease-in-out;
+}
+
+:root[data-theme="ark"] .shadow-image.fade-in {
+  opacity: .5;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 800px) {
+  :root[data-theme="ark"] body {
+    background-color: var(--bg-color);
+    background-image: none;
+  }
+}
+
+/* =============================================================================
+   CHRISTMAS THEME (snow)
+   ============================================================================= */
+:root[data-theme="snow"] {
+  --page-bg: #203f78;
+  --page-color: #203f78;
+  --font-color: #c0daee;
+  --border-color: #27272a;
+  --font-link-color: rgb(255, 252, 173);
+}
+
+:root[data-theme="snow"] body {
+  background-color: var(--page-bg);
+  background-attachment: fixed;
+  background-image: 
+    url("https://cdn.sgxp.me/themes/snow/snow_pattern.gif"),
+    url("https://cdn.sgxp.me/themes/snow/snow_pattern.gif"),
+    url("https://cdn.sgxp.me/themes/snow/Snowy-BG.gif");
+  background-position:
+    /*snow pattern 1*/ left 0px bottom 0px, 
+    /*snow pattern 2*/ left 200px bottom 100px, 
+    /*snowy bg*/ left 0px bottom 0px;
+  animation: 200s snow-para infinite linear;
+  transition: var(--transition-speed);
+}
+
+@keyframes snow-para {
+  100% {
+    background-position:
+      /*snow pattern 1*/ left -5000px bottom -7000px, 
+      /*snow pattern 2*/ left -2000px bottom -6000px, 
+      /*snowy bg*/ left 0px bottom 0px;
+  }
+}
+
+/* =============================================================================
+   FIRESIDE THEME (cozy)
+   ============================================================================= */
+:root[data-theme="cozy"] {
+  --border-color: #000500;
+  --page-color: #7a3114;
+  --font-color: #ffea9e;
+  --font-link-color: #57d866;
+  --font-link-hover: #ff6b6b;
+}
+
+:root[data-theme="cozy"] body {
+  background-color: #230e0e;
+  background-attachment: fixed;
+  background-image: url("https://cdn.sgxp.me/themes/cozy/rs11_s21_n-art-comfy-star-5x.gif");
+  transition: var(--transition-speed);
+}
+
+/* =============================================================================
+   BATTLE NETWORK THEME (sbn)
+   ============================================================================= */
+:root[data-theme="sbn"] {
+  --border-color: #000500;
+  --page-color: #004e6b;
+  --font-color: #f0f0f0;
+  --font-link-color: #9cffc1;
+  --font-link-hover: #004058;
+}
+
+:root[data-theme="sbn"] body {
+  image-rendering: pixelated;
+  background-color: #242424;
+  background-attachment: fixed;
+  background-image:
+    /*bg tiles*/ url("https://cdn.sgxp.me/themes/sbn/bg_tiles2.png");
+  background-repeat: repeat;
+  background-position:
+    /*bg tiles*/ left 0px bottom 0px;
+  animation: 200s sbn-para infinite linear;
+  transition: var(--transition-speed);
+}
+
+@keyframes sbn-para {
+  100% {
+    background-position:
+      /*bg tiles*/ left 0px bottom 0px;
+  }
+}
+
+/* =============================================================================
+   HIDDEN PALACE ZONE THEME (hpz)
+   ============================================================================= */
+:root[data-theme="hpz"] {
+  --page-bg: #242424;
+  --border-color: #000500;
+  --page-color: #24486C;
+  --font-color: #c6ffe4;
+  --font-link-color: #ffcb6b;
+  --font-link-hover: #799cff;
+}
+
+:root[data-theme="hpz"] body {
+  background-color: var(--page-bg);
+  background-attachment: fixed;
+  background-image:
+    /*boss*/ url("https://cdn.sgxp.me/themes/hpz/boss.gif"), 
+    /*sonic*/ url("https://cdn.sgxp.me/themes/hpz/sonic_run.gif"), 
+    /*floor 1*/ url("https://cdn.sgxp.me/themes/hpz/floor_01.png"), 
+    /*wall 1*/ url("https://cdn.sgxp.me/themes/hpz/wall_01.png"),
+    /*wall 2*/ url("https://cdn.sgxp.me/themes/hpz/wall_02.png"), 
+    /*wall 3*/ url("https://cdn.sgxp.me/themes/hpz/wall_03.png"), 
+    /*wall 4*/ url("https://cdn.sgxp.me/themes/hpz/wall_04.png"), 
+    /*wall 5*/ url("https://cdn.sgxp.me/themes/hpz/wall_05.png"),
+    /*wall 6*/ url("https://cdn.sgxp.me/themes/hpz/wall_06.png"), 
+    /*wall 7*/ url("https://cdn.sgxp.me/themes/hpz/wall_07.png"), 
+    /*wall 8*/ url("https://cdn.sgxp.me/themes/hpz/wall_08.png"), 
+    /*wall 9*/ url("https://cdn.sgxp.me/themes/hpz/wall_09.png"),
+    /*wall 10*/ url("https://cdn.sgxp.me/themes/hpz/wall_10.png");
+  background-repeat: repeat-x;
+  background-position:
+    /*boss*/ left -3500px bottom 120px, 
+    /*sonic*/ left -3000px bottom 100px, 
+    /*floor 1*/ left 0px bottom -300px, 
+    /*wall 1*/ left 0px bottom 100px, 
+    /*wall 2*/ left 0px bottom 256px, 
+    /*wall 3*/ left 0px bottom 303px,
+    /*wall 4*/ left 0px bottom 311px, 
+    /*wall 5*/ left 0px bottom 328px, 
+    /*wall 6*/ left 0px bottom 336px, 
+    /*wall 7*/ left 0px bottom 344px, 
+    /*wall 8*/ left 0px bottom 348px, 
+    /*wall 9*/ left 0px bottom 352px, 
+    /*wall 10*/ -1500px 0;
+  animation: 200s hpz-para infinite linear;
+  transition: var(--transition-speed);
+}
+
+@keyframes hpz-para {
+  100% {
+    background-position:
+      /*boss*/ left 86500px bottom 100px, 
+      /*sonic*/ left 87000px bottom 100px, 
+      /*floor 1*/ left -3500px bottom -300px, 
+      /*wall 1*/ left -2500px bottom 100px, 
+      /*wall 2*/ left -2250px bottom 256px,
+      /*wall 3*/ left -2000px bottom 303px, 
+      /*wall 4*/ left -1750px bottom 311px, 
+      /*wall 5*/ left -1500px bottom 328px, 
+      /*wall 6*/ left -1250px bottom 336px, 
+      /*wall 7*/ left -1000px bottom 344px, 
+      /*wall 8*/ left -750px bottom 348px,
+      /*wall 9*/ left -500px bottom 352px, 
+      /*wall 10*/ -2000px 0;
+  }
+}
+
+/* =============================================================================
+   MFZ THEME (mfz)
+   ============================================================================= */
+:root[data-theme="mfz"] {
+  --border-color: #000500;
+  --page-color: #00271F;
+  --font-color: #18ff5d;
+  --font-link-color: #ff7e29;
+  --font-link-hover: #ff6b6b;
+}
+
+:root[data-theme="mfz"] body {
+  background-color: black;
+  background-attachment: fixed;
+  background-image: url("https://cdn.sgxp.me/themes/mfz/bg_02.png");
+  transition: var(--transition-speed);
+}
+
+/* =============================================================================
+   SKY SANCTUARY ZONE THEME (ssz)
+   ============================================================================= */
+:root[data-theme="ssz"] {
+  --page-bg: #2448fc;
+  --border-color: #000500;
+  --page-color: #1f1f3f;
+  --font-color: #f1f1ff;
+  --font-link-color: #fdf075;
+  --font-link-hover: #ff3b55;
+}
+
+:root[data-theme="ssz"] body {
+  background-color: var(--page-bg);
+  background-attachment: fixed;
+  background-image:
+    /*tornado 2*/ url("https://cdn.sgxp.me/themes/ssz/tornado_02.gif"), 
+    /*tornado 1*/ url("https://cdn.sgxp.me/themes/ssz/tornado_01.gif"), 
+    /*mecha 2*/ url("https://cdn.sgxp.me/themes/ssz/mecha_02.gif"), 
+    /*mecha 1*/ url("https://cdn.sgxp.me/themes/ssz/mecha_01.gif"),
+    /*death egg*/ url("https://cdn.sgxp.me/themes/ssz/deathegg.png"), 
+    /*cloud 1*/ url("https://cdn.sgxp.me/themes/ssz/cloud_01.png"), 
+    /*cloud 2*/ url("https://cdn.sgxp.me/themes/ssz/cloud_02.png"), 
+    /*cloud 3*/ url("https://cdn.sgxp.me/themes/ssz/cloud_03.png"),
+    /*cloud 4*/ url("https://cdn.sgxp.me/themes/ssz/cloud_04.png"), 
+    /*cloud 5*/ url("https://cdn.sgxp.me/themes/ssz/cloud_05.png"), 
+    /*cloud 6*/ url("https://cdn.sgxp.me/themes/ssz/cloud_06.png"), 
+    /*cloud 7*/ url("https://cdn.sgxp.me/themes/ssz/cloud_07.png"),
+    /*cloud 8*/ url("https://cdn.sgxp.me/themes/ssz/cloud_08.png"), 
+    /*cloud 9*/ url("https://cdn.sgxp.me/themes/ssz/cloud_09.png"), 
+    /*cloud 10*/ url("https://cdn.sgxp.me/themes/ssz/cloud_10.png"), 
+    /*cloud 11*/ url("https://cdn.sgxp.me/themes/ssz/cloud_11.png"),
+    /*cloud 12*/ url("https://cdn.sgxp.me/themes/ssz/cloud_12.png"), 
+    /*cloud 13*/ url("https://cdn.sgxp.me/themes/ssz/cloud_13.png"), 
+    /*cloud 14*/ url("https://cdn.sgxp.me/themes/ssz/cloud_14.png"), 
+    /*cloud 15*/ url("https://cdn.sgxp.me/themes/ssz/cloud_15.png"),
+    /*cloud 16*/ url("https://cdn.sgxp.me/themes/ssz/cloud_16.png"), 
+    /*cloud 17*/ url("https://cdn.sgxp.me/themes/ssz/cloud_17.png"), 
+    /*cloud 18*/ url("https://cdn.sgxp.me/themes/ssz/cloud_18.png"), 
+    /*cloud 19*/ url("https://cdn.sgxp.me/themes/ssz/cloud_19.png"),
+    /*cloud 20*/ url("https://cdn.sgxp.me/themes/ssz/cloud_20.png"), 
+    /*cloud 21*/ url("https://cdn.sgxp.me/themes/ssz/cloud_01.png"), 
+    /*cloud 22*/ url("https://cdn.sgxp.me/themes/ssz/cloud_22.png"), 
+    /*cloud 23*/ url("https://cdn.sgxp.me/themes/ssz/cloud_23.png"),
+    /*cloud 24*/ url("https://cdn.sgxp.me/themes/ssz/cloud_24.png"), 
+    /*cloud 25*/ url("https://cdn.sgxp.me/themes/ssz/cloud_25.png"), 
+    /*cloud 26*/ url("https://cdn.sgxp.me/themes/ssz/cloud_26.png"), 
+    /*cloud 27*/ url("https://cdn.sgxp.me/themes/ssz/cloud_27.png"),
+    /*cloud 28*/ url("https://cdn.sgxp.me/themes/ssz/cloud_28.png"), 
+    /*cloud 29*/ url("https://cdn.sgxp.me/themes/ssz/cloud_29.png"), 
+    /*cloud 30*/ url("https://cdn.sgxp.me/themes/ssz/cloud_30.png");
+  background-repeat: repeat-x;
+  background-position:
+    /*tornado 2*/ left -7000px bottom 500px, 
+    /*tornado 1*/ right -3000px bottom 250px, 
+    /*mecha 2*/ left -7500px bottom 500px, 
+    /*mecha 1*/ right -4000px bottom 250px, 
+    /*death egg*/ left -100px bottom 500px,
+    /*cloud 1*/ left 0px bottom 0px, 
+    /*cloud 2*/ left 0px bottom 64px, 
+    /*cloud 3*/ left 0px bottom 96px, 
+    /*cloud 4*/ left 0px bottom 120px, 
+    /*cloud 5*/ left 0px bottom 136px, 
+    /*cloud 6*/ left 0px bottom 144px,
+    /*cloud 7*/ left 0px bottom 152px, 
+    /*cloud 8*/ left 0px bottom 160px, 
+    /*cloud 9*/ left 0px bottom 192px, 
+    /*cloud 10*/ left 0px bottom 200px, 
+    /*cloud 11*/ left 0px bottom 240px, 
+    /*cloud 12*/ left 0px bottom 248px,
+    /*cloud 13*/ left 0px bottom 256px, 
+    /*cloud 14*/ left 0px bottom 272px, 
+    /*cloud 15*/ left 0px bottom 312px, 
+    /*cloud 16*/ left 0px bottom 320px, 
+    /*cloud 17*/ left 0px bottom 336px, 
+    /*cloud 18*/ left 0px bottom 352px,
+    /*cloud 19*/ left 0px bottom 360px, 
+    /*cloud 20*/ left 0px bottom 384px, 
+    /*cloud 21*/ left 0px top 0px, 
+    /*cloud 22*/ left 0px top 64px, 
+    /*cloud 23*/ left 0px top 96px, 
+    /*cloud 24*/ left 0px top 120px, 
+    /*cloud 25*/ left 0px top 136px,
+    /*cloud 26*/ left 0px top 144px, 
+    /*cloud 27*/ left 0px top 152px, 
+    /*cloud 28*/ left 0px top 160px, 
+    /*cloud 29*/ left 0px top 192px, 
+    /*cloud 30*/ left 0px top 200px;
+  animation: 200s ssz-para infinite linear;
+  transition: var(--transition-speed);
+}
+
+@keyframes ssz-para {
+  100% {
+    background-position:
+      /*tornado 2*/ left 73000px bottom 500px, 
+      /*tornado 1*/ right 77000px bottom 250px, 
+      /*mecha 2*/ left 72500px bottom 500px, 
+      /*mecha 1*/ right 76000px bottom 250px, 
+      /*death egg*/ left 1000px bottom 300px,
+      /*cloud 1*/ left 10000px bottom 0px, 
+      /*cloud 2*/ left 8000px bottom 64px, 
+      /*cloud 3*/ left 6000px bottom 96px, 
+      /*cloud 4*/ left 2500px bottom 120px, 
+      /*cloud 5*/ left 2000px bottom 136px, 
+      /*cloud 6*/ left 1500px bottom 144px,
+      /*cloud 7*/ left 1000px bottom 152px, 
+      /*cloud 8*/ left 750px bottom 160px, 
+      /*cloud 9*/ left 500px bottom 192px, 
+      /*cloud 10*/ left 250px bottom 200px, 
+      /*cloud 11*/ left -1000px bottom 240px, 
+      /*cloud 12*/ left 900px bottom 248px,
+      /*cloud 13*/ left -800px bottom 256px, 
+      /*cloud 14*/ left 600px bottom 272px, 
+      /*cloud 15*/ left -500px bottom 312px, 
+      /*cloud 16*/ left 800px bottom 320px, 
+      /*cloud 17*/ left -200px bottom 336px, 
+      /*cloud 18*/ left 200px bottom 352px,
+      /*cloud 19*/ left 1000px bottom 360px, 
+      /*cloud 20*/ left 500px bottom 384px, 
+      /*cloud 21*/ left 10000px top 0px, 
+      /*cloud 22*/ left 8000px top 64px, 
+      /*cloud 23*/ left 6000px top 96px, 
+      /*cloud 24*/ left 2500px top 120px,
+      /*cloud 25*/ left 2000px top 136px, 
+      /*cloud 26*/ left 1500px top 144px, 
+      /*cloud 27*/ left 1000px top 152px, 
+      /*cloud 28*/ left 750px top 160px, 
+      /*cloud 29*/ left 500px top 192px, 
+      /*cloud 30*/ left 250px top 200px;
+  }
+}

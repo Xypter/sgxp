@@ -1,45 +1,61 @@
 ---
-import SpriteViewerLayout from "../../layouts/SpriteViewerLayout.astro";
-import fetchApi from '../../lib/strapi';
-import type Sheet from '../../interfaces/sheet';
+import FrontPageLayout from "../../layouts/FrontPageLayout.astro";
+import SpriteViewer from "../../components/SpriteViewer.svelte";
 
+// Get the sprite ID from the URL params
 const { id } = Astro.params;
 
-let sheet: Sheet;
+// Pre-fetch sprite data server-side to reduce loading time
+let sprite = null;
+let fetchError = null;
 
 try {
-  sheet = await fetchApi<Sheet>({
-    endpoint: 'sprites',
-    wrappedByKey: 'data',
-    wrappedByList: true,
-    query: {
-      'populate': '*',
-      'filters[id][$eq]': id || '',
-    },
-  });
+  if (id) {
+    const response = await fetch(`https://cms.sgxp.me/api/sprites/${id}?depth=3`);
+    if (response.ok) {
+      sprite = await response.json();
+    } else {
+      fetchError = 'Sprite not found';
+    }
+  }
 } catch (error) {
-  return Astro.redirect('/404');
+  fetchError = 'Failed to load sprite';
+  console.error('Server-side fetch error:', error);
 }
 
-function count(number) {
-  if (number <= 9) {
-    return '00' + number
-  } else if (number > 9 && number <= 99) {
-    return '0' + number
-  } else {
-    return number
+// Get the auth token from cookies and fetch user data with profile picture
+let user = null;
+const token = Astro.cookies.get('payload-token')?.value;
+
+if (token) {
+  try {
+    // depth=2 to ensure profilePicture is fully populated
+    const userResponse = await fetch(`${import.meta.env.PUBLIC_PAYLOAD_URL}/api/users/me?depth=2`, {
+      headers: {
+        'Cookie': `payload-token=${token}`
+      }
+    });
+
+    if (userResponse.ok) {
+      const userData = await userResponse.json();
+      user = userData.user || userData;
+      console.log('[Sprite Page] User data fetched:', {
+        id: user?.id,
+        username: user?.username,
+        hasProfilePicture: !!user?.profilePicture,
+        profilePictureUrl: user?.profilePicture?.url
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching user data:', error);
   }
 }
 ---
 
-<SpriteViewerLayout>
-  <div class="image-container-group">
-    <div class="image-container">
-      <div class="image-card">
-        <div class="image-panel">
-          <img id="zoomMe" class="zoom-img" src=`https://api.sgxp.me${sheet.attributes.spritesheet.data.attributes.url}` alt="">
-        </div>
-      </div>
+<FrontPageLayout title={`Sprite Sheet Viewer`}>
+  <div class="sprite-viewer-page-container">
+    <div class="flex flex-col items-center justify-start w-full min-h-screen">
+      <SpriteViewer spriteId={id} initialSprite={sprite} initialError={fetchError} user={user} client:only="svelte" />
     </div>
   </div>
-</SpriteViewerLayout>
+</FrontPageLayout>

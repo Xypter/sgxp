@@ -20,7 +20,7 @@ pnpm-debug.log*
 # macOS-specific files
 .DS_Store
 
-/docs
+docs/
 
 # Messaging feature (work in progress - not ready for production)
 src/components/messages/

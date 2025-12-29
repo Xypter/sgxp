@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "astro": {
+      "type": "sse",
+      "url": "http://localhost:4321/__mcp/sse"
+    },
+    "typescript": {
+      "command": "npx",
+      "args": [
+        "mcp-typescript-server"
+      ]
+    },
+    "eslint": {
+      "command": "npx",
+      "args": [
+        "@eslint/mcp@latest"
+      ]
+    }
+  }
+}

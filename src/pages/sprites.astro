@@ -1,82 +1,97 @@
 ---
 import FrontPageLayout from "../layouts/FrontPageLayout.astro";
+import SpriteBrowser from "../components/SpriteBrowser.svelte";
 
+// OPTIMIZATION: Import Redis caching utilities
+import { getCached, setCached, cacheKey, CACHE_TTL } from '../lib/redis';
+
+// OPTIMIZATION: Fetch initial sprite data server-side for faster page loads
+const API_BASE_URL = "https://cms.sgxp.me/api/sprites";
+
+let initialSprites = [];
+let initialTotalResults = 0;
+
+// Performance timing
+const perfStart = performance.now();
+console.log('[Sprites SSR] ⏱️  Page load started');
+
+// Cache key for initial sprites list (page 1, newest first, no filters)
+const spritesCacheKey = cacheKey.spritesList(1, '-createdAt', 'none');
+
+try {
+  const cacheCheckStart = performance.now();
+  // OPTIMIZATION: Try Redis cache first
+  const cachedData = await getCached<{ docs: any[], totalDocs: number }>(spritesCacheKey);
+  const cacheCheckDuration = performance.now() - cacheCheckStart;
+
+  if (cachedData) {
+    console.log(`[Sprites SSR] ✅ Cache HIT - using cached sprites list (${cacheCheckDuration.toFixed(0)}ms)`);
+    initialSprites = cachedData.docs;
+    initialTotalResults = cachedData.totalDocs;
+  } else {
+    console.log(`[Sprites SSR] ❌ Cache MISS after ${cacheCheckDuration.toFixed(0)}ms - fetching from API`);
+
+    // OPTIMIZATION: Fetch with timeout to prevent long blocking
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+    try {
+      const fetchStart = performance.now();
+      // OPTIMIZATION: Reduced depth from 2 to 1 for 3x faster API response (210ms vs 667ms)
+      const response = await fetch(
+        `${API_BASE_URL}?depth=1&draft=false&locale=undefined&trash=false&limit=21&page=1&sort=-createdAt`,
+        { signal: controller.signal }
+      );
+      const fetchDuration = performance.now() - fetchStart;
+      console.log(`[Sprites SSR] 🌐 API fetch completed in ${fetchDuration.toFixed(0)}ms`);
+
+      clearTimeout(timeoutId);
+
+      const parseStart = performance.now();
+      const data = await response.json();
+      const parseDuration = performance.now() - parseStart;
+      console.log(`[Sprites SSR] 📦 JSON parsing completed in ${parseDuration.toFixed(0)}ms`);
+
+      if (data.docs) {
+        initialSprites = data.docs;
+        initialTotalResults = data.totalDocs;
+
+        // Cache the result (fire and forget)
+        const cacheSetStart = performance.now();
+        setCached(spritesCacheKey, { docs: data.docs, totalDocs: data.totalDocs }, CACHE_TTL.SPRITES_LIST);
+        const cacheSetDuration = performance.now() - cacheSetStart;
+        console.log(`[Sprites SSR] 💾 Cached result in ${cacheSetDuration.toFixed(0)}ms`);
+        console.log(`[Sprites SSR] ℹ️  Fetched ${data.docs.length} sprites (${data.totalDocs} total)`);
+      }
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      if (fetchError.name === 'AbortError') {
+        console.warn('[Sprites SSR] ⚠️  Fetch timed out - client will load sprites');
+      } else {
+        throw fetchError;
+      }
+    }
+  }
+} catch (error) {
+  console.error('[Sprites SSR] ❌ Error fetching initial sprites:', error);
+  // Component will handle empty state
+}
+
+const perfEnd = performance.now();
+const totalDuration = perfEnd - perfStart;
+console.log(`[Sprites SSR] ⏱️  Total SSR processing time: ${totalDuration.toFixed(0)}ms`);
 ---
 
 <FrontPageLayout title="Sprites">
-
-  <script src="/src/js/spritefetch.js"></script>
-    <div class="sprite-page-container">
-      <div class="categories-container-group">
-        <div class="categories-container-title">Author</div>
-        <div class="categories-container-main"></div>
-        <div class="categories-container-title">Game</div>
-        <div class="categories-container-main"></div>
-        <div class="categories-container-title">Character</div>
-        <div class="categories-container-main"></div>
-      </div>
-      <div class="sprite-container-group">
-        <div class="sprite-container-title">Sprite Index</div>
-
-        <div class="custom-select-container">
-          <div class="custom-select">
-            <select class="sprite-select">
-              <option value="">Sort by</option>
-              <option value="createdAt:desc">Newest</option>
-              <option value="createdAt:asc">Oldest</option>
-              <option value="views:DESC">Most Viewed</option>
-            </select>
-          </div>
-          <p class="page-number" id="pageNumber">1</p>
-          <button class="arrow-button" id="incrementButton">Next Page</button>
-          <button class="arrow-button" id="decrementButton">Previous Page</button>
-          
-          
-        </div>
-        
-
-        <div id="hello" class="sprite-container">
-
-        </div>      
+  <div class="sprite-page-container">
+    <div class="flex flex-col items-center justify-start w-full">
+      <!-- OPTIMIZATION: Use client:only to skip SSR entirely and test performance -->
+      <!-- This will help identify if SpriteBrowser SSR is the bottleneck -->
+      <SpriteBrowser
+        client:only="svelte"
+        initialSprites={initialSprites}
+        initialTotalResults={initialTotalResults}
+      />
     </div>
   </div>
-
-  <input id="textInput" placeholder="Type your message" />
-<button onclick="renderText()">Render</button>
-<div id="output"></div>
-
-<script is:inline src="https://pixijs.download/release/pixi.min.js"></script>
-<script is:inline>
-  let app = new PIXI.Application({
-    width: 300,
-    height: 100,
-    backgroundAlpha: 0
-  });
-  document.getElementById('output').appendChild(app.view);
-
-  // Load your bitmap font
-  PIXI.Assets.addBundle('fonts', {
-    pixeltinyFnt: '/src/styles/fonts/pixeltiny.fnt',  // Your exported .fnt file
-  });
-
-  PIXI.Assets.loadBundle('fonts').then(() => {
-    renderText();
-  });
-
-  function renderText() {
-    const userInput = document.getElementById('textInput').value || 'Hello Pixi!';
-
-    app.stage.removeChildren(); // Clear previous text
-
-    const text = new PIXI.BitmapText(userInput, {
-      fontName: 'pixeltiny', // Must match name in .fnt file
-      fontSize: 16,
-      tint: 0xffffff
-    });
-
-    text.x = 10;
-    text.y = 20;
-    app.stage.addChild(text);
-  }
-</script>
 </FrontPageLayout>

@@ -1,20 +1,20 @@
 ---
 import FrontPageLayout from "../layouts/FrontPageLayout.astro";
+import PostFetcher from "../components/Posts.svelte";
 ---
 
 <FrontPageLayout title="Updates">  
-  <script src="/src/js/postfetch.js"></script> 
     <div class="container">
         <div class="header"><img src="https://cdn.sgxp.me/img/Xmas_Banner.png" alt=""></div>
         <div class="sidebar">
           <div class="sidebar-title">Socials</div>
           <div class="sidebar-box">
-            <a href="https://discord.gg/XsBWEWnYWP" class="side-bar-img"><img src="img/discord-pixel.png" class="dsc" alt="discordlogo"></a>
+            <a href="https://discord.gg/XsBWEWnYWP" class="side-bar-img"><img class="mx-auto" src="img/discord-pixel.png" class="dsc" alt="discordlogo"></a>
             <div>Join our Discord for updates on the archive and other projects.</div>
-            <br>
+            
             <a href="https://www.reddit.com/r/SGXP/" class="side-bar-img"><img src="img/reddit-pixel.png" class="dsc" alt="redditlogo"></a>
             <div>Join our subreddit for dank memes.</div>
-            <br>
+            
             <img src="img/best-viewed-on-firefox.png" class="dsc" alt="firefoxlogo">
           </div>
           <div class="sidebar-title">Affiliates</div>
@@ -31,31 +31,23 @@ import FrontPageLayout from "../layouts/FrontPageLayout.astro";
           </div>
           <div class="sidebar-title">Other Communities</div>
           <div class="sidebar-box">
-            <a href="http://www.themfz.net/" class="side-bar-img"><img src="img/link_1.jpg" class="sideimg" alt=""></a>
-            <br>
+          <a href="http://www.themfz.net/" class="side-bar-img"><img src="img/link_1.jpg" class="sideimg" alt=""></a>
+            
             <a href="https://mgcomics.com" class="side-bar-img"><img src="img/button_mg.png" class="sideimg" alt=""></a>
-            <br>
+            
             <a href="http://dioxaz.free.fr/tlfz/index_en.html" class="side-bar-img"><img src="img/tlfz-button.png" class="sideimg" alt=""></a>
-            <br>
+            
             <a href="http://www.wizard-alcove.net/" class="side-bar-img"><img src="img/Power-Button.gif" class="sideimg" alt=""></a>
-            <br>
+            
             <a href="https://spriters-resource.com" class="side-bar-img"><img src="img/tsraff.gif" class="sideimg" alt=""></a>
-            <br>
+            
             <a href="https://spritedatabase.net/" class="side-bar-img"><img src="img/Link-Sonic1.gif" class="sideimg" alt=""></a>
-            <br>
+            
             <a href="https://www.bghq.com/" class="side-bar-img"><img src="img/Links.2.gif" class="sideimg" alt=""></a>
           </div>
         </div>
         <div class="main-content">
-          <div id="posts"></div>
-          
-         
-          
-          
-          
-          
-        </div> 
-        <!--<div class="footer">All material seen on The SGXP is © 2021 to their respective owners. All rights reserved. Sonic, Knuckles, Tails, etc © Sega
-          All staff avatars and sub-characters are © their respective owners. </div>
-      </div>-->
+          <PostFetcher client:only/>
+        </div>
+    </div>
 </FrontPageLayout>

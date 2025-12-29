@@ -1,77 +1,132 @@
 ---
-import "../styles/main.css";
+import "../styles/global.css";
 import "../styles/sprite_icon.css";
+
+// Remove main.css import for now to avoid conflicts
+// import "../styles/main.css";
+
+// Correct import statement to the .tsx file
+import SGXPNavbar from "../components/Navbar.svelte";
+import Toaster from "../lib/components/ui/layout/Toaster.svelte";
+
+// Import types from the .tsx file
+import ThemeValue from '../components/Navbar.svelte';
+import User from '../components/Navbar.svelte';
+
+// OPTIMIZATION: Import Redis caching utilities
+import { getCached, setCached, cacheKey, hashString, CACHE_TTL } from '../lib/redis';
+
+// Get the theme from the cookie during SSR to prevent flashing
+const themeFromCookie = (Astro.cookies.get('theme')?.value as ThemeValue) || "style_v7";
+
+let user: User | null = null;
+// Get the auth token from the request cookies on the server
+const token = Astro.cookies.get('payload-token')?.value;
+
+// OPTIMIZATION: Auth check with Redis caching and timeout
+const AUTH_TIMEOUT_MS = 1500; // 1.5 second timeout for auth check
+
+if (token) {
+  const authStart = performance.now();
+  try {
+    const tokenHash = hashString(token);
+    const authCacheKey = cacheKey.auth(tokenHash);
+
+    const cacheCheckStart = performance.now();
+    // Try to get cached auth result first
+    const cachedUser = await getCached<User>(authCacheKey);
+    const cacheCheckDuration = performance.now() - cacheCheckStart;
+
+    if (cachedUser) {
+      user = cachedUser;
+      const authDuration = performance.now() - authStart;
+      console.log(`[SSR Auth] ✅ Cache HIT - using cached user (${authDuration.toFixed(0)}ms total, ${cacheCheckDuration.toFixed(0)}ms cache)`);
+    } else {
+      console.log(`[SSR Auth] ❌ Cache MISS after ${cacheCheckDuration.toFixed(0)}ms`);
+
+      // Create an AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), AUTH_TIMEOUT_MS);
+
+      try {
+        const fetchStart = performance.now();
+        // Use the environment variable for the Payload URL
+        const response = await fetch(`${import.meta.env.PUBLIC_PAYLOAD_URL}/api/users/me`, {
+          headers: {
+            // Forward the cookie to Payload for verification
+            'Cookie': `payload-token=${token}`
+          },
+          signal: controller.signal
+        });
+        const fetchDuration = performance.now() - fetchStart;
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          const parseStart = performance.now();
+          const data = await response.json();
+          const parseDuration = performance.now() - parseStart;
+          user = data.user || data; // Set the user object if the token is valid
+
+          // Cache the auth result (fire and forget - don't await)
+          setCached(authCacheKey, user, CACHE_TTL.AUTH);
+          const authDuration = performance.now() - authStart;
+          console.log(`[SSR Auth] 🌐 Fetched and cached user (${authDuration.toFixed(0)}ms total: ${fetchDuration.toFixed(0)}ms fetch + ${parseDuration.toFixed(0)}ms parse)`);
+        }
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+
+        if (fetchError.name === 'AbortError') {
+          console.warn(`[SSR Auth] ⚠️  Auth check timed out after ${AUTH_TIMEOUT_MS}ms - page will render without user`);
+        } else {
+          throw fetchError;
+        }
+      }
+    }
+  } catch (error) {
+    // Log the error on the server, but don't block the page from rendering
+    console.error('[SSR Auth] ❌ Auth Check Failed:', error);
+  }
+}
+
+// Any other props for your layout
+export interface Props {
+    title: string;
+}
+
 const { title } = Astro.props;
 ---
 
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<!-- Set the data-theme attribute on the server based on the cookie -->
+<html lang="en" class="dark" data-theme={themeFromCookie}>
 <head>
   <script
     src="https://stats.sgxp.me:7443/api/script.js"
     data-site-id="1"
     defer
   ></script>
-  <script src="/src/js/nav.js"></script>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{title}</title>
-  <link rel="stylesheet" type="text/css"  href="" id="themeStylesheet">
+
+  <!-- Load consolidated themes CSS -->
+  <link rel="stylesheet" type="text/css" href="/themes.css">
+
+  <!-- The theme loading script is no longer needed here as the theme is set on the server -->
+
   <link rel="icon" type="image/gif" href="/img/SGXPkanDos.gif" />
 </head>
 <body>
-  <!--<div class="other-header">
-    <div class="header-title"></div>
-    <div class="slogan">
-      <div onclick="GetRandomMsg()" class="inner-slogan">
-        <div class="unselectable-text" id="message"></div>
-      </div>
-    </div>
-  </div>-->
-  <nav class="nav">
-    <ul>
-      <li class="navlogo">SGXP</li>
-      <li><a class="navlink" href="/">Updates</a></li>
-      <li><a class="navlink" href="/smackjeeves">Smack Jeeves Archive</a></li>
-      <li><a class="navlink" href="http://old.sgxp.me">Old Site</a></li>
-      <!-- <li>
-        <ul>
-          <li>Option</li>
-          <li>Option</li>
-          <li>Option</li>
-        </ul>
-      </li> -->
-      
-      <!--<li class="navlink dropdown">
-        <a href="javascript:void(0)" class="navlink dropbtn">Extras</a>
-        <div class="navlink dropdown-content">
-          <a href="#">Rave</a>
-          <a href="#">Metal</a>
-        </div>
-      </li>-->
-      
-      
-    </ul>
-    <div class="theme-select-container">
-      <div class="theme-select">
-        <select name="themeSelect" id="themeSelect">
-          <option value="">Themes</option>
-          <option value="ark">SPACE COLONY ARK</option> 
-          <option value="snow">CHRISTMAS</option>
-          <option value="cozy">FIRESIDE</option>
-          <option value="sbn">BATTLE NETWORK</option>
-          <option value="style_v7">DOOMSDAY ZONE</option>
-          <option value="hpz">HIDDEN PALACE ZONE</option>
-          <option value="mfz">MFZ</option>
-          <option value="ssz">SKY SANCTUARY ZONE</option> 
-        </select>
-      </div>
-    </div>
-  </nav>
+<!-- IMPORTANT: Using client:load to ensure navbar is interactive immediately on all pages -->
+<SGXPNavbar client:load initialUser={user} baseURL={Astro.url.origin} initialTheme={themeFromCookie} />
 
   <div class="sonic-trigger" title="Click me!"></div>
-  <script is:inline src="/js/arkanimation.js"></script>
+  <!-- <script is:inline src="/js/arkanimation.js"></script> -->
   <slot>You're not supposed to see this LMAO</slot>
+
+  <!-- OPTIMIZATION: Changed from client:load to client:idle to prevent blocking page load -->
+  <Toaster client:idle />
 </body>
 </html>

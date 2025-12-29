@@ -1,90 +1,179 @@
 ---
-import FrontPageLayout from '../layouts/FrontPageLayout.astro';
-import { supabase } from '../lib/supabaseClient';
+import FrontPageLayout from "../layouts/FrontPageLayout.astro";
+import ProfileViewer from "../components/profile/ProfileViewer.svelte";
 
-const { cookies, redirect } = Astro;
+// OPTIMIZATION: Import Redis caching utilities
+import { getCached, setCached, cacheKey, CACHE_TTL, deleteCached } from '../lib/redis';
 
-// Get session
-const accessToken = cookies.get('sb-access-token');
-const refreshToken = cookies.get('sb-refresh-token');
+// Get user ID from query params (e.g., /profile?id=35)
+// If no ID provided, show the logged-in user's profile
+const userId = Astro.url.searchParams.get('id');
+const forceRefresh = Astro.url.searchParams.get('refresh') === '1';
 
-if (!accessToken || !refreshToken) {
-    return redirect('/login');
+let profileUser = null;
+let initialError = null;
+let isOwnProfile = false;
+
+// Get the auth token from the request cookies on the server
+const token = Astro.cookies.get('payload-token')?.value;
+
+// Performance timing
+const perfStart = performance.now();
+console.log('[Profile SSR] Starting profile page load');
+
+try {
+  if (userId) {
+    // Fetch specific user profile
+    const userCacheKey = cacheKey.user(parseInt(userId));
+
+    // Invalidate cache if refresh is requested
+    if (forceRefresh) {
+      console.log(`[Profile SSR] Force refresh requested for user ${userId}`);
+      await deleteCached(userCacheKey);
+    }
+
+    const cachedUser = await getCached<any>(userCacheKey);
+
+    if (cachedUser && !forceRefresh) {
+      console.log(`[Profile SSR] Cache HIT for user ${userId}`, {
+        hasHeaderImage: !!cachedUser.headerImage,
+        headerImageUrl: cachedUser.headerImage?.url
+      });
+      profileUser = cachedUser;
+    } else {
+      console.log(`[Profile SSR] Cache MISS for user ${userId} - fetching from API`);
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      try {
+        const response = await fetch(
+          `${import.meta.env.PUBLIC_PAYLOAD_URL}/api/users/${userId}?depth=3`,
+          { signal: controller.signal }
+        );
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          profileUser = await response.json();
+          console.log('[Profile SSR] Fetched user data:', {
+            id: profileUser.id,
+            hasHeaderImage: !!profileUser.headerImage,
+            headerImageUrl: profileUser.headerImage?.url
+          });
+          // Cache the result
+          setCached(userCacheKey, profileUser, CACHE_TTL.USERS);
+        } else if (response.status === 404) {
+          initialError = 'User not found';
+        } else {
+          initialError = 'Failed to load profile';
+        }
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        if (fetchError.name === 'AbortError') {
+          console.warn('[Profile SSR] Fetch timed out');
+          initialError = 'Request timed out';
+        } else {
+          throw fetchError;
+        }
+      }
+    }
+
+    // Check if viewing own profile
+    if (token && profileUser) {
+      try {
+        const meResponse = await fetch(
+          `${import.meta.env.PUBLIC_PAYLOAD_URL}/api/users/me?depth=3`,
+          {
+            headers: { 'Cookie': `payload-token=${token}` }
+          }
+        );
+        if (meResponse.ok) {
+          const meData = await meResponse.json();
+          const currentUser = meData.user || meData;
+          isOwnProfile = currentUser.id === profileUser.id;
+        }
+      } catch (e) {
+        // Ignore errors checking own profile
+      }
+    }
+  } else if (token) {
+    // Fetch logged-in user's profile
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.PUBLIC_PAYLOAD_URL}/api/users/me?depth=3`,
+        {
+          headers: {
+            'Cookie': `payload-token=${token}`
+          },
+          signal: controller.signal
+        }
+      );
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        const data = await response.json();
+        profileUser = data.user || data;
+        isOwnProfile = true;
+      } else {
+        initialError = 'Please log in to view your profile';
+      }
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      if (fetchError.name === 'AbortError') {
+        console.warn('[Profile SSR] Fetch timed out');
+      }
+      initialError = 'Failed to load profile';
+    }
+  } else {
+    initialError = 'Please log in to view your profile or provide a user ID';
+  }
+} catch (error) {
+  console.error('[Profile SSR] Error:', error);
+  initialError = 'An error occurred while loading the profile';
 }
 
-// Set up Supabase session
-const { data: { user }, error } = await supabase.auth.getUser(accessToken.value);
+const perfEnd = performance.now();
+console.log(`[Profile SSR] Total processing time: ${(perfEnd - perfStart).toFixed(0)}ms`);
 
-if (error || !user) {
-    // Clear cookies if session is invalid
-    cookies.delete('sb-access-token', { path: '/' });
-    cookies.delete('sb-refresh-token', { path: '/' });
-    return redirect('/login');
-}
-
-// Get the username from user metadata
-const username = user.user_metadata?.full_name || user.user_metadata?.username || user.email;
+// Get display name for the page title
+const pageTitle = profileUser?.displayName
+  ? `${profileUser.displayName}'s Profile`
+  : 'Profile';
 ---
 
-<FrontPageLayout title="Dashboard">
-    <div class="dashboard-container">
-        <div class="dashboard-main">
-            <div class="dashboard-main-title">Dashboard</div>
-            <div class="dashboard-main-box">
-                <div class="news">
-                    <div class="news-user">Welcome, {username}</div>
-                    <div class="news-content">
-                        <p>Your account dashboard content will appear here.</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="dashboard-main-title">Recent Activity</div>
-            <div class="dashboard-main-box">
-                <div class="news">
-                    <div class="news-content">
-                        <p>Your recent activity will appear here.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="dashboard-sidebar">
-            <div class="dashboard-sidebar-title">User Settings</div>
-            <div class="dashboard-sidebar-box">
-                <a href="/settings"><button class="login-button" style="margin-bottom: 10px;">Settings</button></a>
-                <button class="login-button" id="signout-button">Sign out</button>
-            </div>
-
-            <div class="dashboard-sidebar-title">Stats</div>
-            <div class="dashboard-sidebar-box">
-                <p>Member since: {new Date(user.created_at).toLocaleDateString()}</p>
-            </div>
-        </div>
-    </div>
+<FrontPageLayout title={pageTitle}>
+  <div class="profile-page-container">
+    <ProfileViewer
+      client:only="svelte"
+      initialUser={profileUser}
+      initialError={initialError}
+      userId={userId ? parseInt(userId) : null}
+      isOwnProfile={isOwnProfile}
+    />
+  </div>
 </FrontPageLayout>
 
-<script>
-    import { supabase } from '../lib/supabaseClient';
+<style>
+  .profile-page-container {
+    width: 1202px;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 50px 0px;
+  }
 
-    document.getElementById('signout-button')?.addEventListener('click', async () => {
-        try {
-            await supabase.auth.signOut();
-            
-            // Clear cookies
-            const response = await fetch('/api/auth/signout', {
-                method: 'POST',
-            });
+  @media (max-width: 1240px) {
+    .profile-page-container {
+      width: 90%;
+    }
+  }
 
-            if (!response.ok) {
-                throw new Error('Failed to sign out');
-            }
-
-            // Redirect to login page
-            window.location.href = '/login';
-        } catch (error) {
-            console.error('Error signing out:', error);
-            alert('Failed to sign out. Please try again.');
-        }
-    });
-</script>
+  @media (max-width: 768px) {
+    .profile-page-container {
+      width: 100%;
+      padding: 20px 10px;
+    }
+  }
+</style>

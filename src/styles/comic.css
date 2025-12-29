@@ -64,11 +64,11 @@ body {
     grid-template-rows: auto;
     grid-template-areas:
     "main";
-    width: 80%;
+    width: 70%;
     min-height: 100%;
     height: auto;
     margin: auto;
-    padding: 20px;
+    padding: 70px 0px;
   }
 
   .comic-content-title {
@@ -77,9 +77,8 @@ body {
     padding: 10px;
     text-rendering:geometricPrecision;
     transform:scaleZ(5);
-    font-family: 'mainfont';
-    font-weight: 900;
-    font-style: italic;
+    font-family: 'saira';
+    font-weight: 800;
     font-size: 24px;
     line-height: 20px;
   
@@ -106,13 +105,12 @@ body {
 
   .smackjeeves-content-title {
     background: color-mix(in srgb, var(--page-color) 60%, black);
-    padding: 10px;
+    padding: 3px 0px 3px 15px;
     margin-bottom: -15px;
     text-rendering:geometricPrecision;
-    font-family: 'mainfont';
-    font-weight: 900;
+    font-family: 'saira';
+    font-weight: 800;
     font-size: 24px;
-    line-height: 20px;
   
     text-shadow:
     calc( 1px * var(--multiply-factor)) calc( 0px * var(--multiply-factor)) 0 var(--bg-color),
