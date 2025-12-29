@@ -1,19 +1,209 @@
 // Reusable Variables
-const umamiKey = import.meta.env.PUBLIC_UMAMI_TOKEN;
+
+const apiKey = import.meta.env.PUBLIC_API_KEY; // Add your API key here
+
 const todaysDate = Date.now();
-const localhost = "http://localhost:1337/api/sprites?populate=*"
+
+const localhost = "http://localhost:3000/api/sprites?depth=3&draft=false&locale=undefined&trash=false"
+
 let currentPage = 1;
 
-// Now, currentPage is accessible outside the script
-console.log(currentPage);
+const apiUrl = `https://cms.sgxp.me/api/sprites?depth=3&draft=false&locale=undefined&trash=false&limit=21`
 
-const apiUrl = `https://api.sgxp.me/api/sprites?populate=*&pagination[pageSize]=21`
+// Import character maps from a separate file
+import { charMap, altNumberMap } from './charMap.js';
+
+// Helper function to create individual character sprite
+function createCharacterSprite(char, characterMap, isAltNumberMap) {
+  if (characterMap[char]) {
+    const charData = characterMap[char];
+    const width = charData.width;
+    const height = charData.height;
+    const offsetX = charData.offsetX || 0;
+    const offsetY = charData.offsetY || 0;
+    
+    const marginRight = isAltNumberMap ? '0px' : '1px';
+    
+    let spriteStyle = `
+      display: inline-block;
+      width: ${width}px;
+      height: ${height}px;
+      background-image: url('https://i.imgur.com/DFC6vib.png');
+      background-size: 400px 14px;
+      background-position: ${charData.x}px ${charData.y}px;
+      image-rendering: pixelated;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: crisp-edges;
+      margin-right: ${marginRight};
+      position: relative;
+      left: ${offsetX}px;
+      top: ${offsetY}px;
+    `;
+    
+    return `<span style="${spriteStyle.replace(/\s+/g, ' ').trim()}"></span>`;
+  } else {
+    // Character not found, add a placeholder
+    return `<span style="
+      display: inline-block;
+      width: 4px;
+      height: 5px;
+      background-color: #ff0000;
+      opacity: 0.3;
+      margin-right: 1px;
+      position: relative;
+    " title="Unknown character: ${char}"></span>`;
+  }
+}
+
+// Original function without word wrapping (for backward compatibility)
+function textToSpriteHTMLOriginal(input, characterMap, isAltNumberMap) {
+  let html = '';
+  
+  for (let i = 0; i < input.length; i++) {
+    const char = input[i];
+    
+    if (char === '\n') {
+      html += '<div class="sprite-newline" style="display: block; height: 7px; width: 100%;"></div>';
+    } else {
+      html += createCharacterSprite(char, characterMap, isAltNumberMap);
+    }
+  }
+  
+  return html;
+}
+
+// Function to convert text to sprite HTML with word wrapping
+function textToSpriteHTML(text, characterMap, maxWidth = null) {
+  const input = text.toString().toUpperCase();
+  let html = '';
+  
+  // Check if we're using the altNumberMap
+  const isAltNumberMap = characterMap === altNumberMap;
+  
+  // If no maxWidth specified, use original behavior
+  if (!maxWidth) {
+    return textToSpriteHTMLOriginal(input, characterMap, isAltNumberMap);
+  }
+  
+  // Split text into words
+  const words = input.split(' ');
+  let currentLineWidth = 0;
+  
+  for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
+    const word = words[wordIndex];
+    
+    // Calculate word width
+    let wordWidth = 0;
+    for (let i = 0; i < word.length; i++) {
+      const char = word[i];
+      if (characterMap[char]) {
+        wordWidth += characterMap[char].width;
+        if (!isAltNumberMap && i < word.length - 1) {
+          wordWidth += 1; // Add margin-right spacing
+        }
+      } else {
+        wordWidth += 4; // Unknown character width
+        if (i < word.length - 1) {
+          wordWidth += 1; // Add margin-right spacing
+        }
+      }
+    }
+    
+    // Add space width if not the first word on the line
+    let spaceWidth = 0;
+    if (currentLineWidth > 0) {
+      spaceWidth = characterMap[' '] ? characterMap[' '].width : 3;
+      if (!isAltNumberMap) {
+        spaceWidth += 1; // Add margin-right spacing
+      }
+    }
+    
+    // Check if word fits on current line
+    if (currentLineWidth > 0 && currentLineWidth + spaceWidth + wordWidth > maxWidth) {
+      // Word doesn't fit, start new line
+      html += '<div class="sprite-newline" style="display: block; width: 100%;"></div>';
+      currentLineWidth = 0;
+    }
+    
+    // Add space if not at beginning of line
+    if (currentLineWidth > 0) {
+      html += createCharacterSprite(' ', characterMap, isAltNumberMap);
+      currentLineWidth += spaceWidth;
+    }
+    
+    // Add word characters
+    for (let i = 0; i < word.length; i++) {
+      const char = word[i];
+      html += createCharacterSprite(char, characterMap, isAltNumberMap);
+      
+      if (characterMap[char]) {
+        currentLineWidth += characterMap[char].width;
+        if (!isAltNumberMap && i < word.length - 1) {
+          currentLineWidth += 1; // Add margin-right spacing
+        }
+      } else {
+        currentLineWidth += 4; // Unknown character width
+        if (i < word.length - 1) {
+          currentLineWidth += 1; // Add margin-right spacing
+        }
+      }
+    }
+  }
+  
+  return html;
+}
+
+// Function to truncate text to fit within max width with ellipsis
+function truncateTextToWidth(text, characterMap, maxWidth) {
+  // Handle null/undefined text
+  if (!text) {
+    return '';
+  }
+  
+  const input = text.toString().toUpperCase();
+  const isAltNumberMap = characterMap === altNumberMap;
+  
+  // Calculate ellipsis width (...) = 3 dots + 2 margins
+  const ellipsisWidth = 3 * (characterMap['.'] ? characterMap['.'].width : 1) + (isAltNumberMap ? 0 : 2);
+  
+  let currentWidth = 0;
+  let truncatedText = '';
+  
+  for (let i = 0; i < input.length; i++) {
+    const char = input[i];
+    const charWidth = characterMap[char] ? characterMap[char].width : 4;
+    const marginWidth = (!isAltNumberMap && i < input.length - 1) ? 1 : 0;
+    
+    // Check if adding this character would exceed limit (leaving room for ellipsis)
+    if (currentWidth + charWidth + marginWidth + ellipsisWidth > maxWidth) {
+      return truncatedText + '...';
+    }
+    
+    truncatedText += char;
+    currentWidth += charWidth + marginWidth;
+  }
+  
+  // If we got here, the full text fits
+  return input;
+}
+
+function textToSprite(text, maxWidth = null) {
+  return textToSpriteHTML(text, charMap, maxWidth);
+}
+
+function numberToAltSprite(text, maxWidth = null) {
+  return textToSpriteHTML(text, altNumberMap, maxWidth);
+}
 
 // Sprite Card special number maker
 function count(number) {
   if (number <= 9) {
-    return '00' + number
+    return '0000' + number
   } else if (number > 9 && number <= 99) {
+    return '000' + number
+  } else if (number > 99 && number <= 999) {
+    return '00' + number
+  } else if (number > 999 && number <= 9999) {
     return '0' + number
   } else {
     return number
@@ -105,11 +295,8 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   document.addEventListener("click", closeAllSelect);
-});
 
-// Sprite Card fetch request 
-document.addEventListener('DOMContentLoaded', function () {
-  const selectContainer = document.querySelector('.select-items');
+  // Sprite Card fetch request 
   const div = document.getElementById('hello');
   const decrementButton = document.getElementById('decrementButton');
   const incrementButton = document.getElementById('incrementButton');
@@ -120,13 +307,29 @@ document.addEventListener('DOMContentLoaded', function () {
   let isFetchingInProgress = false;
   let pageCount = 1; // Initialize pageCount
 
-  // Attach click event listener to each option
-  selectContainer.addEventListener('click', function (event) {
-    if (event.target.tagName === 'DIV') {
-      sortBy = event.target.getAttribute('value'); // Update sortBy value
-      clearAndFetchSprites(sortBy);
+  // Use a MutationObserver to wait for the select-items element to be created
+  const observer = new MutationObserver((mutationsList, observer) => {
+    for(const mutation of mutationsList) {
+      if (mutation.type === 'childList') {
+        const selectContainer = document.querySelector('.select-items');
+        if (selectContainer) {
+          // Attach click event listener to the dynamically created selectContainer
+          selectContainer.addEventListener('click', function (event) {
+            if (event.target.tagName === 'DIV') {
+              sortBy = event.target.getAttribute('value'); // Update sortBy value
+              clearAndFetchSprites(sortBy);
+            }
+          });
+          // Stop observing once the element is found
+          observer.disconnect();
+          break;
+        }
+      }
     }
   });
+
+  // Start observing the body for changes in the DOM
+  observer.observe(document.body, { childList: true, subtree: true });
 
   // Add click event listener to the decrement button
   decrementButton.addEventListener('click', function () {
@@ -180,85 +383,147 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function fetchAndSortSprites(sortBy) {
-  // Append sorting query parameter based on the selected option
-  const urlWithSorting = sortBy
-    ? `${apiUrl}&sort=${sortBy}&pagination[page]=${currentPage}`
-    : `${apiUrl}&sort=createdAt:desc&pagination[page]=${currentPage}`;
+    // Payload CMS sorting mapping (adjust these based on your available sort fields)
+    const sortMapping = {
+      'createdAt:desc': '-createdAt',
+      'createdAt:asc': 'createdAt',
+      'updatedAt:desc': '-updatedAt',
+      'updatedAt:asc': 'updatedAt',
+      'title:desc': '-title',
+      'title:asc': 'title',
+      'id:desc': '-id',
+      'id:asc': 'id'
+    };
 
-  console.log(urlWithSorting);
+    // Convert sortBy to Payload CMS format
+    const payloadSort = sortMapping[sortBy] || '-createdAt';
 
-  return fetch(urlWithSorting)
-    .then(res => {
-      if (!res.ok) {
-        throw new Error(`Network response was not ok: ${res.statusText}`);
+    // Append sorting query parameter based on the selected option
+    const urlWithSorting = `${apiUrl}&sort=${payloadSort}&page=${currentPage}`;
+
+    // Add headers for authentication if needed
+    const fetchOptions = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        // Option A: API Key in header
+        ...(apiKey && { 'X-API-Key': apiKey }),
+        // Option B: Authorization header (uncomment if using Bearer tokens)
+        // 'Authorization': `Bearer ${apiKey}`,
+        // Option C: Custom header
+        // 'X-Client-Origin': window.location.hostname,
       }
-      return res.json();
-    })
-    .then(data => {
-      // Extract pageCount from the API response
-      pageCount = data.meta.pagination.pageCount;
+    };
 
-      const spritePromises = data.data.map(sprite => {
-        // Assume the following functions return dynamically fed values
-        const countValue = count(sprite.id);
-        const titleValue = sprite.attributes.title;
-        const iconImageUrl = `https://api.sgxp.me${sprite.attributes.iconimage.data.attributes.url}`;
-        const authorName = sprite.attributes.author.data.attributes.name;
-        const gameName = sprite.attributes.game.data.attributes.name;
-        const createdByUsername = sprite.attributes.createdBy.username;
-        const sizeValue = formatBytes(sprite.attributes.spritesheet.data.attributes.size * 1000, 2);
+    return fetch(urlWithSorting, fetchOptions)
+      .then(res => {
+        
+        if (!res.ok) {
+          // Log more details about the error
+          return res.text().then(text => {
+            console.error('Error response body:', text);
+            throw new Error(`Network response was not ok: ${res.status} ${res.statusText}`);
+          });
+        }
+        return res.json();
+      })
+      .then(data => {
+        
+        // Extract pageCount from the Payload CMS response
+        pageCount = data.totalPages;
 
-        return Promise.resolve(`
-          <a href="/sprites/${sprite.id}" class="sprite-box" target="_blank">
-            <div class="sprite-star-container">
-              <div class="sprite-star"></div>
-              <div class="sprite-star"></div>
-              <div class="sprite-star"></div>
-              <div class="sprite-star"></div>
-              <div class="sprite-star"></div>
-              <div class="sprite-star"></div>
-              <div class="sprite-star"></div>
-              <div class="sprite-star"></div>
-              <div class="sprite-star"></div>
-              <div class="sprite-star"></div>
-            </div>
-            <div class="sprite-number">${countValue}</div>
-            <div class="sprite-title">
-              <div id="author" class="sprite-text">${titleValue}</div>
-            </div>
-            <div class="sprite-image">
-              <img src="${iconImageUrl}" alt="">
-            </div>
-            <div class="sprite-author">
-              <div class="sprite-text">${authorName}</div>
-            </div>
-            <div class="sprite-stats">
-              <div class="sprite-text">${gameName}</div>
-            </div>
-            <div class="sprite-stats">
-              <div class="sprite-text">${createdByUsername}</div>
-            </div>
-            <div class="sprite-stats">
-              <div class="sprite-text">69</div>
-            </div>
-            <div class="sprite-stats">
-              <div class="sprite-text">${sizeValue}</div>
-            </div>
-          </a>
-        `);
-      });
+        const spritePromises = data.docs.map(sprite => {
+          // Convert values to sprite format - Payload CMS structure with null checks
+          const countValue = count(sprite.id);
+          const titleValue = sprite.title || 'Untitled';
+          
+          // Try different possible field structures
+          const iconImageUrl = sprite.iconImage?.url || 
+                              sprite.iconimage?.url || 
+                              sprite.icon_image?.url || '';
+          
+          const uploaderName = sprite.uploader?.name || 
+                              sprite.createdBy?.name || 
+                              sprite.author?.name || 
+                              'Unknown';
+          
+          // Note: You might need to adjust these based on your actual Payload schema
+          const gameName = sprite.game?.name || 
+                          sprite.series?.name || 
+                          'Unknown Game';
+          
+          const sizeValue = sprite.image?.filesize || 
+                           sprite.spritesheet?.filesize || 
+                           sprite.file?.filesize || 0;
 
-      // Use Promise.all to wait for all sprite HTML blocks
-      return Promise.all(spritePromises)
-        .then(spriteHtmlArray => {
-          div.innerHTML += spriteHtmlArray.join('');
-        })
-        .catch(error => {
-          console.error('Error building sprite HTML:', error);
+          const sheetType = sprite.typeOfSheet[0].blockType;
+          
+          const formattedSize = sizeValue ? formatBytes(sizeValue, 2) : '0 Bytes';
+
+          // Convert text to sprites with word wrapping and truncation
+          const spriteNumber = numberToAltSprite(countValue);
+          const spriteTitle = textToSprite(truncateTextToWidth(titleValue, charMap, 170), 93);
+          const spriteAuthor = textToSprite(truncateTextToWidth(uploaderName, charMap, 85), 93);
+          const spriteSection = textToSprite(truncateTextToWidth(sheetType, charMap, 85), 93);
+          const spriteCreatedBy = textToSprite(truncateTextToWidth(uploaderName, charMap, 85), 93);
+          const spriteSize = textToSprite(truncateTextToWidth(formattedSize, charMap, 85), 93);
+          const spriteRecognition = textToSprite(truncateTextToWidth('Asuperlongcharacterstring', charMap, 85), 93);
+          const spriteViews = textToSprite('69');
+
+          return Promise.resolve(`
+            <a href="/sprites/${sprite.id}" class="sprite-box sprite-glow" target="_blank">
+              <div class="sprite-star-container">
+                <div class="sprite-star"></div>
+                <div class="sprite-star"></div>
+                <div class="sprite-star"></div>
+                <div class="sprite-star"></div>
+                <div class="sprite-star"></div>
+                <div class="sprite-star"></div>
+                <div class="sprite-star"></div>
+                <div class="sprite-star"></div>
+                <div class="sprite-star"></div>
+                <div class="sprite-star"></div>
+              </div>
+              <div class="sprite-number">${spriteNumber}</div>
+              <div class="sprite-title">
+                <div id="author" class="sprite-text">${spriteTitle}</div>
+              </div>
+              <div class="sprite-image">
+                <img src="${iconImageUrl}" alt="">
+              </div>
+              <div class="sprite-author">
+                <div class="sprite-text">${spriteAuthor}</div>
+              </div>
+              <div class="sprite-stats">
+                <div class="sprite-text">${spriteRecognition}</div>
+              </div>
+              <div class="sprite-stats">
+                <div class="sprite-text">${spriteSection}</div>
+              </div>
+              <div class="sprite-stats">
+                <div class="sprite-text">${spriteViews}</div>
+              </div>
+              <div class="sprite-stats">
+                <div class="sprite-text">${spriteSize}</div>
+              </div>
+            </a>
+          `);
         });
-    });
-}
 
+        // Use Promise.all to wait for all sprite HTML blocks
+        return Promise.all(spritePromises)
+          .then(spriteHtmlArray => {
+            div.innerHTML += spriteHtmlArray.join('');
+          })
+          .catch(error => {
+            console.error('Error building sprite HTML:', error);
+          });
+      })
+      .catch(error => {
+        console.error('Error fetching sprites:', error);
+        div.innerHTML = '<p>Error loading sprites. Please try again later.</p>';
+      });
+  }
 
   // Fetch and display sprites on page load with default sorting
   fetchAndSortSprites(sortBy).finally(() => {
@@ -269,141 +534,3 @@ document.addEventListener('DOMContentLoaded', function () {
     incrementButton.disabled = currentPage === pageCount;
   });
 });
-
-
-
-// Old code kept in case I need it >:]
-
-
-// Depricated 01/25/2024
-// function getSprites() {
-//   const div = document.getElementById('hello')
-//   fetch(apiUrl)
-//   .then(res => res.json())
-//   .then(data => {
-//     data.data.forEach(sprite => {
-//       fetch(`https://analytics.sgxp.me/api/websites/c78c6fb7-bd5f-4715-8af5-f794ad7b3584/stats?startAt=1672578061000&endAt=${todaysDate}&url=/sprites/${sprite.id}`, {
-//         headers: {Authorization: `Bearer ${umamiKey}`}
-//       })
-//       .then(res => res.json())
-//       .then(data => {
-//         let views = data.pageviews.value
-
-//         div.innerHTML += `
-
-//         <a href="/sprites/${sprite.id}" class="sprite-box">
-//           <div class="sprite-star-container">
-//             <div class="sprite-star"></div>
-//             <div class="sprite-star"></div>
-//             <div class="sprite-star"></div>
-//             <div class="sprite-star"></div>
-//             <div class="sprite-star"></div>
-//             <div class="sprite-star"></div>
-//             <div class="sprite-star"></div>
-//             <div class="sprite-star"></div>
-//             <div class="sprite-star"></div>
-//             <div class="sprite-star"></div>
-//           </div>
-//           <div class="sprite-number">${count(sprite.id)}</div>
-//           <div class="sprite-title">
-//             <div id="author" class="sprite-text">${sprite.attributes.title}</div>
-//           </div>
-//           <div class="sprite-image">
-//             <img src="https://api.sgxp.me${sprite.attributes.iconimage.data.attributes.url}" alt="">
-//           </div>
-//           <div class="sprite-author">
-//             <div class="sprite-text">${sprite.attributes.author.data.attributes.name}</div>
-//           </div>
-//           <div class="sprite-stats">
-//             <div class="sprite-text">${sprite.attributes.game.data.attributes.name}</div>
-//           </div>
-//           <div class="sprite-stats">
-//             <div class="sprite-text">${sprite.attributes.createdBy.username}</div>
-//           </div>
-//           <div class="sprite-stats">
-//             <div class="sprite-text">${views}</div>
-//           </div>
-//           <div class="sprite-stats">
-//             <div class="sprite-text">${formatBytes(sprite.attributes.spritesheet.data.attributes.size*1000, 2)}</div>
-//           </div>
-//         </a>
-
-//             `
-//       })
-      
-//     })
-//   })
-// }
-
-// getSprites();
-
-
-// Depricated 01/29/2024
-// function getSprites() {
-//   const div = document.getElementById('hello');
-//   fetch(apiUrl)
-//       .then(res => res.json())
-//       .then(data => {
-//           const spritePromises = data.data.map(sprite => {
-//               return fetch(`https://analytics.sgxp.me/api/websites/c78c6fb7-bd5f-4715-8af5-f794ad7b3584/stats?startAt=1672578061000&endAt=${todaysDate}&url=/sprites/${sprite.id}`, {
-//                   headers: { Authorization: `Bearer ${umamiKey}` }
-//               })
-//                   .then(res => res.json())
-//                   .then(data => {
-//                       let views = data.pageviews.value;
-
-//                       return `
-//                       <a href="/sprites/${sprite.id}" class="sprite-box">
-//                       <div class="sprite-star-container">
-//                         <div class="sprite-star"></div>
-//                         <div class="sprite-star"></div>
-//                         <div class="sprite-star"></div>
-//                         <div class="sprite-star"></div>
-//                         <div class="sprite-star"></div>
-//                         <div class="sprite-star"></div>
-//                         <div class="sprite-star"></div>
-//                         <div class="sprite-star"></div>
-//                         <div class="sprite-star"></div>
-//                         <div class="sprite-star"></div>
-//                       </div>
-//                       <div class="sprite-number">${count(sprite.id)}</div>
-//                       <div class="sprite-title">
-//                         <div id="author" class="sprite-text">${sprite.attributes.title}</div>
-//                       </div>
-//                       <div class="sprite-image">
-//                         <img src="https://api.sgxp.me${sprite.attributes.iconimage.data.attributes.url}" alt="">
-//                       </div>
-//                       <div class="sprite-author">
-//                         <div class="sprite-text">${sprite.attributes.author.data.attributes.name}</div>
-//                       </div>
-//                       <div class="sprite-stats">
-//                         <div class="sprite-text">${sprite.attributes.game.data.attributes.name}</div>
-//                       </div>
-//                       <div class="sprite-stats">
-//                         <div class="sprite-text">${sprite.attributes.createdBy.username}</div>
-//                       </div>
-//                       <div class="sprite-stats">
-//                         <div class="sprite-text">${views}</div>
-//                       </div>
-//                       <div class="sprite-stats">
-//                         <div class="sprite-text">${formatBytes(sprite.attributes.spritesheet.data.attributes.size*1000, 2)}</div>
-//                       </div>
-//                     </a>
-//                       `;
-//                   });
-//           });
-
-//           // Use Promise.all to wait for all fetches to complete
-//           Promise.all(spritePromises)
-//               .then(spriteHtmlArray => {
-//                   // Combine the HTML strings and append to the div
-//                   div.innerHTML += spriteHtmlArray.join('');
-//               })
-//               .catch(error => {
-//                   console.error('Error fetching sprite data:', error);
-//               });
-//       });
-// }
-
-
-

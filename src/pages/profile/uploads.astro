@@ -1,0 +1,157 @@
+---
+import FrontPageLayout from "../../layouts/FrontPageLayout.astro";
+import UserUploadsViewer from "../../components/uploads/UserUploadsViewer.svelte";
+
+// Get the auth token from the request cookies on the server
+const token = Astro.cookies.get('payload-token')?.value;
+
+let currentUser = null;
+let initialSprites: any[] = [];
+let initialTotal = 0;
+let initialError = null;
+
+// Redirect to login if not authenticated
+if (!token) {
+  return Astro.redirect('/login?redirect=/profile/uploads');
+}
+
+try {
+  // Fetch current user (depth=0 since we don't need populated relations)
+  const meResponse = await fetch(
+    `${import.meta.env.PUBLIC_PAYLOAD_URL}/api/users/me?depth=0`,
+    {
+      headers: { 'Cookie': `payload-token=${token}` }
+    }
+  );
+
+  if (!meResponse.ok) {
+    return Astro.redirect('/login?redirect=/profile/uploads');
+  }
+
+  const meData = await meResponse.json();
+  currentUser = meData.user || meData;
+
+  if (!currentUser?.id) {
+    return Astro.redirect('/login?redirect=/profile/uploads');
+  }
+
+  // Fetch initial sprites for SSR
+  const spritesResponse = await fetch(
+    `${import.meta.env.PUBLIC_PAYLOAD_URL}/api/sprites?where[author][equals]=${currentUser.id}&depth=1&limit=10&page=1&sort=-createdAt`,
+    {
+      headers: { 'Cookie': `payload-token=${token}` }
+    }
+  );
+
+  if (spritesResponse.ok) {
+    const spritesData = await spritesResponse.json();
+    initialSprites = spritesData.docs || [];
+    initialTotal = spritesData.totalDocs || 0;
+  }
+
+} catch (error) {
+  console.error('[Uploads SSR] Error:', error);
+  initialError = 'An error occurred while loading your uploads';
+}
+
+const pageTitle = 'My Uploads';
+---
+
+<FrontPageLayout title={pageTitle}>
+  <div class="uploads-page-container">
+    <div class="page-header">
+      <h1>My Uploads</h1>
+      <p class="page-description">
+        Track the status of your sprite submissions and respond to admin feedback.
+      </p>
+    </div>
+
+    {initialError ? (
+      <div class="error-container">
+        <p>{initialError}</p>
+        <a href="/profile/uploads" class="retry-link">Try Again</a>
+      </div>
+    ) : (
+      <UserUploadsViewer
+        client:only="svelte"
+        user={currentUser}
+        initialSprites={initialSprites}
+        initialTotal={initialTotal}
+      />
+    )}
+  </div>
+</FrontPageLayout>
+
+<style>
+  .uploads-page-container {
+    width: 1202px;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 50px 0px;
+  }
+
+  .page-header {
+    margin-bottom: 30px;
+  }
+
+  .page-header h1 {
+    font-family: 'saira', sans-serif;
+    font-weight: 800;
+    font-size: 32px;
+    color: var(--font-color);
+    margin: 0 0 12px 0;
+    text-shadow:
+      calc(2px * var(--multiply-factor, 1)) calc(0px * var(--multiply-factor, 1)) 0 var(--bg-color),
+      calc(2px * var(--multiply-factor, 1)) calc(2px * var(--multiply-factor, 1)) 0 var(--bg-color),
+      calc(0px * var(--multiply-factor, 1)) calc(2px * var(--multiply-factor, 1)) 0 var(--bg-color);
+  }
+
+  .page-description {
+    font-family: 'saira', sans-serif;
+    font-size: 16px;
+    color: var(--font-color);
+    opacity: 0.8;
+    margin: 0;
+  }
+
+  .error-container {
+    background: var(--page-color);
+    padding: 40px;
+    text-align: center;
+    border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white);
+    box-shadow: var(--box-shadow);
+  }
+
+  .error-container p {
+    color: var(--font-color);
+    font-size: 16px;
+    margin: 0 0 20px 0;
+  }
+
+  .retry-link {
+    color: var(--font-link-color);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .retry-link:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 1240px) {
+    .uploads-page-container {
+      width: 90%;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .uploads-page-container {
+      width: 100%;
+      padding: 20px 10px;
+    }
+
+    .page-header h1 {
+      font-size: 24px;
+    }
+  }
+</style>

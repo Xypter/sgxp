@@ -1,0 +1,259 @@
+---
+import FrontPageLayout from "../layouts/FrontPageLayout.astro";
+import SpriteUploadForm from "../components/upload/SpriteUploadForm.svelte";
+import { Toaster } from '$lib/components';
+
+export const prerender = false;
+
+// Get the auth token from cookies
+const token = Astro.cookies.get('payload-token')?.value;
+
+// Redirect to login if not authenticated
+if (!token) {
+  return Astro.redirect('/login?redirect=/upload');
+}
+
+// Verify the user is logged in
+const payloadUrl = import.meta.env.PUBLIC_PAYLOAD_URL;
+let currentUser = null;
+
+try {
+  const meResponse = await fetch(`${payloadUrl}/api/users/me`, {
+    headers: { 'Cookie': `payload-token=${token}` }
+  });
+
+  if (!meResponse.ok) {
+    return Astro.redirect('/login?redirect=/upload');
+  }
+
+  const meData = await meResponse.json();
+  currentUser = meData.user || meData;
+
+  if (!currentUser?.id) {
+    return Astro.redirect('/login?redirect=/upload');
+  }
+} catch (error) {
+  console.error('[Upload] Auth check failed:', error);
+  return Astro.redirect('/login?redirect=/upload');
+}
+
+// Check if we're in edit mode
+const editId = Astro.url.searchParams.get('edit');
+let existingSprite = null;
+let isEditMode = false;
+
+if (editId) {
+  try {
+    const spriteResponse = await fetch(`${payloadUrl}/api/sprites/${editId}?depth=1`, {
+      headers: { 'Cookie': `payload-token=${token}` }
+    });
+
+    if (spriteResponse.ok) {
+      existingSprite = await spriteResponse.json();
+
+      // Verify the current user is the author
+      const authorId = typeof existingSprite.author === 'object' ? existingSprite.author.id : existingSprite.author;
+      if (authorId !== currentUser.id) {
+        // User doesn't own this sprite, redirect to uploads
+        return Astro.redirect('/profile/uploads');
+      }
+
+      // Only allow editing of pending, needs_revision, or approved sprites
+      // Note: Rejected sprites cannot be edited
+      if (existingSprite.status === 'rejected') {
+        // Can't edit rejected sprites, redirect to uploads
+        return Astro.redirect('/profile/uploads');
+      }
+
+      isEditMode = true;
+    } else {
+      // Sprite not found, redirect to uploads
+      return Astro.redirect('/profile/uploads');
+    }
+  } catch (error) {
+    console.error('[Upload] Failed to fetch sprite for editing:', error);
+    return Astro.redirect('/profile/uploads');
+  }
+}
+
+// Fetch dropdown data
+let teams: { value: string; label: string }[] = [];
+let officialGames: { value: string; label: string }[] = [];
+let fanGames: { value: string; label: string }[] = [];
+let series: { value: string; label: string }[] = [];
+let sections: { value: string; label: string }[] = [];
+let contributors: { value: string; label: string }[] = [];
+let characters: { value: string; label: string }[] = [];
+
+try {
+  // Fetch all data in parallel
+  const [teamsRes, gamesRes, seriesRes, sectionsRes, contributorsRes, charactersRes] = await Promise.all([
+    fetch(`${payloadUrl}/api/teams?limit=1000&sort=name`),
+    fetch(`${payloadUrl}/api/games?limit=1000&sort=title`),
+    fetch(`${payloadUrl}/api/series?limit=1000&sort=title`),
+    fetch(`${payloadUrl}/api/sections?limit=1000&sort=title`),
+    fetch(`${payloadUrl}/api/contributors?limit=1000&sort=name`),
+    fetch(`${payloadUrl}/api/characters?limit=1000&sort=name`)
+  ]);
+
+  if (teamsRes.ok) {
+    const teamsData = await teamsRes.json();
+    teams = (teamsData.docs || []).map((t: any) => ({
+      value: t.id.toString(),
+      label: t.name || 'Untitled'
+    }));
+  }
+
+  if (gamesRes.ok) {
+    const gamesData = await gamesRes.json();
+    const allGames = gamesData.docs || [];
+
+    // Separate games by gameType
+    officialGames = allGames
+      .filter((g: any) => g.gameType === 'official')
+      .map((g: any) => ({
+        value: g.id.toString(),
+        label: g.title || g.name || 'Untitled'
+      }));
+
+    fanGames = allGames
+      .filter((g: any) => g.gameType === 'fan')
+      .map((g: any) => ({
+        value: g.id.toString(),
+        label: g.title || g.name || 'Untitled'
+      }));
+  }
+
+  if (seriesRes.ok) {
+    const seriesData = await seriesRes.json();
+    series = (seriesData.docs || []).map((s: any) => ({
+      value: s.id.toString(),
+      label: s.title || s.name || 'Untitled'
+    }));
+  }
+
+  if (sectionsRes.ok) {
+    const sectionsData = await sectionsRes.json();
+    sections = (sectionsData.docs || []).map((s: any) => ({
+      value: s.id.toString(),
+      label: s.title || s.name || 'Untitled'
+    }));
+  }
+
+  if (contributorsRes.ok) {
+    const contributorsData = await contributorsRes.json();
+    contributors = (contributorsData.docs || []).map((c: any) => ({
+      value: c.id.toString(),
+      label: c.name || c.displayName || 'Unknown'
+    }));
+  }
+
+  if (charactersRes.ok) {
+    const charactersData = await charactersRes.json();
+    characters = (charactersData.docs || []).map((c: any) => ({
+      value: c.id.toString(),
+      label: c.name || 'Unknown',
+      characterType: c.characterType // Include characterType ('official' or 'fan')
+    }));
+  }
+
+} catch (error) {
+  console.error('[Upload] Failed to fetch dropdown data:', error);
+  // Continue with empty arrays - the form will still work but without pre-populated options
+}
+---
+
+<FrontPageLayout title={isEditMode ? 'Edit Sprite' : 'Upload Sprite'}>
+  <div class="upload-page-container">
+    <div class="page-header-section">
+      <div class="page-header-title">{isEditMode ? 'Edit Sprite' : 'Submit a Sprite'}</div>
+      <div class="page-header-box">
+        <p class="page-description">
+          {isEditMode
+            ? 'Update your sprite submission. Make your changes and resubmit for review.'
+            : 'Share your sprite work with the community. Fill out the form below to submit your sprite sheet for review.'}
+        </p>
+      </div>
+    </div>
+
+    <SpriteUploadForm
+      client:only="svelte"
+      teams={teams}
+      officialGames={officialGames}
+      fanGames={fanGames}
+      series={series}
+      sections={sections}
+      contributors={contributors}
+      characters={characters}
+      sprite={existingSprite}
+      isEditMode={isEditMode}
+    />
+
+    <Toaster client:only="svelte" />
+  </div>
+</FrontPageLayout>
+
+<style>
+  .upload-page-container {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+
+  .page-header-section {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: var(--gap);
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .page-header-title {
+    display: block;
+    background: color-mix(in srgb, var(--page-color) 60%, black);
+    padding: 3px 0px 3px 15px;
+    font-family: 'saira';
+    font-weight: 800;
+    font-size: 18px;
+    text-shadow: calc(1px * var(--multiply-factor)) 0 0 var(--bg-color),
+                 calc(1px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 0 var(--bg-color),
+                 0 calc(1px * var(--multiply-factor)) 0 var(--bg-color);
+    border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    box-shadow: var(--box-shadow);
+    color: var(--font-color);
+  }
+
+  .page-header-box {
+    background: var(--page-color);
+    padding: 20px;
+    border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    box-shadow: var(--box-shadow);
+  }
+
+  .page-description {
+    font-family: 'saira', monospace;
+    font-size: 14px;
+    color: var(--font-color);
+    margin: 0;
+    line-height: 1.6;
+    text-align: center;
+    text-shadow:
+      1px 0 0 var(--bg-color),
+      1px 1px 0 var(--bg-color),
+      0 1px 0 var(--bg-color);
+  }
+
+  @media (max-width: 768px) {
+    .upload-page-container {
+      padding: 20px 10px;
+    }
+
+    .page-header-title {
+      font-size: 16px;
+    }
+  }
+</style>

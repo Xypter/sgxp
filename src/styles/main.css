@@ -480,6 +480,8 @@ body {
   calc( 0px * var(--multiply-factor)) calc( 1px * var(--multiply-factor)) 0 var(--bg-color);
 
   border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  box-shadow: var(--box-shadow);
+  position: relative;
 }
 
 .sidebar-box {
@@ -499,6 +501,8 @@ body {
   border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
   border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
   border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+  position: relative;
+  z-index: 1;
 }
 
 .side-bar-img {
@@ -993,6 +997,8 @@ a:hover {
                  calc(1px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 0 var(--bg-color),
                  0 calc(1px * var(--multiply-factor)) 0 var(--bg-color);
     border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    box-shadow: var(--box-shadow);
+    position: relative;
 }
 
 .dashboard-sidebar-box {
@@ -1009,4 +1015,6 @@ a:hover {
     border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
     border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
     border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+    position: relative;
+    z-index: 1;
 }
