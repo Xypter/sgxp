@@ -343,14 +343,15 @@
 	}
 
 	// OPTIMIZATION: Deferred memoization using requestIdleCallback or setTimeout fallback
-	function memoizeSpritesDeferred(spritesToMemoize: SpriteWithMemoized[]): void {
-		const BATCH_SIZE = 5; // Process 5 sprites at a time
+	function memoizeSpritesDeferred(spritesToMemoize: SpriteWithMemoized[], onComplete?: () => void): void {
+		// Increased batch size for faster processing (process full page at once)
+		const BATCH_SIZE = 21;
 		let index = 0;
 
 		function processBatch(deadline?: IdleDeadline) {
 			// Process sprites while we have time (or in batches if no IdleDeadline)
 			const endIndex = Math.min(index + BATCH_SIZE, spritesToMemoize.length);
-			
+
 			while (index < endIndex) {
 				memoizeSpriteText(spritesToMemoize[index]);
 				index++;
@@ -366,7 +367,10 @@
 			} else {
 				// All done - trigger reactivity update
 				isMemoized = true;
+				// Trigger sprites update to ensure reactivity
 				sprites = [...spritesToMemoize];
+				// Call completion callback if provided
+				onComplete?.();
 			}
 		}
 
@@ -523,10 +527,15 @@
 			let fetchedSprites: SpriteWithMemoized[];
 
 			// Check if the API call was successful
-			if (data.success && data.docs) {
+			// Note: API returns 'results' array, not 'docs'
+			const spriteResults = data.results || data.docs || [];
+			if (data.success && spriteResults.length >= 0) {
+				// Extract sprite data from the results (each item has type and data properties)
+				const extractedSprites = spriteResults.map((item: any) => item.data || item);
+
 				// Multiply the data for testing purposes
-				if (MOCK_DATA_MULTIPLIER > 1 && data.docs.length > 0) {
-					const originalSprites = data.docs;
+				if (MOCK_DATA_MULTIPLIER > 1 && extractedSprites.length > 0) {
+					const originalSprites = extractedSprites;
 					const multipliedSprites = [];
 					for (let i = 0; i < MOCK_DATA_MULTIPLIER; i++) {
 						const duplicatedSprites = originalSprites.map((sprite: Sprite, index: number) => ({
@@ -540,7 +549,7 @@
 					fetchedSprites = multipliedSprites;
 					totalResults = data.totalDocs * MOCK_DATA_MULTIPLIER;
 				} else {
-					fetchedSprites = data.docs;
+					fetchedSprites = extractedSprites;
 					totalResults = data.totalDocs;
 				}
 
@@ -575,6 +584,9 @@
 		styleSourceId = '';
 		authorFilter = '';
 		currentPage = 1;
+
+		// Explicitly fetch sprites to ensure we reload even if values didn't change
+		fetchSprites();
 	}
 
 
@@ -789,8 +801,8 @@
 								bind:value={searchTerm}
 								placeholder="Search sprites by title, author, or game..."
 								themed={true}
-								class="flex-1"
-								onkeydown={(e) => {
+								class="search-input"
+								onkeydown={(e: KeyboardEvent) => {
 									if (e.key === 'Enter') {
 										handleSearch();
 									}
@@ -803,6 +815,14 @@
 								class="px-6"
 							>
 								Search
+							</Button>
+							<Button
+								onclick={resetAllFilters}
+								themed={true}
+								disabled={isFetchingInProgress}
+								class="px-6"
+							>
+								Reset Filters
 							</Button>
 						</div>
 					</div>
@@ -966,8 +986,8 @@
 
 					<div id="hello" class="sprite-container">
 						{#if isFetchingInProgress}
-							<div class="w-full flex justify-center items-center h-40">
-								<p class="text-muted-foreground">Loading sprites...</p>
+							<div class="loading-sprites-message">
+								<p class="loading-sprites-text">Loading sprites...</p>
 							</div>
 						{:else if sprites.length > 0}
 							{#each sprites as sprite (sprite.id)}
@@ -1057,18 +1077,18 @@
 								</a>
 							{/each}
 						{:else}
-							<div class="w-full flex flex-col items-center justify-end p-8 text-center">
-								<div class="text-muted-foreground mb-4">
-									<svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<div class="no-sprites-message">
+								<div class="no-sprites-icon">
+									<svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
 										<circle cx="11" cy="11" r="8"></circle>
 										<path d="m21 21-4.35-4.35"></path>
 									</svg>
 								</div>
-								<h3 class="text-lg font-semibold text-foreground mb-2">No sprites found</h3>
-								<p class="text-muted-foreground mb-6">Try adjusting your search terms or filters.</p>
+								<h3 class="no-sprites-title">No Sprites Found</h3>
+								<p class="no-sprites-description">Try adjusting your search terms or filters.</p>
 								<Button
+									themed
 									onclick={resetAllFilters}
-									class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors"
 								>
 									Reset All Filters
 								</Button>
@@ -1109,5 +1129,71 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: flex-start;
+	}
+
+	/* Search Input Styling */
+	:global(.search-input) {
+		flex: 1;
+		min-width: 0; /* Allow flex item to shrink below content size */
+		padding: 8px 12px !important; /* Reduce padding from default */
+	}
+
+	/* Loading Sprites Message Styling */
+	.loading-sprites-message {
+		grid-column: 1 / -1; /* Span all grid columns */
+		width: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 400px;
+	}
+
+	.loading-sprites-text {
+		font-family: 'saira', monospace;
+		font-size: 18px;
+		color: color-mix(in srgb, var(--font-color) 70%, transparent);
+		text-shadow:
+			1px 0px 0 var(--bg-color),
+			1px 1px 0 var(--bg-color),
+			0px 1px 0 var(--bg-color);
+	}
+
+	/* No Sprites Found Message Styling */
+	.no-sprites-message {
+		grid-column: 1 / -1; /* Span all grid columns */
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding: 60px 20px;
+		text-align: center;
+		min-height: 400px;
+	}
+
+	.no-sprites-icon {
+		margin-bottom: 24px;
+		color: color-mix(in srgb, var(--font-color) 40%, transparent);
+		opacity: 0.7;
+	}
+
+	.no-sprites-title {
+		font-family: 'saira', monospace;
+		font-weight: 800;
+		font-size: 24px;
+		color: var(--font-color);
+		margin-bottom: 12px;
+		text-shadow:
+			1px 0px 0 var(--bg-color),
+			1px 1px 0 var(--bg-color),
+			0px 1px 0 var(--bg-color);
+	}
+
+	.no-sprites-description {
+		font-family: 'saira', monospace;
+		font-size: 16px;
+		color: color-mix(in srgb, var(--font-color) 70%, transparent);
+		margin-bottom: 32px;
+		max-width: 400px;
 	}
 </style>

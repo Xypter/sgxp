@@ -211,6 +211,7 @@
 	function handleSwitchToLogin(e: MouseEvent) {
 		e.preventDefault();
 		activeTab = 'login';
+		registrationSuccess = false;
 	}
 </script>
 

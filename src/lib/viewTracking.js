@@ -80,8 +80,6 @@ export async function trackSpriteView(spriteId) {
   const isThrottled = !shouldTrackView(spriteId);
 
   if (isThrottled) {
-    console.log(`[View Tracking] View not tracked - sprite ${spriteId} viewed recently`);
-
     // Still fetch current count to show latest views from other users
     try {
       const response = await fetch(`/api/proxy/sprites/${spriteId}`);
@@ -93,7 +91,6 @@ export async function trackSpriteView(spriteId) {
         // Update cache with latest count
         if (currentCount !== undefined) {
           cacheViewCount(spriteId, currentCount);
-          console.log(`[View Tracking] Fetched current count for sprite ${spriteId}: ${currentCount} views`);
           return currentCount;
         }
       }
@@ -107,7 +104,6 @@ export async function trackSpriteView(spriteId) {
 
   // Don't track if tab is hidden
   if (document.hidden) {
-    console.log('[View Tracking] Tab hidden - skipping view tracking');
     return;
   }
 
@@ -116,7 +112,6 @@ export async function trackSpriteView(spriteId) {
 
   // Check again if tab is still visible after delay
   if (document.hidden) {
-    console.log('[View Tracking] Tab became hidden during delay - skipping view tracking');
     return;
   }
 
@@ -134,10 +129,7 @@ export async function trackSpriteView(spriteId) {
       // Cache the view count for future reference
       cacheViewCount(spriteId, newCount);
 
-      console.log(`[View Tracking] View tracked for sprite ${spriteId}, new count: ${newCount}`);
       return newCount;
-    } else {
-      console.warn(`[View Tracking] Failed to track view - server returned ${response.status}`);
     }
   } catch (error) {
     console.error('[View Tracking] Failed to track view:', error);

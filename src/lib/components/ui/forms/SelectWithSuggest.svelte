@@ -76,6 +76,7 @@
 
 <div class="select-with-suggest-wrapper">
   {#if label}
+    <!-- svelte-ignore a11y_label_has_associated_control -->
     <label id="{name || 'select-with-suggest'}-label" class="theme-label" class:themed>
       {label}
       {#if required}<span class="required-asterisk">*</span>{/if}

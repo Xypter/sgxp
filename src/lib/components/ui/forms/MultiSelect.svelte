@@ -1,6 +1,7 @@
 <script lang="ts">
   import * as Popover from '$components/ui/popover';
   import Input from '../base/Input.svelte';
+  import Badge from '../base/Badge.svelte';
   import { ChevronDown, Check, Plus, X } from 'lucide-svelte';
 
   interface Option {
@@ -84,6 +85,7 @@
 
 <div class="multiselect-wrapper">
   {#if label}
+    <!-- svelte-ignore a11y_label_has_associated_control -->
     <label id="{name || 'multiselect'}-label" class="theme-label" class:themed>
       {label}
       {#if required}<span class="required-asterisk">*</span>{/if}
@@ -98,16 +100,18 @@
           <span class="placeholder-text">{placeholder}</span>
         {:else}
           {#each selectedOptions as option (option.value)}
-            <span class="selected-tag">
-              {option.label}
-              <button
-                type="button"
-                class="remove-tag"
-                onclick={(e) => removeOption(option.value, e)}
-              >
-                <X class="h-3 w-3" />
-              </button>
-            </span>
+            <Badge themed class="selected-badge">
+              {#snippet children()}
+                <span>{option.label}</span>
+                <button
+                  type="button"
+                  class="remove-tag"
+                  onclick={(e) => removeOption(option.value, e)}
+                >
+                  <X class="h-3 w-3" />
+                </button>
+              {/snippet}
+            </Badge>
           {/each}
         {/if}
       </div>
@@ -253,7 +257,7 @@
   .selected-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
+    gap: 6px;
     flex: 1;
     align-items: center;
   }
@@ -262,16 +266,10 @@
     color: color-mix(in srgb, var(--font-color) 50%, transparent);
   }
 
-  .selected-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 6px;
-    background: var(--font-link-color);
-    color: white;
-    font-size: 12px;
-    font-weight: 600;
-    border-radius: 0px;
+  :global(.selected-badge) {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
   }
 
   .remove-tag {
@@ -283,7 +281,8 @@
     color: white;
     cursor: pointer;
     padding: 0;
-    opacity: 0.7;
+    margin-left: 2px;
+    opacity: 0.8;
     transition: opacity 0.2s;
   }
 
@@ -320,7 +319,6 @@
     font-size: 14px !important;
     padding: 8px 12px !important;
     min-height: 42px !important;
-    height: 42px !important;
     transition: all var(--transition-speed, 200ms) ease-in-out !important;
     text-shadow: 1px 0px 0 var(--bg-color), 1px 1px 0 var(--bg-color), 0px 1px 0 var(--bg-color) !important;
     width: 100%;

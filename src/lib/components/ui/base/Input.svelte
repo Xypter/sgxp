@@ -2,9 +2,11 @@
   import type { HTMLInputAttributes } from 'svelte/elements';
   import { Input as ShadcnInput } from '$components/ui/input';
 
-  interface InputProps extends HTMLInputAttributes {
+  interface InputProps {
     themed?: boolean;
     value?: any;
+    class?: string;
+    [key: string]: any;
   }
 
   let {

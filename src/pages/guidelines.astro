@@ -1,0 +1,24 @@
+---
+import FrontPageLayout from "../layouts/FrontPageLayout.astro";
+import GuidelinesContent from "../components/GuidelinesContent.svelte";
+---
+
+<FrontPageLayout title="Upload Guidelines">
+  <div class="guidelines-container">
+    <GuidelinesContent client:only="svelte" />
+  </div>
+</FrontPageLayout>
+
+<style>
+  .guidelines-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+
+  @media (max-width: 768px) {
+    .guidelines-container {
+      padding: 1rem 0.5rem;
+    }
+  }
+</style>

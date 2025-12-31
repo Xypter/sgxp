@@ -5,8 +5,6 @@
   // Props
   let { user }: { user: any } = $props();
 
-  const API_BASE_URL = "https://cms.sgxp.me/api";
-
   // Prestige role progress state
   let roleProgress = $state<any>(null);
   let loadingProgress = $state(true);
@@ -17,7 +15,7 @@
 
     loadingProgress = true;
     try {
-      const response = await fetch(`${API_BASE_URL}/users/${user.id}/role-progress`);
+      const response = await fetch(`/api/proxy/users/${user.id}/role-progress`);
       if (response.ok) {
         roleProgress = await response.json();
       }
