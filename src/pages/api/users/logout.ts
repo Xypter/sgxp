@@ -18,12 +18,16 @@ export const POST: APIRoute = async ({ cookies }) => {
       });
     }
 
-    // Clear the HttpOnly cookie by setting it to expire
-    cookies.delete('payload-token', {
+    // Clear the HttpOnly cookie by setting it to expire immediately
+    // Using set() with maxAge: 0 is more reliable than delete() across environments
+    const isProduction = import.meta.env.PROD;
+
+    cookies.set('payload-token', '', {
       path: '/',
       httpOnly: true,
-      secure: true,
-      sameSite: 'strict'
+      secure: isProduction, // Only use secure flag in production (HTTPS)
+      sameSite: 'strict',
+      maxAge: 0 // Immediately expire the cookie
     });
 
     return new Response(JSON.stringify({ message: 'Logged out successfully' }), {

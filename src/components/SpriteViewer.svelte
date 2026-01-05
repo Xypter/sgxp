@@ -246,20 +246,44 @@
             }
 
             // Queue contributor fetches if needed (these are already parallel within themselves)
-            if (populated.contributors?.length && needsPopulation(populated.contributors[0])) {
-                fetchKeys.push('contributors');
-                fetchPromises.push(
-                    Promise.all(
-                        populated.contributors.map(contrib => {
-                            if (!needsPopulation(contrib)) return Promise.resolve(contrib);
-                            const cacheKey = `users:${contrib}`;
-                            const cached = getFromClientCache(cacheKey);
-                            if (cached) return Promise.resolve(cached);
-                            return cachedFetch(`${API_BASE_URL}/users/${contrib}`, cacheKey)
-                                .then(data => data || contrib);
-                        })
-                    )
+            // Contributors have structure: { name: "...", user: ID_or_Object }
+            if (populated.contributors?.length) {
+                const needsContributorPopulation = populated.contributors.some(contrib =>
+                    contrib && typeof contrib === 'object' && contrib.user && needsPopulation(contrib.user)
                 );
+
+                if (needsContributorPopulation) {
+                    fetchKeys.push('contributors');
+                    fetchPromises.push(
+                        Promise.all(
+                            populated.contributors.map(async (contrib) => {
+                                // If contributor is not an object or doesn't have a user field, return as-is
+                                if (!contrib || typeof contrib !== 'object' || !contrib.user) {
+                                    return contrib;
+                                }
+
+                                // If user is already populated, return as-is
+                                if (!needsPopulation(contrib.user)) {
+                                    return contrib;
+                                }
+
+                                // Fetch the user data
+                                const cacheKey = `users:${contrib.user}`;
+                                const cached = getFromClientCache(cacheKey);
+                                if (cached) {
+                                    return { ...contrib, user: cached };
+                                }
+
+                                const userData = await cachedFetch(`${API_BASE_URL}/users/${contrib.user}?depth=2`, cacheKey);
+                                if (userData) {
+                                    return { ...contrib, user: userData };
+                                }
+
+                                return contrib;
+                            })
+                        )
+                    );
+                }
             }
 
             // OPTIMIZATION: Execute all fetches in parallel

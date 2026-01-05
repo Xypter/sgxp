@@ -20,9 +20,11 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       const setCookieHeader = response.headers.get('set-cookie');
       if (setCookieHeader) {
         // Parse and set the cookie on your domain
+        const isProduction = import.meta.env.PROD;
+
         cookies.set('payload-token', data.token, {
           httpOnly: true,
-          secure: true,
+          secure: isProduction, // Only use secure flag in production (HTTPS)
           sameSite: 'strict', // Can use strict since it's same-origin now
           maxAge: 60 * 60 * 24 * 7, // 7 days
           path: '/'
