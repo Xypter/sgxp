@@ -22,7 +22,7 @@ body {
   display: block; /* Changed from grid */
   width: 70%;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 0rem 2rem 2rem 2rem;
   min-height: 100vh;
   overflow: visible;
 }

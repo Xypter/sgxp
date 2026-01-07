@@ -412,6 +412,123 @@ async function checkAuthStatus(): Promise<void> {
                   }
                 }}
               >
+                Community
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content
+                class="no-theme-styles w-[200px]"
+                align="start"
+                alignOffset={0}
+                sideOffset={8}
+                avoidCollisions={true}
+                style="
+                  background-color: var(--page-color);
+                  border: 1px solid color-mix(in srgb, var(--page-color) 80%, white);
+                  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                  z-index: 50;
+                "
+              >
+                <DropdownMenu.Item
+                  class="cursor-pointer focus:outline-none no-theme-styles"
+                  style="
+                    background-color: color-mix(in srgb, var(--page-color) 99%, black);
+                    padding-bottom: 10px;
+                    color: var(--font-color);
+                    font-family: nav;
+                    font-size: 16px;
+                    line-height: 12px;
+                    text-shadow:
+                      -1px -1px 0 var(--bg-color),
+                      0px -1px 0 var(--bg-color),
+                      1px -1px 0 var(--bg-color),
+                      1px 0px 0 var(--bg-color),
+                      1px 1px 0 var(--bg-color),
+                      0px 1px 0 var(--bg-color),
+                      -1px 1px 0 var(--bg-color),
+                      -1px 0px 0 var(--bg-color);
+                  "
+                  onmouseenter={(e: MouseEvent) => {
+                    if (e.currentTarget instanceof HTMLElement) {
+                      e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+                    }
+                  }}
+                  onmouseleave={(e: MouseEvent) => {
+                    if (e.currentTarget instanceof HTMLElement) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
+                  onclick={() => (window.location.href = '/sprite-sheet-guidelines')}
+                >
+                  Sprite Sheet Guidelines
+                </DropdownMenu.Item>
+                <DropdownMenu.Item
+                  class="cursor-pointer focus:outline-none no-theme-styles"
+                  style="
+                    background-color: color-mix(in srgb, var(--page-color) 99%, black);
+                    padding-bottom: 10px;
+                    color: var(--font-color);
+                    font-family: nav;
+                    font-size: 16px;
+                    line-height: 12px;
+                    text-shadow:
+                      -1px -1px 0 var(--bg-color),
+                      0px -1px 0 var(--bg-color),
+                      1px -1px 0 var(--bg-color),
+                      1px 0px 0 var(--bg-color),
+                      1px 1px 0 var(--bg-color),
+                      0px 1px 0 var(--bg-color),
+                      -1px 1px 0 var(--bg-color),
+                      -1px 0px 0 var(--bg-color);
+                  "
+                  onmouseenter={(e: MouseEvent) => {
+                    if (e.currentTarget instanceof HTMLElement) {
+                      e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+                    }
+                  }}
+                  onmouseleave={(e: MouseEvent) => {
+                    if (e.currentTarget instanceof HTMLElement) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
+                  onclick={() => (window.location.href = '/upload-guide')}
+                >
+                  Upload Guide
+                </DropdownMenu.Item>
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
+          </NavigationMenu.Item>
+
+          <NavigationMenu.Item>
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger
+                class={cn(
+                  "group inline-flex h-12 w-max items-center justify-center rounded-md px-4 font-medium transition-colors focus:outline-none disabled:pointer-events-none disabled:opacity-50 no-theme-styles"
+                )}
+                style="
+                  padding-bottom: 1px;
+                  color: var(--font-color);
+                  font-family: nav;
+                  font-size: 16px;
+                  text-shadow:
+                    -1px -1px 0 var(--bg-color),
+                    0px -1px 0 var(--bg-color),
+                    1px -1px 0 var(--bg-color),
+                    1px 0px 0 var(--bg-color),
+                    1px 1px 0 var(--bg-color),
+                    0px 1px 0 var(--bg-color),
+                    -1px 1px 0 var(--bg-color),
+                    -1px 0px 0 var(--bg-color);
+                "
+                onmouseenter={(e: MouseEvent) => {
+                  if (e.currentTarget instanceof HTMLElement) {
+                    e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+                  }
+                }}
+                onmouseleave={(e: MouseEvent) => {
+                  if (e.currentTarget instanceof HTMLElement) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
+              >
                 Archive
               </DropdownMenu.Trigger>
               <DropdownMenu.Content
@@ -1251,6 +1368,68 @@ async function checkAuthStatus(): Promise<void> {
             }}
           >
             Sprites
+          </a>
+          <a
+            href="/sprite-sheet-guidelines"
+            class="block no-theme-styles py-2 px-4 rounded-md transition-colors"
+            style="
+              color: var(--font-color);
+              font-family: nav;
+              font-size: 14px;
+              text-shadow:
+                -1px -1px 0 var(--bg-color),
+                0px -1px 0 var(--bg-color),
+                1px -1px 0 var(--bg-color),
+                1px 0px 0 var(--bg-color),
+                1px 1px 0 var(--bg-color),
+                0px 1px 0 var(--bg-color),
+                -1px 1px 0 var(--bg-color),
+                -1px 0px 0 var(--bg-color);
+            "
+            onclick={() => (isMobileMenuOpen = false)}
+            onmouseenter={(e: MouseEvent) => {
+              if (e.currentTarget instanceof HTMLElement) {
+                e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+              }
+            }}
+            onmouseleave={(e: MouseEvent) => {
+              if (e.currentTarget instanceof HTMLElement) {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }
+            }}
+          >
+            Sprite Sheet Guidelines
+          </a>
+          <a
+            href="/upload-guide"
+            class="block no-theme-styles py-2 px-4 rounded-md transition-colors"
+            style="
+              color: var(--font-color);
+              font-family: nav;
+              font-size: 14px;
+              text-shadow:
+                -1px -1px 0 var(--bg-color),
+                0px -1px 0 var(--bg-color),
+                1px -1px 0 var(--bg-color),
+                1px 0px 0 var(--bg-color),
+                1px 1px 0 var(--bg-color),
+                0px 1px 0 var(--bg-color),
+                -1px 1px 0 var(--bg-color),
+                -1px 0px 0 var(--bg-color);
+            "
+            onclick={() => (isMobileMenuOpen = false)}
+            onmouseenter={(e: MouseEvent) => {
+              if (e.currentTarget instanceof HTMLElement) {
+                e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+              }
+            }}
+            onmouseleave={(e: MouseEvent) => {
+              if (e.currentTarget instanceof HTMLElement) {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }
+            }}
+          >
+            Upload Guide
           </a>
           <a
             href="/smackjeeves"

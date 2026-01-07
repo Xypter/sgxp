@@ -41,9 +41,8 @@
   <!-- Custom Sprites -->
   <h3>Custom Sprites</h3>
   <Alert.Root class="theme-alert theme-alert-success">
-    <Alert.Title class="theme-alert-title">Gold Standard</Alert.Title>
     <Alert.Description class="theme-alert-description">
-      Any work that you created completely on your own is most likely to be accepted. We encourage you to submit this above anything else.
+      This is the gold standard. Any work that you created completely on your own is most likely to be accepted. We encourage you to submit this above anything else.
     </Alert.Description>
   </Alert.Root>
 

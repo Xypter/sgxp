@@ -7,6 +7,7 @@
 	import { Button, Input, Select, Combobox, Pagination } from '$lib/components';
 
 	import SpriteViewer from './SpriteViewer.svelte';
+	import Logo3D from './Logo3D.svelte';
 
 	// Updated interface to match your API structure
 	interface ImageData {
@@ -625,12 +626,15 @@
 		// Fade out viewer
 		viewingSprite = null;
 
-		// Wait for fade out, then show browser and scroll to top
+		// Wait for fade out, then show browser and scroll to sprite cards
 		setTimeout(() => {
 			showBrowser = true;
-			// Scroll to top instantly
+			// Scroll to sprite container to center it in viewport
 			setTimeout(() => {
-				window.scrollTo(0, 0);
+				const spriteContainer = document.getElementById('hello');
+				if (spriteContainer) {
+					spriteContainer.scrollIntoView({ behavior: 'auto', block: 'center' });
+				}
 			}, 50);
 		}, 50);
 
@@ -642,13 +646,16 @@
 
 	function handlePopState(event: PopStateEvent) {
 		if (viewingSprite && !event.state?.spriteViewer) {
-			// User pressed back button, close viewer and scroll to top
+			// User pressed back button, close viewer and scroll to sprite cards
 			viewingSprite = null;
 			setTimeout(() => {
 				showBrowser = true;
-				// Scroll to top instantly
+				// Scroll to sprite container to center it in viewport
 				setTimeout(() => {
-					window.scrollTo(0, 0);
+					const spriteContainer = document.getElementById('hello');
+					if (spriteContainer) {
+						spriteContainer.scrollIntoView({ behavior: 'auto', block: 'center' });
+					}
 				}, 50);
 			}, 50);
 		}
@@ -785,7 +792,10 @@
 <div class="sprite-page-wrapper">
 	{#if showBrowser && !viewingSprite}
 		<div class="browser-container" in:fly={{ x: -100, duration: 200 }} out:fly={{ x: -100, duration: 200 }}>
-			<div class="flex flex-col items-center justify-start p-4 md:p-8 space-y-8 w-full">
+			<!-- 3D Logo Effect - only shows on main browser view -->
+			<Logo3D text="SPRITES" />
+
+			<div class="flex flex-col items-center justify-start p-4 md:p-8 space-y-8 w-full" style="padding-top: 0px;">
 				<div class="search-section w-full">
 					<div class="search-header">
 						<div class="search-stats">

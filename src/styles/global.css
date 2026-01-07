@@ -5,6 +5,11 @@
 
 /* Font Face Declarations - Moved from main.css */
 @font-face {
+  font-family: spritelogo;
+  src: url('./fonts/Starbirl.otf');
+}
+
+@font-face {
   font-family: saira;
   src: url('./fonts/saira.ttf');
 }

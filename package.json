@@ -32,6 +32,7 @@
     "@tailwindcss/vite": "^4.1.12",
     "@tanstack/table-core": "^8.21.3",
     "@types/dotenv": "^8.2.3",
+    "@types/three": "^0.182.0",
     "astro": "^5.14.8",
     "astro-mcp": "^0.4.2",
     "class-variance-authority": "^0.7.1",
@@ -63,6 +64,7 @@
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.12",
     "text-to-svg": "^3.1.5",
+    "three": "^0.182.0",
     "typescript": "^5.9.2"
   },
   "devDependencies": {
