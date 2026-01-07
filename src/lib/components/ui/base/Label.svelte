@@ -27,8 +27,9 @@
   :global(.theme-label) {
     color: var(--font-color) !important;
     font-family: 'saira', monospace !important;
-    font-weight: 600 !important;
+    font-weight: 700 !important;
     font-size: 14px !important;
+    text-transform: none !important;
     text-shadow: 1px 0px 0 var(--bg-color), 1px 1px 0 var(--bg-color), 0px 1px 0 var(--bg-color) !important;
   }
 </style>

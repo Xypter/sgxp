@@ -11,6 +11,9 @@
     import SpriteInfo from './sprite/SpriteInfo.svelte';
     import SpriteActions from './sprite/SpriteActions.svelte';
 
+    // Import utility functions
+    import { formatDate } from '$lib/spriteUtils';
+
     // OPTIMIZATION: Simple in-memory cache for client-side related data
     // This persists across sprite views within the same session
     const clientCache = new Map();
@@ -100,9 +103,10 @@
         // Check arrays - if first item is object, assume all are populated
         const charactersPopulated = !spriteData.characters?.length || typeof spriteData.characters[0] === 'object';
         const contributorsPopulated = !spriteData.contributors?.length || typeof spriteData.contributors[0] === 'object';
+        const additionalCreditsPopulated = !spriteData.additionalCredits?.length || typeof spriteData.additionalCredits[0] === 'object';
 
         return authorPopulated && styleGamePopulated && sourceGamePopulated && sourceSeriesPopulated &&
-               sectionPopulated && charactersPopulated && contributorsPopulated;
+               sectionPopulated && charactersPopulated && contributorsPopulated && additionalCreditsPopulated;
     }
 
     // OPTIMIZATION: Populate related data using parallel fetches instead of sequential
@@ -286,6 +290,88 @@
                 }
             }
 
+            // Queue additional credits fetches if needed (these are already parallel within themselves)
+            // Additional credits have structure: { name: "...", user: ID_or_Object }
+            if (populated.additionalCredits?.length) {
+                const needsAdditionalCreditsPopulation = populated.additionalCredits.some(credit =>
+                    credit && typeof credit === 'object' && credit.user && needsPopulation(credit.user)
+                );
+
+                if (needsAdditionalCreditsPopulation) {
+                    fetchKeys.push('additionalCredits');
+                    fetchPromises.push(
+                        Promise.all(
+                            populated.additionalCredits.map(async (credit) => {
+                                // If credit is not an object or doesn't have a user field, return as-is
+                                if (!credit || typeof credit !== 'object' || !credit.user) {
+                                    return credit;
+                                }
+
+                                // If user is already populated, return as-is
+                                if (!needsPopulation(credit.user)) {
+                                    return credit;
+                                }
+
+                                // Fetch the user data
+                                const cacheKey = `users:${credit.user}`;
+                                const cached = getFromClientCache(cacheKey);
+                                if (cached) {
+                                    return { ...credit, user: cached };
+                                }
+
+                                const userData = await cachedFetch(`${API_BASE_URL}/users/${credit.user}?depth=2`, cacheKey);
+                                if (userData) {
+                                    return { ...credit, user: userData };
+                                }
+
+                                return credit;
+                            })
+                        )
+                    );
+                }
+            }
+
+            // Queue update history fetches if needed (populate updatedBy user)
+            // Update history entries have structure: { note: "...", updatedBy: ID_or_Object, timestamp: "...", previousImage: ID }
+            if (populated.updateHistory?.length) {
+                const needsUpdateHistoryPopulation = populated.updateHistory.some(entry =>
+                    entry && typeof entry === 'object' && entry.updatedBy && needsPopulation(entry.updatedBy)
+                );
+
+                if (needsUpdateHistoryPopulation) {
+                    fetchKeys.push('updateHistory');
+                    fetchPromises.push(
+                        Promise.all(
+                            populated.updateHistory.map(async (entry) => {
+                                // If entry is not an object or doesn't have an updatedBy field, return as-is
+                                if (!entry || typeof entry !== 'object' || !entry.updatedBy) {
+                                    return entry;
+                                }
+
+                                // If updatedBy is already populated, return as-is
+                                if (!needsPopulation(entry.updatedBy)) {
+                                    return entry;
+                                }
+
+                                // Fetch the user data
+                                const cacheKey = `users:${entry.updatedBy}`;
+                                const cached = getFromClientCache(cacheKey);
+                                if (cached) {
+                                    return { ...entry, updatedBy: cached };
+                                }
+
+                                const userData = await cachedFetch(`${API_BASE_URL}/users/${entry.updatedBy}?depth=2`, cacheKey);
+                                if (userData) {
+                                    return { ...entry, updatedBy: userData };
+                                }
+
+                                return entry;
+                            })
+                        )
+                    );
+                }
+            }
+
             // OPTIMIZATION: Execute all fetches in parallel
             if (fetchPromises.length > 0) {
                 const results = await Promise.all(fetchPromises);
@@ -448,6 +534,32 @@
                     {/if}
                 </div>
 
+                <!-- Update History Section -->
+                {#if sprite.updateHistory && sprite.updateHistory.length > 0}
+                    <div class="update-history-section">
+                        <div class="sprite-content-title">Update History</div>
+                        <div class="sprite-content-box">
+                            <div class="update-history-list">
+                                {#each sprite.updateHistory as update}
+                                    <div class="update-item">
+                                        <div class="update-header">
+                                            <span class="update-date">{formatDate(update.timestamp)}</span>
+                                            {#if update.updatedBy}
+                                                <span class="update-author">
+                                                    by <a href="/profile?id={update.updatedBy.id}" class="author-link">
+                                                        {update.updatedBy.displayName || update.updatedBy.username || 'Unknown'}
+                                                    </a>
+                                                </span>
+                                            {/if}
+                                        </div>
+                                        <p class="update-note">{update.note}</p>
+                                    </div>
+                                {/each}
+                            </div>
+                        </div>
+                    </div>
+                {/if}
+
                 <!-- Information Section -->
                 <SpriteInfo {sprite} />
 
@@ -512,6 +624,32 @@
                     </div>
                 {/if}
             </div>
+
+            <!-- Update History Section -->
+            {#if sprite.updateHistory && sprite.updateHistory.length > 0}
+                <div class="update-history-section">
+                    <div class="sprite-content-title">Update History</div>
+                    <div class="sprite-content-box">
+                        <div class="update-history-list">
+                            {#each sprite.updateHistory as update}
+                                <div class="update-item">
+                                    <div class="update-header">
+                                        <span class="update-date">{formatDate(update.timestamp)}</span>
+                                        {#if update.updatedBy}
+                                            <span class="update-author">
+                                                by <a href="/profile?id={update.updatedBy.id}" class="author-link">
+                                                    {update.updatedBy.displayName || update.updatedBy.username || 'Unknown'}
+                                                </a>
+                                            </span>
+                                        {/if}
+                                    </div>
+                                    <p class="update-note">{update.note}</p>
+                                </div>
+                            {/each}
+                        </div>
+                    </div>
+                </div>
+            {/if}
 
             <!-- Information Section -->
             <SpriteInfo {sprite} />
@@ -695,6 +833,65 @@
         padding: 40px;
         font-style: italic;
         opacity: 0.7;
+    }
+
+    /* Update History Section */
+    .update-history-section {
+        margin-bottom: var(--gap);
+    }
+
+    .update-history-list {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .update-item {
+        padding: 16px;
+        background: color-mix(in srgb, var(--page-color) 95%, white);
+        border-left: 3px solid var(--font-link-color);
+        border-radius: 4px;
+    }
+
+    .update-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+        font-family: 'saira', monospace;
+        font-size: 13px;
+        color: color-mix(in srgb, var(--font-color) 70%, transparent);
+    }
+
+    .update-date {
+        font-weight: 700;
+        color: var(--font-color);
+        text-shadow: 1px 0px 0 var(--bg-color), 1px 1px 0 var(--bg-color), 0px 1px 0 var(--bg-color);
+    }
+
+    .update-author {
+        color: color-mix(in srgb, var(--font-color) 70%, transparent);
+    }
+
+    .update-author :global(.author-link) {
+        color: var(--font-link-color);
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .update-author :global(.author-link):hover {
+        text-decoration: underline;
+    }
+
+    .update-note {
+        font-family: 'saira', monospace;
+        font-size: 14px;
+        color: var(--font-color);
+        line-height: 1.6;
+        margin: 0;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        text-shadow: 1px 0px 0 var(--bg-color), 1px 1px 0 var(--bg-color), 0px 1px 0 var(--bg-color);
     }
 
     /* Responsive Design */

@@ -40,7 +40,7 @@
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
-    padding: 1.5rem 0;
+    padding: 0;
     flex-wrap: wrap;
   }
 
@@ -50,16 +50,16 @@
   }
 
   .page-title {
-    font-size: 1.875rem;
+    font-size: 2.25rem;
     font-weight: 800;
     line-height: 2.25rem;
     margin: 0;
+    padding-bottom: 10px;
   }
 
   .page-description {
     font-size: 0.875rem;
     line-height: 1.25rem;
-    margin-top: 0.5rem;
     opacity: 0.8;
   }
 

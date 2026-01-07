@@ -355,7 +355,7 @@
     margin-bottom: 0;
   }
 
-  :global(.form-label) {
+  .settings-form :global(.form-label) {
     display: block;
     font-family: 'saira' !important;
     font-weight: 700 !important;

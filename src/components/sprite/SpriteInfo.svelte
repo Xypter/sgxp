@@ -197,6 +197,26 @@
       </div>
     {/if}
 
+    <!-- Additional Credits Section -->
+    {#if sprite.additionalCredits && sprite.additionalCredits.length > 0}
+      <div class="contributors-section">
+        <h4>Additional Credits</h4>
+        <div class="contributors-list">
+          {#each sprite.additionalCredits as credit}
+            <div class="contributor-item">
+              {#if credit.user}
+                <a href="/profile?id={credit.user.id}" class="contributor-link">
+                  {credit.name}
+                </a>
+              {:else}
+                <span>{credit.name}</span>
+              {/if}
+            </div>
+          {/each}
+        </div>
+      </div>
+    {/if}
+
     <!-- Description Section -->
     {#if sprite.description}
       <div class="description-section">

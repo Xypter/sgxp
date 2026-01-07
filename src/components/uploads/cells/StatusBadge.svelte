@@ -12,8 +12,8 @@
       case 'approved': return '#22c55e';
       case 'pending': return '#f59e0b';
       case 'needs_revision':
-      case 'revision': return '#ef4444';
-      case 'rejected': return '#6b7280';
+      case 'revision': return '#6b7280';
+      case 'rejected': return '#ef4444';
       default: return '#6b7280';
     }
   }

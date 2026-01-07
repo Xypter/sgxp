@@ -24,6 +24,7 @@
     sprite.status === 'revision' ||
     sprite.status === 'approved'
   );
+  const canDelete = $derived(sprite.status !== 'rejected');
 
   function handleDelete() {
     onDelete?.();
@@ -64,7 +65,7 @@
     size="sm"
     onclick={handleDelete}
     class="delete-btn"
-    disabled={isDeleting}
+    disabled={isDeleting || !canDelete}
   >
     {#if isDeleting}
       <Loader2 class="h-4 w-4 animate-spin" />

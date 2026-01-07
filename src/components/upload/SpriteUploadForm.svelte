@@ -17,6 +17,7 @@
     series?: Option[];
     sections?: Option[];
     contributors?: Option[];
+    additionalCredits?: Option[];
     characters?: Option[];
     sprite?: any;
     isEditMode?: boolean;
@@ -29,6 +30,7 @@
     series = [],
     sections = [],
     contributors = [],
+    additionalCredits = [],
     characters = [],
     sprite = null,
     isEditMode = false
@@ -39,6 +41,7 @@
   let description = $state('');
   let spriteImage = $state<File | null>(null);
   let iconImage = $state<File | null>(null);
+  let updateNote = $state('');
   let styleSourceType = $state('');
   let styleTeam = $state('');
   let styleOfficialGame = $state('');
@@ -47,6 +50,7 @@
   let section = $state('');
   let selectedCharacters = $state<string[]>([]);
   let selectedContributors = $state<string[]>([]);
+  let selectedAdditionalCredits = $state<string[]>([]);
 
   // Terms of Use
   let contactForPermissions = $state(false);
@@ -100,6 +104,7 @@
     description: 'Description',
     spriteImage: 'Sprite Sheet Image',
     iconImage: 'Icon Image',
+    updateNote: 'Update Note',
     styleSourceType: 'Style Source Type',
     styleTeam: 'Project Team',
     styleOfficialGame: 'Official Game',
@@ -124,6 +129,9 @@
 
   // Show characters for section ID 1 (Official Characters) or 13 (Fan Characters)
   const showCharacters = $derived(section === '1' || section === '13');
+
+  // Show update note field when editing and a new sprite image is selected
+  const showUpdateNote = $derived(isEditMode && spriteImage !== null);
 
   // Filter characters based on section type
   const filteredCharacters = $derived(
@@ -623,6 +631,12 @@
         );
       }
 
+      if (sprite.additionalCredits && Array.isArray(sprite.additionalCredits)) {
+        selectedAdditionalCredits = sprite.additionalCredits.map((c: any) =>
+          typeof c === 'object' ? c.id.toString() : c.toString()
+        );
+      }
+
       // Handle terms of use
       if (sprite.termsOfUse) {
         contactForPermissions = sprite.termsOfUse.contactForPermissions || false;
@@ -647,7 +661,8 @@
       styleSeries: styleSeries || '(empty)',
       section: section || '(empty)',
       selectedCharacters,
-      selectedContributors
+      selectedContributors,
+      selectedAdditionalCredits
     });
 
     if (!title.trim()) {
@@ -669,6 +684,13 @@
 
     if (!isEditMode && !iconImage) {
       newErrors.iconImage = 'Icon image is required';
+    }
+
+    // Update note is required when editing and changing the sprite image
+    if (isEditMode && spriteImage && !updateNote.trim()) {
+      newErrors.updateNote = 'Update note is required when changing the sprite sheet image';
+    } else if (updateNote.length > 1000) {
+      newErrors.updateNote = 'Update note must be 1000 characters or less';
     }
 
     if (!styleSourceType) {
@@ -740,6 +762,10 @@
       // In edit mode, if no new file is selected, the backend will keep the existing image
       if (spriteImage) {
         formData.append('image', spriteImage);
+        // If editing and changing the image, include the update note
+        if (isEditMode && updateNote.trim()) {
+          formData.append('updateNote', updateNote.trim());
+        }
       }
       if (iconImage) {
         formData.append('iconImage', iconImage);
@@ -776,6 +802,11 @@
       // Contributors
       if (selectedContributors.length > 0) {
         formData.append('contributors', JSON.stringify(selectedContributors));
+      }
+
+      // Additional Credits
+      if (selectedAdditionalCredits.length > 0) {
+        formData.append('additionalCredits', JSON.stringify(selectedAdditionalCredits));
       }
 
       // Determine endpoint and method based on edit mode
@@ -922,6 +953,23 @@
           maxHeight={71}
         />
       </div>
+
+      {#if showUpdateNote}
+        <div class="update-note-section">
+          <FormTextarea
+            themed
+            label="Update Note"
+            name="updateNote"
+            bind:value={updateNote}
+            placeholder="Describe what changed in this update (e.g., 'Fixed transparency issues and improved color palette')"
+            rows={3}
+            required
+            maxLength={1000}
+            error={errors.updateNote}
+            helperText="Required when changing the sprite sheet image. Describe what you changed or improved."
+          />
+        </div>
+      {/if}
     </div>
   </div>
 
@@ -1061,7 +1109,26 @@
     </div>
   </div>
 
-  <!-- Section 6: Terms of Use -->
+  <!-- Section 6: Additional Credits -->
+  <div class="form-section">
+    <div class="main-content-title">Additional Credits</div>
+    <div class="main-content-box">
+      <div class="form-grid">
+        <MultiSelect
+          themed
+          label="Additional Credits"
+          name="additionalCredits"
+          options={additionalCredits}
+          bind:value={selectedAdditionalCredits}
+          placeholder="Select additional credits"
+          helperText="Credit people who should be acknowledged but didn't directly contribute (optional)"
+          onAddNew={openContributorSheet}
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 7: Terms of Use -->
   <div class="form-section">
     <div class="main-content-title">Terms of Use</div>
     <div class="main-content-box">
@@ -1561,5 +1628,12 @@
     margin-bottom: 16px;
     line-height: 1.5;
     text-shadow: 1px 0px 0 var(--bg-color), 1px 1px 0 var(--bg-color), 0px 1px 0 var(--bg-color);
+  }
+
+  /* Update Note Section */
+  .update-note-section {
+    margin-top: var(--gap);
+    padding-top: var(--gap);
+    border-top: 2px solid color-mix(in srgb, var(--page-color) 80%, white);
   }
 </style>
