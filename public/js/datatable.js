@@ -979,6 +979,9 @@ var table = $('#example').DataTable({
     }
 });
 
+// Expose dataSet globally for the Svelte component
+window.dataSet = dataSet;
+
 
 
 

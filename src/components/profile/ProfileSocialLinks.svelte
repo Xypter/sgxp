@@ -192,4 +192,26 @@
     opacity: 0.5;
     margin: 0;
   }
+
+  @media (max-width: 768px) {
+    .profile-social-title {
+      border-left: none !important;
+      border-right: none !important;
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
+      padding-left: 1rem !important;
+      padding-right: 1rem !important;
+      box-shadow: none !important;
+    }
+
+    .profile-social-box {
+      border-left: none !important;
+      border-right: none !important;
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
+      box-shadow: none !important;
+    }
+  }
 </style>

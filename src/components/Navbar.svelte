@@ -1067,8 +1067,8 @@ async function checkAuthStatus(): Promise<void> {
           class="no-theme-styles"
           style="
             color: var(--font-color);
-            font-family: logo;
-            font-size: 28px;
+            font-family: spritelogo;
+            font-size: 24px;
             text-shadow: 
             -2px -2px 0 var(--bg-color), 
             0px -2px 0 var(--bg-color), 
@@ -1100,12 +1100,12 @@ async function checkAuthStatus(): Promise<void> {
 
       <!-- Scrollable content -->
       <div class="overflow-y-auto" style="max-height: calc(100vh - 57px);">
-        <div class="px-3 py-3">
+        <div class="px-3">
           <!-- User section -->
           {#if isLoggedIn && user}
             <div class="pb-4 mb-4 border-b" style="border-color: rgba(255,255,255,0.1);">
               <div class="flex items-center gap-3 px-3 mb-2">
-                <span style="color: var(--font-color); font-family: saira; font-size: 28px; font-weight: 900;">
+                <span style="color: var(--font-color); font-family: saira; font-size: 20px; font-weight: 900;">
                   {getUserDisplayName(user)}
                 </span>
               </div>

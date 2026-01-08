@@ -389,9 +389,29 @@
     }
   }
 
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     .stats-grid {
       grid-template-columns: 1fr 1fr;
+    }
+
+    .profile-stats-title {
+      border-left: none !important;
+      border-right: none !important;
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
+      padding-left: 1rem !important;
+      padding-right: 1rem !important;
+      box-shadow: none !important;
+    }
+
+    .profile-stats-box {
+      border-left: none !important;
+      border-right: none !important;
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
+      box-shadow: none !important;
     }
   }
 </style>

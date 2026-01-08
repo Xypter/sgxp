@@ -342,6 +342,8 @@
             // Scale factor determines sensitivity (0.01 = 1% zoom per pixel)
             const scaleFactor = 0.01;
             let newZoom = initialPinchZoom + (distanceChange * scaleFactor);
+            // Round to nearest integer for cleaner zoom levels (1x, 2x, 3x, etc.)
+            newZoom = Math.round(newZoom);
             newZoom = Math.max(1, Math.min(25, newZoom));
 
             if (newZoom !== zoom) {

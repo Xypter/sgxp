@@ -415,7 +415,7 @@
         </div>
 
         <!-- Banner Image Section -->
-        <div class="form-section">
+        <div class="form-section banner-section">
           <h3 class="section-title">Banner Image</h3>
           <div class="banner-upload-area">
             {#if bannerPreview}
@@ -815,11 +815,26 @@
   }
 
   /* Responsive */
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
+    .modal-overlay {
+      padding: 0;
+    }
+
     .modal-content {
       max-height: 100vh;
       height: 100vh;
       max-width: 100%;
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    .modal-header {
+      border-left: none !important;
+      border-right: none !important;
+    }
+
+    .modal-body {
+      padding: 15px;
     }
 
     .profile-picture-upload-area {
@@ -827,11 +842,35 @@
       align-items: flex-start;
     }
 
+    .banner-section {
+      display: none !important;
+    }
+
     .social-link-fields {
       flex-direction: column;
+      width: 100%;
     }
 
     .field-group {
+      width: 100%;
+    }
+
+    .field-group :global(select),
+    .field-group :global(input) {
+      width: 100% !important;
+    }
+
+    /* Full width form elements */
+    .form-section {
+      width: 100%;
+    }
+
+    .button-group {
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .button-group :global(button) {
       width: 100%;
     }
   }

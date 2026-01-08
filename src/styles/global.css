@@ -1055,6 +1055,36 @@ body {
   .formatting-toolbar { flex-direction: column; align-items: flex-start; }
   .toolbar-buttons { width: 100%; justify-content: flex-start; }
 
+  /* Sprite content boxes - full width on mobile with no left/right borders */
+  .sprite-content-title,
+  .sprite-info-title,
+  .sprite-comments-title {
+    border-left: none !important;
+    border-right: none !important;
+    width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+    margin-right: calc(-50vw + 50%) !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    box-shadow: none !important;
+  }
+
+  .sprite-content-box,
+  .sprite-info-content,
+  .sprite-comments-content {
+    border-left: none !important;
+    border-right: none !important;
+    width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+    margin-right: calc(-50vw + 50%) !important;
+    box-shadow: none !important;
+  }
+
+  .sprite-info-section,
+  .sprite-comments-section {
+    width: 100%;
+  }
+
   /* Individual comment cards full width on mobile with no left/right borders */
   .comment-form-card, .comment-card, .reply-card {
     border-left: none !important;

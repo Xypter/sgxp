@@ -1,5 +1,6 @@
 ---
 import FrontPageLayout from "../layouts/FrontPageLayout.astro";
+import SmackJeevesArchive from "../components/SmackJeevesArchive.svelte";
 import "../styles/comic.css";
 import "../styles/datatable.css";
 import "../styles/searchPanes.dataTables.css";
@@ -8,7 +9,7 @@ import "../styles/dataTables.dataTables.css";
 
 <FrontPageLayout title="Smack Jeeves Archive">
   <link href="https://cdn.datatables.net/select/2.1.0/css/select.dataTables.css" rel="stylesheet">
-  <link href="https://cdn.datatables.net/responsive/3.0.3/css/responsive.dataTables.css" rel="stylesheet">  
+  <link href="https://cdn.datatables.net/responsive/3.0.3/css/responsive.dataTables.css" rel="stylesheet">
   <script type="text/javascript" is:inline src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script type="text/javascript" is:inline src="https://cdn.datatables.net/2.1.8/js/dataTables.js"></script>
   <script type="text/javascript" is:inline src="https://cdn.datatables.net/searchpanes/2.3.3/js/dataTables.searchPanes.js"></script>
@@ -17,19 +18,83 @@ import "../styles/dataTables.dataTables.css";
   <script type="text/javascript" is:inline src="https://cdn.datatables.net/select/2.1.0/js/select.dataTables.js"></script>
   <script type="text/javascript" is:inline src="https://cdn.datatables.net/responsive/3.0.3/js/dataTables.responsive.js"></script>
   <script type="text/javascript" is:inline src="https://cdn.datatables.net/responsive/3.0.3/js/responsive.dataTables.js"></script>
-        <div class="comic-container">
-          <div class="smackjeeves-content-title">Smack Jeeves Archive</div>
-          <div class="comic-content" style="padding:20px">
-            <div class="smackjeeves-content-box">Welcome to this archive, a sanctuary for comics and their original user comments, preserved from a now-vanished website. The thoughts and views expressed in these works belong solely to their creators. They do not, in any way, reflect the opinions or beliefs of this website or its keeper.
-              <br>
-              <br>
-              This collection exists to honor history, to educate, and perhaps even to entertain. It is not an endorsement but a preservation of voices from another time. So, as you journey through these pages, remember: discretion is your guide. Take what you will, leave what you must, and understand it for what it is—a glimpse into the past.</div>
-              <div class="container ignore-main">
-                <table id="example" class="display nowrap" width="100%">
-                    
-                </table>
-              </div>
+
+  <!-- Desktop View (DataTables) -->
+  <div class="desktop-view">
+    <div class="comic-container">
+      <div class="smackjeeves-content-title">Smack Jeeves Archive</div>
+      <div class="comic-content" style="padding:20px">
+        <div class="smackjeeves-content-box">Welcome to this archive, a sanctuary for comics and their original user comments, preserved from a now-vanished website. The thoughts and views expressed in these works belong solely to their creators. They do not, in any way, reflect the opinions or beliefs of this website or its keeper.
+          <br>
+          <br>
+          This collection exists to honor history, to educate, and perhaps even to entertain. It is not an endorsement but a preservation of voices from another time. So, as you journey through these pages, remember: discretion is your guide. Take what you will, leave what you must, and understand it for what it is—a glimpse into the past.</div>
+          <div class="container ignore-main">
+            <table id="example" class="display nowrap" width="100%">
+
+            </table>
           </div>
-        </div> 
-        <script type="text/javascript" is:inline src="/js/datatable.js"></script>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile View (Svelte Component) -->
+  <div class="mobile-view">
+    <div class="mobile-logo">SMACK JEEVES ARCHIVE</div>
+    <SmackJeevesArchive client:only="svelte" />
+  </div>
+
+  <script type="text/javascript" is:inline src="/js/datatable.js"></script>
 </FrontPageLayout>
+
+<style>
+  .desktop-view {
+    display: block;
+  }
+
+  .mobile-view {
+    display: none;
+  }
+
+  @media (max-width: 768px) {
+    .desktop-view {
+      display: none;
+    }
+
+    .mobile-view {
+      display: block;
+    }
+
+    .mobile-logo {
+      color: var(--font-color);
+      font-family: spritelogo;
+      font-size: 10vw;
+      text-align: center;
+      padding: 20px 0;
+      text-shadow:
+        -2px -2px 0 var(--bg-color),
+        0px -2px 0 var(--bg-color),
+        2px -2px 0 var(--bg-color),
+        2px 0px 0 var(--bg-color),
+        2px 2px 0 var(--bg-color),
+        0px 2px 0 var(--bg-color),
+        -2px 2px 0 var(--bg-color),
+        -2px 0px 0 var(--bg-color);
+    }
+
+    .mobile-intro-box {
+      background: var(--page-color);
+      padding: 15px;
+      font-family: 'saira';
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--font-color);
+      border-left: none !important;
+      border-right: none !important;
+      border-top: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+      border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
+    }
+  }
+</style>

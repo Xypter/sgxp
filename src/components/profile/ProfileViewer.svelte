@@ -546,11 +546,13 @@
     }
   }
 
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     .profile-top-section {
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: -40px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 15px;
+      padding-left: 0;
     }
 
     .profile-avatar {
@@ -564,31 +566,50 @@
 
     .profile-identity {
       flex: 1;
-      min-width: 200px;
+      width: 100%;
+      min-width: 0;
     }
 
     .profile-name {
       font-size: 24px;
-      max-width: 280px;
+      max-width: 100%;
+      margin: -10px 0 -14px 0px;
     }
 
     .profile-username {
       font-size: 16px;
+      margin: -3px 0 0px 0px;
     }
 
     .edit-profile-btn {
       margin-left: 0;
       width: 100%;
       justify-content: center;
-      order: 3;
     }
 
     .profile-header {
-      padding: 60px 15px 15px 15px;
+      display: none;
     }
 
-    .profile-header-banner {
-      width: 100%;
+    /* Full width profile content boxes on mobile */
+    .profile-content-title {
+      border-left: none !important;
+      border-right: none !important;
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
+      padding-left: 1rem !important;
+      padding-right: 1rem !important;
+      box-shadow: none !important;
+    }
+
+    .profile-content-box {
+      border-left: none !important;
+      border-right: none !important;
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
+      box-shadow: none !important;
     }
   }
 </style>

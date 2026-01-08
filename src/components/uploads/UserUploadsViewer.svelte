@@ -60,6 +60,9 @@
   let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 10 });
   let sorting = $state<SortingState>([{ id: 'createdAt', desc: true }]);
 
+  // Computed values
+  let pageCount = $derived(Math.ceil(totalSprites / pagination.pageSize));
+
   // Fetch sprites
   async function fetchSprites() {
     if (!user?.id) return;
@@ -316,7 +319,80 @@
         </a>
       </div>
     {:else}
-      <DataTable {table} themed showPagination emptyMessage="No sprites found." />
+      <!-- Desktop Table View -->
+      <div class="desktop-table">
+        <DataTable {table} themed showPagination emptyMessage="No sprites found." />
+      </div>
+
+      <!-- Mobile Card View -->
+      <div class="mobile-cards">
+        {#each sprites as sprite (sprite.id)}
+          <div class="upload-card">
+            <div class="upload-card-header">
+              {#if sprite.iconImage?.url}
+                <img src={sprite.iconImage.url} alt={sprite.title} class="upload-card-icon" />
+              {:else}
+                <div class="upload-card-icon-placeholder">
+                  <span>No Icon</span>
+                </div>
+              {/if}
+              <div class="upload-card-title-section">
+                {#if sprite.status === 'approved'}
+                  <a href="/sprites/{sprite.id}" class="upload-card-title-link">{sprite.title}</a>
+                {:else}
+                  <h3 class="upload-card-title">{sprite.title}</h3>
+                {/if}
+                <div class="upload-card-meta">
+                  <span class="upload-card-section">{sprite.section?.name || 'N/A'}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="upload-card-details">
+              <div class="upload-card-detail">
+                <span class="detail-label">Status:</span>
+                <StatusBadge status={sprite.status} />
+              </div>
+              <div class="upload-card-detail">
+                <span class="detail-label">Submitted:</span>
+                <span class="detail-value">{formatDate(sprite.createdAt)}</span>
+              </div>
+            </div>
+
+            <div class="upload-card-actions">
+              <ActionsCell
+                sprite={sprite}
+                onViewFeedback={() => openFeedbackModal(sprite)}
+                onDelete={() => handleDeleteSprite(sprite.id)}
+                isDeleting={deletingSprite === sprite.id}
+              />
+            </div>
+          </div>
+        {/each}
+
+        <!-- Mobile Pagination -->
+        {#if pageCount > 1}
+          <div class="mobile-pagination">
+            <button
+              class="pagination-btn"
+              onclick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Previous
+            </button>
+            <span class="pagination-info">
+              Page {pagination.pageIndex + 1} of {pageCount}
+            </span>
+            <button
+              class="pagination-btn"
+              onclick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Next
+            </button>
+          </div>
+        {/if}
+      </div>
     {/if}
   </div>
 </div>
@@ -437,5 +513,209 @@
     color: var(--font-color);
     opacity: 0.7;
     font-size: 13px;
+  }
+
+  /* Desktop/Mobile Toggle */
+  .desktop-table {
+    display: block;
+  }
+
+  .mobile-cards {
+    display: none;
+  }
+
+  /* Mobile Card Styles */
+  .upload-card {
+    background: var(--page-color);
+    border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white);
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: var(--box-shadow);
+  }
+
+  .upload-card-header {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 70%, white);
+  }
+
+  .upload-card-icon {
+    width: 60px;
+    height: 42px;
+    object-fit: contain;
+    flex-shrink: 0;
+    image-rendering: pixelated;
+  }
+
+  .upload-card-icon-placeholder {
+    width: 60px;
+    height: 42px;
+    background: color-mix(in srgb, var(--page-color) 80%, black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: var(--font-color);
+    opacity: 0.5;
+    flex-shrink: 0;
+  }
+
+  .upload-card-title-section {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .upload-card-title,
+  .upload-card-title-link {
+    font-family: 'saira';
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--font-color);
+    margin: 0 0 6px 0;
+    word-wrap: break-word;
+  }
+
+  .upload-card-title-link {
+    color: var(--font-link-color);
+    text-decoration: none;
+    display: block;
+  }
+
+  .upload-card-title-link:hover {
+    text-decoration: underline;
+  }
+
+  .upload-card-meta {
+    font-size: 12px;
+    color: var(--font-color);
+    opacity: 0.7;
+  }
+
+  .upload-card-section {
+    font-family: 'saira';
+  }
+
+  .upload-card-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .upload-card-detail {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'saira';
+    font-size: 13px;
+  }
+
+  .detail-label {
+    font-weight: 700;
+    color: var(--font-color);
+    opacity: 0.8;
+  }
+
+  .detail-value {
+    color: var(--font-color);
+  }
+
+  .upload-card-actions {
+    display: flex;
+    justify-content: flex-start;
+  }
+
+  /* Mobile Pagination */
+  .mobile-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 15px;
+    background: var(--page-color);
+    border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white);
+    box-shadow: var(--box-shadow);
+    margin-top: 15px;
+  }
+
+  .pagination-btn {
+    padding: 8px 16px;
+    background: var(--font-link-color);
+    color: white;
+    border: none;
+    font-family: 'saira';
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .pagination-btn:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--font-link-color) 80%, white);
+  }
+
+  .pagination-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .pagination-info {
+    font-family: 'saira';
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--font-color);
+    white-space: nowrap;
+  }
+
+  /* Mobile Styles */
+  @media (max-width: 768px) {
+    .desktop-table {
+      display: none;
+    }
+
+    .mobile-cards {
+      display: block;
+    }
+
+    .main-content-title {
+      border-left: none !important;
+      border-right: none !important;
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
+      padding-left: 1rem !important;
+      padding-right: 1rem !important;
+      box-shadow: none !important;
+    }
+
+    .main-content-box {
+      border-left: none !important;
+      border-right: none !important;
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
+      box-shadow: none !important;
+    }
+
+    .upload-card,
+    .mobile-pagination {
+      border-left: none !important;
+      border-right: none !important;
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
+      box-shadow: none !important;
+    }
+
+    .pagination-btn {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    .pagination-info {
+      font-size: 12px;
+    }
   }
 </style>

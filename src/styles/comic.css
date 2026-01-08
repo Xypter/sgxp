@@ -398,24 +398,63 @@ body {
       margin-bottom: 15px !important;
       border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 70%, white) !important;
       background: color-mix(in srgb, var(--page-color) 95%, white) !important;
-      padding: 10px !important;
+      padding: 15px !important;
     }
 
     table.dataTable tbody td {
-      display: block !important;
-      text-align: left !important;
-      padding: 8px 10px !important;
-      border: none !important;
-      position: relative !important;
-      padding-left: 50% !important;
+      display: none !important;
     }
 
-    table.dataTable tbody td:before {
-      content: attr(data-label) !important;
-      position: absolute !important;
-      left: 10px !important;
+    /* Only show Title (index 2), Rating (index 8), and Link (index 10) on mobile */
+    table.dataTable tbody td:nth-child(3),
+    table.dataTable tbody td:nth-child(9),
+    table.dataTable tbody td:nth-child(11) {
+      display: block !important;
+      text-align: left !important;
+      padding: 8px 0px !important;
+      border: none !important;
+      position: relative !important;
+      word-wrap: break-word !important;
+      overflow-wrap: break-word !important;
+    }
+
+    /* Title styling - larger and prominent */
+    table.dataTable tbody td:nth-child(3) {
+      font-size: 16px !important;
       font-weight: 700 !important;
       color: var(--font-link-color) !important;
+      margin-bottom: 8px !important;
+      padding-right: 0 !important;
+    }
+
+    /* Rating styling */
+    table.dataTable tbody td:nth-child(9) {
+      font-size: 14px !important;
+      color: var(--font-color) !important;
+      opacity: 0.8 !important;
+      margin-bottom: 8px !important;
+    }
+
+    table.dataTable tbody td:nth-child(9):before {
+      content: "Rating: " !important;
+      font-weight: 700 !important;
+      color: var(--font-link-color) !important;
+    }
+
+    /* Link styling - button-like */
+    table.dataTable tbody td:nth-child(11) a {
+      display: inline-block !important;
+      padding: 8px 16px !important;
+      background: var(--font-link-color) !important;
+      color: var(--page-color) !important;
+      border-radius: 4px !important;
+      text-decoration: none !important;
+      font-weight: 700 !important;
+      transition: all 0.2s ease !important;
+    }
+
+    table.dataTable tbody td:nth-child(11) a:hover {
+      background: color-mix(in srgb, var(--font-link-color) 80%, white) !important;
     }
 
     /* DataTables controls */
