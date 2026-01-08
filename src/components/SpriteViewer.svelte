@@ -914,5 +914,63 @@
         .sprite-sheet-section {
             padding: 15px;
         }
+
+        /* Full width boxes with no left/right borders on mobile */
+        :global(.sprite-content-title),
+        .sprite-viewer-header :global(.sprite-content-title) {
+            border-left: none !important;
+            border-right: none !important;
+            width: 100vw !important;
+            margin-left: calc(-50vw + 50%) !important;
+            margin-right: calc(-50vw + 50%) !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+
+        :global(.sprite-content-box),
+        .sprite-sheet-section,
+        .update-history-section :global(.sprite-content-box) {
+            border-left: none !important;
+            border-right: none !important;
+            width: 100vw !important;
+            margin-left: calc(-50vw + 50%) !important;
+            margin-right: calc(-50vw + 50%) !important;
+            box-shadow: none !important;
+        }
+
+        /* Sprite sheet section specifically */
+        .sprite-sheet-section {
+            border-left: none !important;
+            border-right: none !important;
+            width: 100vw !important;
+            margin-left: calc(-50vw + 50%) !important;
+            margin-right: calc(-50vw + 50%) !important;
+            box-shadow: none !important;
+            padding: 15px 1rem !important;
+        }
+
+        /* Sprite info section (Information) */
+        :global(.sprite-info-section),
+        :global(.sprite-info-title),
+        :global(.sprite-info-content) {
+            border-left: none !important;
+            border-right: none !important;
+            width: 100vw !important;
+            margin-left: calc(-50vw + 50%) !important;
+            margin-right: calc(-50vw + 50%) !important;
+            box-shadow: none !important;
+        }
+
+        /* Comments section */
+        :global(.sprite-comments-section),
+        :global(.sprite-comments-title),
+        :global(.sprite-comments-content) {
+            border-left: none !important;
+            border-right: none !important;
+            width: 100vw !important;
+            margin-left: calc(-50vw + 50%) !important;
+            margin-right: calc(-50vw + 50%) !important;
+            box-shadow: none !important;
+        }
     }
 </style>

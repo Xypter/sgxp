@@ -792,8 +792,30 @@
 <div class="sprite-page-wrapper">
 	{#if showBrowser && !viewingSprite}
 		<div class="browser-container" in:fly={{ x: -100, duration: 200 }} out:fly={{ x: -100, duration: 200 }}>
-			<!-- 3D Logo Effect - only shows on main browser view -->
-			<Logo3D text="SPRITES" />
+			<!-- 3D Logo Effect - only shows on desktop -->
+			<div class="desktop-logo">
+				<Logo3D text="SPRITES" />
+			</div>
+
+			<!-- Mobile Logo - simple text -->
+			<div class="mobile-logo" style="
+				color: var(--font-color);
+				font-family: spritelogo;
+				font-size: 10vw;
+				text-align: center;
+				padding: 20px 0;
+				text-shadow:
+					-2px -2px 0 var(--bg-color),
+					0px -2px 0 var(--bg-color),
+					2px -2px 0 var(--bg-color),
+					2px 0px 0 var(--bg-color),
+					2px 2px 0 var(--bg-color),
+					0px 2px 0 var(--bg-color),
+					-2px 2px 0 var(--bg-color),
+					-2px 0px 0 var(--bg-color)
+			">
+				SPRITES
+			</div>
 
 			<div class="flex flex-col items-center justify-start p-4 md:p-8 space-y-8 w-full" style="padding-top: 0px;">
 				<div class="search-section w-full">
@@ -1139,6 +1161,68 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: flex-start;
+	}
+
+	/* Logo visibility control */
+	.desktop-logo {
+		display: block;
+	}
+
+	.mobile-logo {
+		display: none;
+	}
+
+	@media (max-width: 768px) {
+		.desktop-logo {
+			display: none;
+		}
+
+		.mobile-logo {
+			display: block;
+		}
+
+		/* Full width boxes with no left/right borders on mobile */
+		:global(.sprite-container-title),
+		:global(.sprite-content-title) {
+			border-left: none !important;
+			border-right: none !important;
+			width: 100vw !important;
+			margin-left: calc(-50vw + 50%) !important;
+			margin-right: calc(-50vw + 50%) !important;
+			padding-left: 1rem !important;
+			padding-right: 1rem !important;
+		}
+
+		:global(.sprite-content-box),
+		:global(.sprite-container),
+		:global(.sprite-sheet-section),
+		:global(.search-section) {
+			border-left: none !important;
+			border-right: none !important;
+			width: 100vw !important;
+			margin-left: calc(-50vw + 50%) !important;
+			margin-right: calc(-50vw + 50%) !important;
+			box-shadow: none !important;
+		}
+
+		/* Ensure pagination controls and sprite card area stay within bounds and full width */
+		:global(.sprite-container-group) {
+			width: 100vw !important;
+			margin-left: calc(-50vw + 50%) !important;
+			margin-right: calc(-50vw + 50%) !important;
+			overflow: hidden;
+		}
+
+		/* Pagination container should be full width with no borders on sides */
+		:global(.sprite-container-group) > div:has(:global([data-pagination-root])),
+		:global(.sprite-container-group) > div {
+			border-left: none !important;
+			border-right: none !important;
+			width: 100vw !important;
+			margin-left: calc(-50vw + 50%) !important;
+			margin-right: calc(-50vw + 50%) !important;
+			box-shadow: none !important;
+		}
 	}
 
 	/* Search Input Styling */

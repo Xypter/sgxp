@@ -242,8 +242,9 @@ async function checkAuthStatus(): Promise<void> {
 });
 </script>
 
+<!-- Desktop navbar - completely hidden on mobile -->
 <nav
-  class="sticky top-0 flex items-center justify-between border-b z-50"
+  class="sticky top-0 items-center justify-between border-b z-50"
   style="
     background-color: var(--page-color);
     border-bottom-color: color-mix(in srgb, var(--page-color) 80%, white);
@@ -1024,529 +1025,258 @@ async function checkAuthStatus(): Promise<void> {
     </div>
   </div>
 
-  <div class="flex md:hidden items-center justify-between w-full mx-4 ">
-    <div
-      class="cursor-pointer transition-opacity duration-200 no-theme-styles"
+</nav>
+
+<!-- Mobile: Floating hamburger button only - completely separate from navbar -->
+<div class="md:hidden fixed top-3 right-3 z-50">
+  <Sheet.Root bind:open={isMobileMenuOpen}>
+    <Sheet.Trigger
+      class="no-theme-styles p-2.5 rounded-lg shadow-lg"
       style="
         color: var(--font-color);
-        font-family: logo;
-        font-size: 14px;
-        text-shadow:
-          -1px -1px 0 var(--bg-color),
-          0px -1px 0 var(--bg-color),
-          1px -1px 0 var(--bg-color),
-          1px 0px 0 var(--bg-color),
-          1px 1px 0 var(--bg-color),
-          0px 1px 0 var(--bg-color),
-          -1px 1px 0 var(--bg-color),
-          -1px 0px 0 var(--bg-color);
+        background-color: var(--page-color);
+        border: 1px solid rgba(255,255,255,0.2);
       "
-      onclick={() => (window.location.href = '/')}
-      role="button"
-      tabindex="0"
-      onkeydown={(e: KeyboardEvent) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          window.location.href = '/';
-        }
-      }}
     >
-      SGXP
-    </div>
-
-    <Sheet.Root bind:open={isMobileMenuOpen}>
-      <Sheet.Trigger
-        class="no-theme-styles p-2"
-        style="
-          color: var(--font-color);
-          background-color: transparent;
-          border: none;
-        "
+      <svg
+        class="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
       >
-        <svg
-          class="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width={2}
+          d="M4 6h16M4 12h16M4 18h16"
+        />
+      </svg>
+    </Sheet.Trigger>
+    <Sheet.Content
+      side="right"
+      class="no-theme-styles w-[280px] max-w-[80vw] p-0 overflow-hidden mobile-sheet-content"
+      style="
+        background-color: var(--page-color);
+        border-left: 1px solid rgba(255,255,255,0.15);
+      "
+    >
+      <!-- Header with close button -->
+      <div class="flex items-center justify-between px-4 py-3 border-b" style="border-color: rgba(255,255,255,0.15);">
+        <a
+          href="/"
+          class="no-theme-styles"
+          style="
+            color: var(--font-color);
+            font-family: logo;
+            font-size: 28px;
+            text-shadow: 
+            -2px -2px 0 var(--bg-color), 
+            0px -2px 0 var(--bg-color), 
+            2px -2px 0 var(--bg-color), 
+            2px 0px 0 var(--bg-color), 
+            2px 2px 0 var(--bg-color), 
+            0px 2px 0 var(--bg-color), 
+            -2px 2px 0 var(--bg-color), 
+            -2px 0px 0 var(--bg-color)
+          "
+          onclick={() => (isMobileMenuOpen = false)}
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width={2}
-            d="M4 6h16M4 12h16M4 18h16"
-          />
-        </svg>
-      </Sheet.Trigger>
-      <Sheet.Content
-        side="right"
-        class="no-theme-styles w-[300px] p-0"
-        style="
-          background-color: var(--page-color);
-          border: 1px solid color-mix(in srgb, var(--page-color) 80%, white);
-          color: var(--font-color);
-        "
-      >
-        <div class="flex flex-col p-6 space-y-4">
+         THE SGXP
+        </a>
+        <button
+          class="no-theme-styles p-1.5 rounded-md transition-colors"
+          style="
+            color: var(--font-color);
+            background-color: transparent;
+            border: none;
+          "
+          onclick={() => (isMobileMenuOpen = false)}
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Scrollable content -->
+      <div class="overflow-y-auto" style="max-height: calc(100vh - 57px);">
+        <div class="px-3 py-3">
+          <!-- User section -->
           {#if isLoggedIn && user}
-            <div class="pb-4 border-b" style="border-color: color-mix(in srgb, var(--page-color) 80%, white);">
-              <div class="mb-3 flex items-center" style="color: var(--font-color); font-family: nav; font-size: 16px;">
-                <img
-                  src="https://cdn.sgxp.me/img/sonic_login_icon.svg"
-                  alt="User"
-                  class="mr-2"
-                  style="
-                    padding-top: 2px;
-                  "
-                />
-                {getUserDisplayName(user)}
+            <div class="pb-4 mb-4 border-b" style="border-color: rgba(255,255,255,0.1);">
+              <div class="flex items-center gap-3 px-3 mb-2">
+                <span style="color: var(--font-color); font-family: saira; font-size: 28px; font-weight: 900;">
+                  {getUserDisplayName(user)}
+                </span>
               </div>
               <a
                 href="/profile"
-                class="block no-theme-styles py-2 px-4 rounded-md transition-colors"
-                style="
-                  color: var(--font-color);
-                  font-family: nav;
-                  font-size: 14px;
-                  text-shadow:
-                    -1px -1px 0 var(--bg-color),
-                    0px -1px 0 var(--bg-color),
-                    1px -1px 0 var(--bg-color),
-                    1px 0px 0 var(--bg-color),
-                    1px 1px 0 var(--bg-color),
-                    0px 1px 0 var(--bg-color),
-                    -1px 1px 0 var(--bg-color),
-                    -1px 0px 0 var(--bg-color);
-                "
+                class="mobile-nav-link"
                 onclick={() => (isMobileMenuOpen = false)}
-                onmouseenter={(e: MouseEvent) => {
-                  if (e.currentTarget instanceof HTMLElement) {
-                    e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
-                  }
-                }}
-                onmouseleave={(e: MouseEvent) => {
-                  if (e.currentTarget instanceof HTMLElement) {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }
-                }}
               >
                 Profile
               </a>
               <a
                 href="/profile/uploads"
-                class="block no-theme-styles py-2 px-4 rounded-md transition-colors"
-                style="
-                  color: var(--font-color);
-                  font-family: nav;
-                  font-size: 14px;
-                  text-shadow:
-                    -1px -1px 0 var(--bg-color),
-                    0px -1px 0 var(--bg-color),
-                    1px -1px 0 var(--bg-color),
-                    1px 0px 0 var(--bg-color),
-                    1px 1px 0 var(--bg-color),
-                    0px 1px 0 var(--bg-color),
-                    -1px 1px 0 var(--bg-color),
-                    -1px 0px 0 var(--bg-color);
-                "
+                class="mobile-nav-link"
                 onclick={() => (isMobileMenuOpen = false)}
-                onmouseenter={(e: MouseEvent) => {
-                  if (e.currentTarget instanceof HTMLElement) {
-                    e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
-                  }
-                }}
-                onmouseleave={(e: MouseEvent) => {
-                  if (e.currentTarget instanceof HTMLElement) {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }
-                }}
               >
                 Uploads ({uploadCount})
               </a>
-              <!-- Temporarily commented out for debugging -->
-              <!-- <a
-                href="/messages"
-                class="block no-theme-styles py-2 px-4 rounded-md transition-colors"
-                style="
-                  color: var(--font-color);
-                  font-family: nav;
-                  font-size: 14px;
-                  text-shadow:
-                    -1px -1px 0 var(--bg-color),
-                    0px -1px 0 var(--bg-color),
-                    1px -1px 0 var(--bg-color),
-                    1px 0px 0 var(--bg-color),
-                    1px 1px 0 var(--bg-color),
-                    0px 1px 0 var(--bg-color),
-                    -1px 1px 0 var(--bg-color),
-                    -1px 0px 0 var(--bg-color);
-                "
-                onclick={() => (isMobileMenuOpen = false)}
-                onmouseenter={(e: MouseEvent) => {
-                  if (e.currentTarget instanceof HTMLElement) {
-                    e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
-                  }
-                }}
-                onmouseleave={(e: MouseEvent) => {
-                  if (e.currentTarget instanceof HTMLElement) {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }
-                }}
-              >
-                Messages {#if unreadMessageCount > 0}({unreadMessageCount}){/if}
-              </a> -->
               <a
                 href="/settings"
-                class="block no-theme-styles py-2 px-4 rounded-md transition-colors"
-                style="
-                  color: var(--font-color);
-                  font-family: nav;
-                  font-size: 14px;
-                  text-shadow:
-                    -1px -1px 0 var(--bg-color),
-                    0px -1px 0 var(--bg-color),
-                    1px -1px 0 var(--bg-color),
-                    1px 0px 0 var(--bg-color),
-                    1px 1px 0 var(--bg-color),
-                    0px 1px 0 var(--bg-color),
-                    -1px 1px 0 var(--bg-color),
-                    -1px 0px 0 var(--bg-color);
-                "
+                class="mobile-nav-link"
                 onclick={() => (isMobileMenuOpen = false)}
-                onmouseenter={(e: MouseEvent) => {
-                  if (e.currentTarget instanceof HTMLElement) {
-                    e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
-                  }
-                }}
-                onmouseleave={(e: MouseEvent) => {
-                  if (e.currentTarget instanceof HTMLElement) {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }
-                }}
               >
                 Settings
               </a>
               <button
-                class="block w-full text-left no-theme-styles py-2 px-4 rounded-md transition-colors"
-                style="
-                  color: var(--font-color);
-                  background-color: transparent;
-                  border: none;
-                  font-family: nav;
-                  font-size: 14px;
-                  text-shadow:
-                    -1px -1px 0 var(--bg-color),
-                    0px -1px 0 var(--bg-color),
-                    1px -1px 0 var(--bg-color),
-                    1px 0px 0 var(--bg-color),
-                    1px 1px 0 var(--bg-color),
-                    0px 1px 0 var(--bg-color),
-                    -1px 1px 0 var(--bg-color),
-                    -1px 0px 0 var(--bg-color);
-                "
-                onclick={() => {
-                  isMobileMenuOpen = false;
-                  handleLogout();
-                }}
-                onmouseenter={(e: MouseEvent) => {
-                  if (e.currentTarget instanceof HTMLElement) {
-                    e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
-                  }
-                }}
-                onmouseleave={(e: MouseEvent) => {
-                  if (e.currentTarget instanceof HTMLElement) {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }
-                }}
+                class="mobile-nav-link w-full text-left"
+                style="border: none; background: transparent;"
+                onclick={() => { isMobileMenuOpen = false; handleLogout(); }}
               >
                 Logout
               </button>
+              <a
+                href="/upload"
+                class="mobile-nav-link-accent"
+                onclick={() => (isMobileMenuOpen = false)}
+              >
+                Upload Sprite
+              </a>
             </div>
           {:else}
-            <Button
-              variant="ghost"
-              class={cn(
-                "h-12 px-4 font-medium no-theme-styles w-full justify-start"
-              )}
-              style="
-                color: var(--font-color);
-                background-color: transparent;
-                font-family: nav;
-                font-size: 16px;
-                text-shadow:
-                  -1px -1px 0 var(--bg-color),
-                  0px -1px 0 var(--bg-color),
-                  1px -1px 0 var(--bg-color),
-                  1px 0px 0 var(--bg-color),
-                  1px 1px 0 var(--bg-color),
-                  0px 1px 0 var(--bg-color),
-                  -1px 1px 0 var(--bg-color),
-                  -1px 0px 0 var(--bg-color);
-              "
-              onmouseenter={(e: MouseEvent) => {
-                if (e.currentTarget instanceof HTMLElement) {
-                  e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
-                }
-              }}
-              onmouseleave={(e: MouseEvent) => {
-                if (e.currentTarget instanceof HTMLElement) {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }
-              }}
-              onclick={() => {
-                isMobileMenuOpen = false;
-                window.location.href = '/login';
-              }}
-            >
-              <img
-                src="https://cdn.sgxp.me/img/sonic_login_icon.svg"
-                alt="Login"
-                class="mr-2"
-                style="
-                  padding-top: 2px;
-                "
-              />
-              Login
-            </Button>
-          {/if}
-          <a
-            href="/"
-            class="block no-theme-styles py-2 px-4 rounded-md transition-colors"
-            style="
-              color: var(--font-color);
-              font-family: nav;
-              font-size: 14px;
-              text-shadow:
-                -1px -1px 0 var(--bg-color),
-                0px -1px 0 var(--bg-color),
-                1px -1px 0 var(--bg-color),
-                1px 0px 0 var(--bg-color),
-                1px 1px 0 var(--bg-color),
-                0px 1px 0 var(--bg-color),
-                -1px 1px 0 var(--bg-color),
-                -1px 0px 0 var(--bg-color);
-            "
-            onclick={() => (isMobileMenuOpen = false)}
-            onmouseenter={(e: MouseEvent) => {
-              if (e.currentTarget instanceof HTMLElement) {
-                e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
-              }
-            }}
-            onmouseleave={(e: MouseEvent) => {
-              if (e.currentTarget instanceof HTMLElement) {
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }
-            }}
-          >
-            News
-          </a>
-          <a
-            href="/sprites"
-            class="block no-theme-styles py-2 px-4 rounded-md transition-colors"
-            style="
-              color: var(--font-color);
-              font-family: nav;
-              font-size: 14px;
-              text-shadow:
-                -1px -1px 0 var(--bg-color),
-                0px -1px 0 var(--bg-color),
-                1px -1px 0 var(--bg-color),
-                1px 0px 0 var(--bg-color),
-                1px 1px 0 var(--bg-color),
-                0px 1px 0 var(--bg-color),
-                -1px 1px 0 var(--bg-color),
-                -1px 0px 0 var(--bg-color);
-            "
-            onclick={() => (isMobileMenuOpen = false)}
-            onmouseenter={(e: MouseEvent) => {
-              if (e.currentTarget instanceof HTMLElement) {
-                e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
-              }
-            }}
-            onmouseleave={(e: MouseEvent) => {
-              if (e.currentTarget instanceof HTMLElement) {
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }
-            }}
-          >
-            Sprites
-          </a>
-          <a
-            href="/sprite-sheet-guidelines"
-            class="block no-theme-styles py-2 px-4 rounded-md transition-colors"
-            style="
-              color: var(--font-color);
-              font-family: nav;
-              font-size: 14px;
-              text-shadow:
-                -1px -1px 0 var(--bg-color),
-                0px -1px 0 var(--bg-color),
-                1px -1px 0 var(--bg-color),
-                1px 0px 0 var(--bg-color),
-                1px 1px 0 var(--bg-color),
-                0px 1px 0 var(--bg-color),
-                -1px 1px 0 var(--bg-color),
-                -1px 0px 0 var(--bg-color);
-            "
-            onclick={() => (isMobileMenuOpen = false)}
-            onmouseenter={(e: MouseEvent) => {
-              if (e.currentTarget instanceof HTMLElement) {
-                e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
-              }
-            }}
-            onmouseleave={(e: MouseEvent) => {
-              if (e.currentTarget instanceof HTMLElement) {
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }
-            }}
-          >
-            Sprite Sheet Guidelines
-          </a>
-          <a
-            href="/upload-guide"
-            class="block no-theme-styles py-2 px-4 rounded-md transition-colors"
-            style="
-              color: var(--font-color);
-              font-family: nav;
-              font-size: 14px;
-              text-shadow:
-                -1px -1px 0 var(--bg-color),
-                0px -1px 0 var(--bg-color),
-                1px -1px 0 var(--bg-color),
-                1px 0px 0 var(--bg-color),
-                1px 1px 0 var(--bg-color),
-                0px 1px 0 var(--bg-color),
-                -1px 1px 0 var(--bg-color),
-                -1px 0px 0 var(--bg-color);
-            "
-            onclick={() => (isMobileMenuOpen = false)}
-            onmouseenter={(e: MouseEvent) => {
-              if (e.currentTarget instanceof HTMLElement) {
-                e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
-              }
-            }}
-            onmouseleave={(e: MouseEvent) => {
-              if (e.currentTarget instanceof HTMLElement) {
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }
-            }}
-          >
-            Upload Guide
-          </a>
-          <a
-            href="/smackjeeves"
-            class="block no-theme-styles py-2 px-4 rounded-md transition-colors"
-            style="
-              color: var(--font-color);
-              font-family: nav;
-              font-size: 14px;
-              text-shadow:
-                -1px -1px 0 var(--bg-color),
-                0px -1px 0 var(--bg-color),
-                1px -1px 0 var(--bg-color),
-                1px 0px 0 var(--bg-color),
-                1px 1px 0 var(--bg-color),
-                0px 1px 0 var(--bg-color),
-                -1px 1px 0 var(--bg-color),
-                -1px 0px 0 var(--bg-color);
-            "
-            onclick={() => (isMobileMenuOpen = false)}
-            onmouseenter={(e: MouseEvent) => {
-              if (e.currentTarget instanceof HTMLElement) {
-                e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
-              }
-            }}
-            onmouseleave={(e: MouseEvent) => {
-              if (e.currentTarget instanceof HTMLElement) {
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }
-            }}
-          >
-            Smack Jeeves Archive
-          </a>
-          <a
-            href="http://old.sgxp.me"
-            class="block no-theme-styles py-2 px-4 rounded-md transition-colors"
-            target="_blank"
-            rel="noopener noreferrer"
-            style="
-              color: var(--font-color);
-              font-family: nav;
-              font-size: 14px;
-              text-shadow:
-                -1px -1px 0 var(--bg-color),
-                0px -1px 0 var(--bg-color),
-                1px -1px 0 var(--bg-color),
-                1px 0px 0 var(--bg-color),
-                1px 1px 0 var(--bg-color),
-                0px 1px 0 var(--bg-color),
-                -1px 1px 0 var(--bg-color),
-                -1px 0px 0 var(--bg-color);
-            "
-            onclick={() => (isMobileMenuOpen = false)}
-            onmouseenter={(e: MouseEvent) => {
-              if (e.currentTarget instanceof HTMLElement) {
-                e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
-              }
-            }}
-            onmouseleave={(e: MouseEvent) => {
-              if (e.currentTarget instanceof HTMLElement) {
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }
-            }}
-          >
-            Old Site
-          </a>
-          <div class="pt-4 border-t" style="border-color: color-mix(in srgb, var(--page-color) 80%, white);">
-            {#each themes as theme (theme.value)}
-              <Button
-                onclick={() => {
-                  handleThemeChange(theme.value);
-                  isMobileMenuOpen = false;
-                }}
-                class={cn(
-                  "cursor-pointer focus:outline-none no-theme-styles w-full justify-start py-2",
-                  selectedTheme === theme.value && "bg-black/30"
-                )}
-                style="
-                  padding-bottom: 10px;
-                  color: var(--font-color);
-                  font-family: nav;
-                  font-size: 16px;
-                  line-height: 12px;
-                  text-shadow:
-                    -1px -1px 0 var(--bg-color),
-                    0px -1px 0 var(--bg-color),
-                    1px -1px 0 var(--bg-color),
-                    1px 0px 0 var(--bg-color),
-                    1px 1px 0 var(--bg-color),
-                    0px 1px 0 var(--bg-color),
-                    -1px 1px 0 var(--bg-color),
-                    -1px 0px 0 var(--bg-color);
-                "
-                onmouseenter={(e: MouseEvent) => {
-                  if (selectedTheme !== theme.value) {
-                    if (e.currentTarget instanceof HTMLElement) {
-                      e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
-                    }
-                  }
-                }}
-                onmouseleave={(e: MouseEvent) => {
-                  if (selectedTheme !== theme.value) {
-                    if (e.currentTarget instanceof HTMLElement) {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }
-                  } else {
-                    if (e.currentTarget instanceof HTMLElement) {
-                      e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.3)';
-                    }
-                  }
-                }}
+            <div class="pb-4 mb-4 border-b" style="border-color: rgba(255,255,255,0.1);">
+              <a
+                href="/login"
+                class="mobile-nav-link-accent"
+                onclick={() => (isMobileMenuOpen = false)}
               >
-                {theme.label}
-              </Button>
-            {/each}
+                <img
+                  src="https://cdn.sgxp.me/img/sonic_login_icon.svg"
+                  alt="Login"
+                  class="w-5 h-5 mr-2"
+                />
+                Login / Register
+              </a>
+            </div>
+          {/if}
+
+          <!-- Navigation -->
+          <div class="mb-4">
+            <div class="mobile-nav-section-title">Navigation</div>
+            <a href="/" class="mobile-nav-link" onclick={() => (isMobileMenuOpen = false)}>News</a>
+            <a href="/sprites" class="mobile-nav-link" onclick={() => (isMobileMenuOpen = false)}>Sprites</a>
+          </div>
+
+          <!-- Community -->
+          <div class="mb-4">
+            <div class="mobile-nav-section-title">Community</div>
+            <a href="/sprite-sheet-guidelines" class="mobile-nav-link" onclick={() => (isMobileMenuOpen = false)}>Sprite Sheet Guidelines</a>
+            <a href="/upload-guide" class="mobile-nav-link" onclick={() => (isMobileMenuOpen = false)}>Upload Guide</a>
+          </div>
+
+          <!-- Archive -->
+          <div class="mb-4">
+            <div class="mobile-nav-section-title">Archive</div>
+            <a href="/smackjeeves" class="mobile-nav-link" onclick={() => (isMobileMenuOpen = false)}>Smack Jeeves</a>
+            <a href="http://old.sgxp.me" target="_blank" rel="noopener noreferrer" class="mobile-nav-link" onclick={() => (isMobileMenuOpen = false)}>
+              Old Site
+              <svg class="w-3 h-3 ml-1 inline-block opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+          </div>
+
+          <!-- Themes -->
+          <div class="pt-4 border-t" style="border-color: rgba(255,255,255,0.1);">
+            <div class="mobile-nav-section-title">Theme</div>
+            <div>
+              {#each themes as theme (theme.value)}
+                <button
+                  onclick={() => { handleThemeChange(theme.value); isMobileMenuOpen = false; }}
+                  class="mobile-nav-link w-full text-left"
+                  class:active={selectedTheme === theme.value}
+                  style="border: none; background: transparent;"
+                >
+                  {theme.label}
+                </button>
+              {/each}
+            </div>
           </div>
         </div>
-      </Sheet.Content>
-    </Sheet.Root>
-  </div>
-</nav>
+      </div>
+    </Sheet.Content>
+  </Sheet.Root>
+</div>
+
+<style>
+  /* Ensure desktop navbar is completely hidden on mobile */
+  nav {
+    display: none !important;
+  }
+
+  @media (min-width: 768px) {
+    nav {
+      display: flex !important;
+    }
+  }
+
+  /* Hide the Sheet's built-in close button (absolute positioned X in top-right) */
+  :global(.mobile-sheet-content > button:last-of-type),
+  :global(.mobile-sheet-content > button[class*="absolute"]),
+  :global(.mobile-sheet-content > button[class*="right-4"]) {
+    display: none !important;
+  }
+
+  /* Mobile navigation styles - clean, modern look */
+  :global(.mobile-nav-link) {
+    display: block;
+    padding: 8px 10px;
+    border-radius: 6px;
+    color: var(--font-color) !important;
+    font-family: saira !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    transition: background-color 0.15s ease;
+    cursor: pointer;
+    text-shadow: none;
+  }
+  :global(.mobile-nav-link:hover),
+  :global(.mobile-nav-link:active) {
+    background-color: rgba(255,255,255,0.1) !important;
+  }
+
+  :global(.mobile-nav-link.active) {
+    background-color: rgba(255,255,255,0.15) !important;
+  }
+
+  :global(.mobile-nav-link-accent) {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: 6px;
+    color: var(--font-color) !important;
+    font-family: saira !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    background-color: rgba(255,255,255,0.1);
+    transition: background-color 0.15s ease;
+    margin-top: 8px;
+  }
+  :global(.mobile-nav-link-accent:hover),
+  :global(.mobile-nav-link-accent:active) {
+    background-color: rgba(255,255,255,0.15) !important;
+  }
+
+  :global(.mobile-nav-section-title) {
+    padding: 0 10px 6px;
+    color: var(--font-color);
+    font-family: saira;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.5;
+  }
+</style>

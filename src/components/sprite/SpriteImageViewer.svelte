@@ -268,6 +268,44 @@
         isDragging = false;
     }
 
+    // Touch event handlers for mobile support
+    function handleTouchStart(event) {
+        if (event.touches.length === 1) {
+            event.preventDefault();
+            isDragging = true;
+
+            const touch = event.touches[0];
+            dragStart = {
+                x: touch.clientX,
+                y: touch.clientY,
+                imageX: imagePosition.x,
+                imageY: imagePosition.y
+            };
+        }
+    }
+
+    function handleTouchMove(event) {
+        if (isDragging && event.touches.length === 1) {
+            event.preventDefault();
+
+            const touch = event.touches[0];
+            const deltaX = touch.clientX - dragStart.x;
+            const deltaY = touch.clientY - dragStart.y;
+
+            imagePosition = {
+                x: dragStart.imageX + deltaX,
+                y: dragStart.imageY + deltaY
+            };
+        }
+    }
+
+    function handleTouchEnd(event) {
+        if (isDragging) {
+            event.preventDefault();
+        }
+        isDragging = false;
+    }
+
     function handleKeydown(event) {
         if (!isOpen) return;
 
@@ -289,16 +327,20 @@
         }
     });
 
-    // Add event listeners for mouse and keyboard
+    // Add event listeners for mouse, touch, and keyboard
     $effect(() => {
         if (isOpen) {
             document.addEventListener('mousemove', handleMouseMove);
             document.addEventListener('mouseup', handleMouseUp);
+            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+            document.addEventListener('touchend', handleTouchEnd);
             document.addEventListener('keydown', handleKeydown);
 
             return () => {
                 document.removeEventListener('mousemove', handleMouseMove);
                 document.removeEventListener('mouseup', handleMouseUp);
+                document.removeEventListener('touchmove', handleTouchMove);
+                document.removeEventListener('touchend', handleTouchEnd);
                 document.removeEventListener('keydown', handleKeydown);
             };
         }
@@ -336,6 +378,7 @@
                                 cursor: grab;
                             "
                             onmousedown={handleMouseDown}
+                            ontouchstart={handleTouchStart}
                             draggable="false"
                             loading="eager"
                             aria-label="Sprite viewer - click and drag to pan"
@@ -599,10 +642,59 @@
 
     /* Responsive Design */
     @media (max-width: 768px) {
+        /* Make viewer full width and height on mobile */
+        .viewer-modal {
+            width: 100vw;
+            height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+
+        .viewer-container {
+            width: 100vw !important;
+            height: 100vh !important;
+            margin: 0;
+            border: none !important;
+        }
+
+        .viewer-image-container {
+            width: 100%;
+            height: 100%;
+            touch-action: none; /* Prevent default touch behaviors */
+        }
+
+        /* Controls at bottom with full width and no margin */
         .viewer-controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100vw;
+            max-width: 100vw;
+            margin: 0;
+            border-radius: 0;
+            border-left: none;
+            border-right: none;
+            border-bottom: none;
+            transform: none;
             flex-wrap: wrap;
-            max-width: 90%;
             justify-content: center;
+            padding: 12px 8px;
+            gap: 6px;
+        }
+
+        /* Make control buttons slightly smaller on mobile */
+        .viewer-controls :global(button) {
+            padding: 6px !important;
+        }
+
+        .zoom-indicator {
+            min-width: 40px;
+        }
+
+        /* Hide control separators on mobile to save space */
+        .control-separator {
+            display: none;
         }
     }
 </style>

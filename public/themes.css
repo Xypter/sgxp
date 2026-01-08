@@ -577,40 +577,67 @@
 @keyframes ssz-para {
   100% {
     background-position:
-      /*tornado 2*/ left 73000px bottom 500px, 
-      /*tornado 1*/ right 77000px bottom 250px, 
-      /*mecha 2*/ left 72500px bottom 500px, 
-      /*mecha 1*/ right 76000px bottom 250px, 
+      /*tornado 2*/ left 73000px bottom 500px,
+      /*tornado 1*/ right 77000px bottom 250px,
+      /*mecha 2*/ left 72500px bottom 500px,
+      /*mecha 1*/ right 76000px bottom 250px,
       /*death egg*/ left 1000px bottom 300px,
-      /*cloud 1*/ left 10000px bottom 0px, 
-      /*cloud 2*/ left 8000px bottom 64px, 
-      /*cloud 3*/ left 6000px bottom 96px, 
-      /*cloud 4*/ left 2500px bottom 120px, 
-      /*cloud 5*/ left 2000px bottom 136px, 
+      /*cloud 1*/ left 10000px bottom 0px,
+      /*cloud 2*/ left 8000px bottom 64px,
+      /*cloud 3*/ left 6000px bottom 96px,
+      /*cloud 4*/ left 2500px bottom 120px,
+      /*cloud 5*/ left 2000px bottom 136px,
       /*cloud 6*/ left 1500px bottom 144px,
-      /*cloud 7*/ left 1000px bottom 152px, 
-      /*cloud 8*/ left 750px bottom 160px, 
-      /*cloud 9*/ left 500px bottom 192px, 
-      /*cloud 10*/ left 250px bottom 200px, 
-      /*cloud 11*/ left -1000px bottom 240px, 
+      /*cloud 7*/ left 1000px bottom 152px,
+      /*cloud 8*/ left 750px bottom 160px,
+      /*cloud 9*/ left 500px bottom 192px,
+      /*cloud 10*/ left 250px bottom 200px,
+      /*cloud 11*/ left -1000px bottom 240px,
       /*cloud 12*/ left 900px bottom 248px,
-      /*cloud 13*/ left -800px bottom 256px, 
-      /*cloud 14*/ left 600px bottom 272px, 
-      /*cloud 15*/ left -500px bottom 312px, 
-      /*cloud 16*/ left 800px bottom 320px, 
-      /*cloud 17*/ left -200px bottom 336px, 
+      /*cloud 13*/ left -800px bottom 256px,
+      /*cloud 14*/ left 600px bottom 272px,
+      /*cloud 15*/ left -500px bottom 312px,
+      /*cloud 16*/ left 800px bottom 320px,
+      /*cloud 17*/ left -200px bottom 336px,
       /*cloud 18*/ left 200px bottom 352px,
-      /*cloud 19*/ left 1000px bottom 360px, 
-      /*cloud 20*/ left 500px bottom 384px, 
-      /*cloud 21*/ left 10000px top 0px, 
-      /*cloud 22*/ left 8000px top 64px, 
-      /*cloud 23*/ left 6000px top 96px, 
+      /*cloud 19*/ left 1000px bottom 360px,
+      /*cloud 20*/ left 500px bottom 384px,
+      /*cloud 21*/ left 10000px top 0px,
+      /*cloud 22*/ left 8000px top 64px,
+      /*cloud 23*/ left 6000px top 96px,
       /*cloud 24*/ left 2500px top 120px,
-      /*cloud 25*/ left 2000px top 136px, 
-      /*cloud 26*/ left 1500px top 144px, 
-      /*cloud 27*/ left 1000px top 152px, 
-      /*cloud 28*/ left 750px top 160px, 
-      /*cloud 29*/ left 500px top 192px, 
+      /*cloud 25*/ left 2000px top 136px,
+      /*cloud 26*/ left 1500px top 144px,
+      /*cloud 27*/ left 1000px top 152px,
+      /*cloud 28*/ left 750px top 160px,
+      /*cloud 29*/ left 500px top 192px,
       /*cloud 30*/ left 250px top 200px;
+  }
+}
+
+/* =============================================================================
+   MOBILE STYLES - All themes
+   Removes animated backgrounds on mobile and uses a solid darker background
+   ============================================================================= */
+@media (max-width: 768px) {
+  /* Default/base mobile background */
+  body {
+    background-color: color-mix(in srgb, var(--page-color) 70%, black) !important;
+    background-image: none !important;
+    animation: none !important;
+  }
+
+  /* Each theme's mobile override */
+  :root[data-theme="style_v7"] body,
+  :root[data-theme="ark"] body,
+  :root[data-theme="snow"] body,
+  :root[data-theme="cozy"] body,
+  :root[data-theme="sbn"] body,
+  :root[data-theme="hpz"] body,
+  :root[data-theme="mfz"] body,
+  :root[data-theme="ssz"] body {
+    background-color: color-mix(in srgb, var(--page-color) 70%, black) !important;
+    background-image: none !important;
+    animation: none !important;
   }
 }
