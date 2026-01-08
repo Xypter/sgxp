@@ -127,12 +127,15 @@
 
 </script>
 
+<!-- Mobile News Logo - only shows on mobile -->
+<div class="mobile-news-logo">NEWS</div>
+
 {#if totalPages > 1}
-        <div style="margin-bottom: var(--gap); background-color: var(--page-color); border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white); padding: 5px; box-shadow: var(--box-shadow); position: relative; z-index: 1;">
-            <Pagination.Root 
-                count={totalPosts} 
-                perPage={postsPerPage} 
-                {siblingCount} 
+        <div class="news-pagination-wrapper" style="margin-bottom: var(--gap); background-color: var(--page-color); border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white); padding: 5px; box-shadow: var(--box-shadow); position: relative; z-index: 1;">
+            <Pagination.Root
+                count={totalPosts}
+                perPage={postsPerPage}
+                {siblingCount}
                 bind:page={currentPage}
             >
                 {#snippet children({ pages, currentPage })}

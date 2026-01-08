@@ -1152,11 +1152,6 @@ async function checkAuthStatus(): Promise<void> {
                 class="mobile-nav-link-accent"
                 onclick={() => (isMobileMenuOpen = false)}
               >
-                <img
-                  src="https://cdn.sgxp.me/img/sonic_login_icon.svg"
-                  alt="Login"
-                  class="w-5 h-5 mr-2"
-                />
                 Login / Register
               </a>
             </div>

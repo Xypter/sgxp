@@ -546,7 +546,7 @@
 	
 	.theme-compatible-login :global(.theme-button) {
 		background: var(--font-link-color);
-		color: var(--font-color);
+		color: var(--page-color);
 		border: none;
 		border-radius: 0px;
 		font-family: 'saira', monospace;
@@ -604,10 +604,29 @@
 		cursor: url('/img/Sonic_Cursor_Spin.gif'), progress;
 	}
 	
-	@media (max-width: 800px) {
+	@media (max-width: 768px) {
 		.theme-compatible-login {
 			max-width: 100%;
 			padding: 0 1rem;
+			margin-top: 2rem;
+		}
+
+		.theme-compatible-login :global(.login-card) {
+			border: none;
+			box-shadow: none;
+			background: transparent;
+		}
+
+		.theme-compatible-login :global(.theme-tab-trigger) {
+			border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+		}
+
+		.theme-compatible-login :global(.theme-tab-trigger:first-child) {
+			border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+		}
+
+		.theme-compatible-login :global(.theme-tab-trigger:last-child) {
+			border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
 		}
 	}
 </style>

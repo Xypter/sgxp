@@ -327,7 +327,110 @@ body {
     .comic-info-wrapper {
       flex-flow: column wrap;
     }
+  }
 
+  @media (max-width: 768px) {
+    .comic-container {
+      width: 100%;
+      padding: 20px 0px;
+    }
+
+    .smackjeeves-content-title {
+      border-left: none !important;
+      border-right: none !important;
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
+      padding-left: 1rem !important;
+      padding-right: 1rem !important;
+    }
+
+    .smackjeeves-content-box {
+      border-left: none !important;
+      border-right: none !important;
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
+      box-shadow: none !important;
+    }
+
+    .comic-content-title {
+      border-left: none !important;
+      border-right: none !important;
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
+      padding-left: 1rem !important;
+      padding-right: 1rem !important;
+    }
+
+    .comic-content {
+      border-left: none !important;
+      border-right: none !important;
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
+      box-shadow: none !important;
+    }
+
+    /* Make DataTables responsive on mobile */
+    .container.ignore-main {
+      border-left: none !important;
+      border-right: none !important;
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
+      padding: 0 !important;
+    }
+
+    /* DataTables mobile optimization */
+    table.dataTable {
+      width: 100% !important;
+      font-size: 12px !important;
+    }
+
+    table.dataTable thead {
+      display: none !important;
+    }
+
+    table.dataTable tbody tr {
+      display: block !important;
+      margin-bottom: 15px !important;
+      border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 70%, white) !important;
+      background: color-mix(in srgb, var(--page-color) 95%, white) !important;
+      padding: 10px !important;
+    }
+
+    table.dataTable tbody td {
+      display: block !important;
+      text-align: left !important;
+      padding: 8px 10px !important;
+      border: none !important;
+      position: relative !important;
+      padding-left: 50% !important;
+    }
+
+    table.dataTable tbody td:before {
+      content: attr(data-label) !important;
+      position: absolute !important;
+      left: 10px !important;
+      font-weight: 700 !important;
+      color: var(--font-link-color) !important;
+    }
+
+    /* DataTables controls */
+    div.dt-container .dt-paging,
+    div.dt-container .dt-info,
+    div.dt-container .dt-length,
+    div.dt-container .dt-search {
+      text-align: center !important;
+      margin: 10px 0 !important;
+    }
+
+    div.dt-container .dt-search input {
+      width: 100% !important;
+      max-width: 300px !important;
+    }
   }
 
   .chapter-select-container {

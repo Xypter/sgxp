@@ -21,6 +21,12 @@
     let showGrid = $state(false);
     let rotation = $state(0);
 
+    // Pinch-to-zoom state
+    let isPinching = $state(false);
+    let initialPinchDistance = $state(0);
+    let initialPinchZoom = $state(1);
+    let pinchCenter = $state({ x: 0, y: 0 });
+
     // Reset viewer state when opened
     function resetViewer() {
         zoom = 1;
@@ -29,6 +35,8 @@
         flipVertical = false;
         showGrid = false;
         rotation = 0;
+        isDragging = false;
+        isPinching = false;
         centerImage();
         // Prevent scrolling on both body and the sprite viewer container
         document.body.style.overflow = 'hidden';
@@ -268,9 +276,44 @@
         isDragging = false;
     }
 
+    // Helper function to calculate distance between two touch points
+    function getTouchDistance(touch1, touch2) {
+        const dx = touch2.clientX - touch1.clientX;
+        const dy = touch2.clientY - touch1.clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    // Helper function to get the center point between two touches
+    function getTouchCenter(touch1, touch2) {
+        return {
+            x: (touch1.clientX + touch2.clientX) / 2,
+            y: (touch1.clientY + touch2.clientY) / 2
+        };
+    }
+
     // Touch event handlers for mobile support
     function handleTouchStart(event) {
-        if (event.touches.length === 1) {
+        if (event.touches.length === 2) {
+            // Two fingers - start pinch zoom
+            event.preventDefault();
+            isPinching = true;
+            isDragging = false;
+
+            const touch1 = event.touches[0];
+            const touch2 = event.touches[1];
+
+            initialPinchDistance = getTouchDistance(touch1, touch2);
+            initialPinchZoom = zoom;
+
+            // Get center point of pinch relative to viewer
+            const centerPoint = getTouchCenter(touch1, touch2);
+            const viewerRect = event.currentTarget.parentElement.getBoundingClientRect();
+            pinchCenter = {
+                x: centerPoint.x - viewerRect.left - viewerRect.width / 2,
+                y: centerPoint.y - viewerRect.top - viewerRect.height / 2
+            };
+        } else if (event.touches.length === 1 && !isPinching) {
+            // One finger - start dragging
             event.preventDefault();
             isDragging = true;
 
@@ -285,7 +328,54 @@
     }
 
     function handleTouchMove(event) {
-        if (isDragging && event.touches.length === 1) {
+        if (isPinching && event.touches.length === 2) {
+            // Pinch zoom
+            event.preventDefault();
+
+            const touch1 = event.touches[0];
+            const touch2 = event.touches[1];
+
+            const currentDistance = getTouchDistance(touch1, touch2);
+            const distanceChange = currentDistance - initialPinchDistance;
+
+            // Calculate zoom level based on pinch distance
+            // Scale factor determines sensitivity (0.01 = 1% zoom per pixel)
+            const scaleFactor = 0.01;
+            let newZoom = initialPinchZoom + (distanceChange * scaleFactor);
+            newZoom = Math.max(1, Math.min(25, newZoom));
+
+            if (newZoom !== zoom) {
+                // Get mouse position relative to current image position
+                const relativeX = pinchCenter.x - imagePosition.x;
+                const relativeY = pinchCenter.y - imagePosition.y;
+
+                // Apply inverse rotation to get image space coordinates
+                const angleRad = -(rotation * Math.PI / 180);
+                const cos = Math.cos(angleRad);
+                const sin = Math.sin(angleRad);
+
+                const rotatedX = relativeX * cos - relativeY * sin;
+                const rotatedY = relativeX * sin + relativeY * cos;
+
+                // Convert to image coordinates at current zoom
+                const imagePointX = rotatedX / zoom;
+                const imagePointY = rotatedY / zoom;
+
+                // Update zoom
+                zoom = newZoom;
+
+                // Rotate the image point back to screen space at new zoom
+                const newRotatedX = imagePointX * zoom * cos + imagePointY * zoom * sin;
+                const newRotatedY = -imagePointX * zoom * sin + imagePointY * zoom * cos;
+
+                // Calculate new image position to keep the point under the pinch center
+                imagePosition = {
+                    x: pinchCenter.x - newRotatedX,
+                    y: pinchCenter.y - newRotatedY
+                };
+            }
+        } else if (isDragging && event.touches.length === 1 && !isPinching) {
+            // Single finger drag
             event.preventDefault();
 
             const touch = event.touches[0];
@@ -300,10 +390,15 @@
     }
 
     function handleTouchEnd(event) {
-        if (isDragging) {
+        if (isDragging || isPinching) {
             event.preventDefault();
         }
-        isDragging = false;
+
+        // Reset states when all fingers are lifted
+        if (event.touches.length === 0) {
+            isDragging = false;
+            isPinching = false;
+        }
     }
 
     function handleKeydown(event) {
@@ -680,16 +775,26 @@
             flex-wrap: wrap;
             justify-content: center;
             padding: 12px 8px;
-            gap: 6px;
+            gap: 8px;
         }
 
-        /* Make control buttons slightly smaller on mobile */
+        /* Make control buttons larger on mobile for better touch targets */
         .viewer-controls :global(button) {
-            padding: 6px !important;
+            padding: 10px !important;
+            min-width: 44px;
+            min-height: 44px;
+        }
+
+        /* Larger icons on mobile */
+        .viewer-controls :global(button svg) {
+            width: 20px !important;
+            height: 20px !important;
         }
 
         .zoom-indicator {
-            min-width: 40px;
+            min-width: 50px;
+            font-size: 16px;
+            padding: 0 8px;
         }
 
         /* Hide control separators on mobile to save space */

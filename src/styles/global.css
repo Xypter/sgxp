@@ -527,6 +527,11 @@
     background-color: var(--page-color);
   }
 
+  /* Mobile news logo - hidden on desktop */
+  .mobile-news-logo {
+    display: none;
+  }
+
   /* Animation keyframes */
   @keyframes fadein-up {
     0% { opacity: 0; transform: translateY(-50px); }
@@ -606,27 +611,84 @@
       padding: 0;
       width: 100%;
     }
-    
+
     .main-content {
       order: 1;
       width: 100%;
     }
-    
+
+    .main-content-title {
+      border-left: none !important;
+      border-right: none !important;
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
+      padding-left: 1rem !important;
+      padding-right: 1rem !important;
+    }
+
     .main-content-box {
-      border: none;
+      border-left: none !important;
+      border-right: none !important;
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
+      box-shadow: none !important;
       margin-bottom: 1em;
     }
-    
+
+    .mobile-news-logo {
+      display: block;
+      color: var(--font-color);
+      font-family: spritelogo;
+      font-size: 10vw;
+      text-align: center;
+      padding: 20px 0;
+      text-shadow:
+        -2px -2px 0 var(--bg-color),
+        0px -2px 0 var(--bg-color),
+        2px -2px 0 var(--bg-color),
+        2px 0px 0 var(--bg-color),
+        2px 2px 0 var(--bg-color),
+        0px 2px 0 var(--bg-color),
+        -2px 2px 0 var(--bg-color),
+        -2px 0px 0 var(--bg-color);
+    }
+
     .sidebar {
       order: 2;
       width: 100%;
     }
-    
+
+    .sidebar-title {
+      border-left: none !important;
+      border-right: none !important;
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
+      padding-left: 1rem !important;
+      padding-right: 1rem !important;
+    }
+
     .sidebar-box {
-      border: none;
+      border-left: none !important;
+      border-right: none !important;
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
+      box-shadow: none !important;
       margin-bottom: 1em;
     }
-    
+
+    .news-pagination-wrapper {
+      border-left: none !important;
+      border-right: none !important;
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
+      box-shadow: none !important;
+    }
+
     .footer {
       order: 3;
       width: 100%;
@@ -992,4 +1054,23 @@ body {
   .comment-avatar, .comment-avatar-large, .comment-avatar-small { width: 40px !important; height: 40px !important; }
   .formatting-toolbar { flex-direction: column; align-items: flex-start; }
   .toolbar-buttons { width: 100%; justify-content: flex-start; }
+
+  /* Individual comment cards full width on mobile with no left/right borders */
+  .comment-form-card, .comment-card, .reply-card {
+    border-left: none !important;
+    border-right: none !important;
+    width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+    margin-right: calc(-50vw + 50%) !important;
+    box-shadow: none !important;
+  }
+
+  /* Replies list should also be full width */
+  .replies-list {
+    padding-left: 0 !important;
+    border-left: none !important;
+    width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+    margin-right: calc(-50vw + 50%) !important;
+  }
 }

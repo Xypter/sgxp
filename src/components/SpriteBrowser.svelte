@@ -1223,6 +1223,16 @@
 			margin-right: calc(-50vw + 50%) !important;
 			box-shadow: none !important;
 		}
+
+		/* Mobile search bar - input on first line, buttons on second line */
+		.search-bar-container .mb-6 {
+			flex-wrap: wrap;
+		}
+
+		.search-bar-container .mb-6 :global(.search-input) {
+			width: 100%;
+			flex: 1 1 100%;
+		}
 	}
 
 	/* Search Input Styling */
@@ -1230,6 +1240,13 @@
 		flex: 1;
 		min-width: 0; /* Allow flex item to shrink below content size */
 		padding: 8px 12px !important; /* Reduce padding from default */
+	}
+
+	/* Search bar container - default horizontal layout */
+	.search-bar-container .mb-6 {
+		display: flex;
+		flex-direction: row;
+		gap: 0.5rem;
 	}
 
 	/* Loading Sprites Message Styling */

@@ -976,15 +976,32 @@
     .comic-title-link {
       font-size: 20px;
       padding: 8px 12px;
+      border-left: none !important;
+      border-right: none !important;
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
+      box-shadow: none !important;
     }
 
     .jeeves-content-title {
       font-size: 16px;
-      padding: 3px 0px 3px 10px;
+      padding: 3px 0px 3px 1rem;
+      border-left: none !important;
+      border-right: none !important;
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
     }
 
     .jeeves-content-box {
       padding: 15px;
+      border-left: none !important;
+      border-right: none !important;
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
+      box-shadow: none !important;
     }
 
     .chapter-grid {
@@ -1023,6 +1040,16 @@
       width: 40px;
       height: 40px;
       font-size: 18px;
+    }
+
+    /* Mobile comment styling matching SpriteViewer */
+    .archive-comment {
+      border-left: none !important;
+      border-right: none !important;
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
+      box-shadow: none !important;
     }
 
     .archive-comment-avatar {

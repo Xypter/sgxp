@@ -566,6 +566,11 @@
   @media (max-width: 768px) {
     .content-box {
       padding: 1rem;
+      border: none !important;
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
+      box-shadow: none !important;
     }
 
     .guidelines-wrapper h2 {

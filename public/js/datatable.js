@@ -954,9 +954,29 @@ var table = $('#example').DataTable({
     layout: {
         topStart: 'searchPanes'
     },
-    
+
     responsive: true,
-    dom: 'Pfrtip'
+    dom: 'Pfrtip',
+    createdRow: function(row, data, dataIndex) {
+        // Add data-label attributes for mobile view
+        const columnLabels = [
+            'Comic #',
+            'Author',
+            'Title',
+            'Category',
+            'Pages in Metadata',
+            'Pages in Folder',
+            'Percent Saved',
+            'Quality',
+            'Rating',
+            'Xypter\'s Notes',
+            'Link'
+        ];
+
+        $('td', row).each(function(index) {
+            $(this).attr('data-label', columnLabels[index]);
+        });
+    }
 });
 
 
