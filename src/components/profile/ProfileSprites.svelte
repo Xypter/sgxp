@@ -498,7 +498,7 @@
       grid-template-columns: repeat(2, 117px);
     }
 
-    .profile-sprites-title {
+    .profile-sprites-header {
       border-left: none !important;
       border-right: none !important;
       width: 100vw !important;

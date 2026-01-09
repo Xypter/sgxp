@@ -514,7 +514,7 @@
       grid-template-columns: repeat(2, 117px);
     }
 
-    .profile-favorites-title {
+    .profile-favorites-header {
       border-left: none !important;
       border-right: none !important;
       width: 100vw !important;
