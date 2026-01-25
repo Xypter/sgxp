@@ -396,6 +396,17 @@ export const PATCH: APIRoute = async ({ params, request, cookies }) => {
       spriteData.suggestions = [];
     }
 
+    // Handle update history (for tracking sprite image changes)
+    const updateHistoryJson = formData.get('updateHistory');
+    if (updateHistoryJson && typeof updateHistoryJson === 'string') {
+      try {
+        spriteData.updateHistory = JSON.parse(updateHistoryJson);
+      } catch (e) {
+        // If parsing fails, don't include updateHistory
+        console.error('[Sprite Update] Failed to parse updateHistory:', e);
+      }
+    }
+
     // Handle sprite sheet image upload (only if new file provided)
     const spriteImage = formData.get('image') as File;
     if (spriteImage && spriteImage.size > 0) {

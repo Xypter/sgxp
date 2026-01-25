@@ -762,9 +762,15 @@
       // In edit mode, if no new file is selected, the backend will keep the existing image
       if (spriteImage) {
         formData.append('image', spriteImage);
-        // If editing and changing the image, include the update note
+        // If editing and changing the image, include the update history entry
         if (isEditMode && updateNote.trim()) {
-          formData.append('updateNote', updateNote.trim());
+          // Get existing update history from the sprite and add the new entry
+          const existingHistory = sprite?.updateHistory || [];
+          const newEntry = {
+            note: updateNote.trim()
+            // updatedBy, timestamp, and previousImage are auto-populated by the backend
+          };
+          formData.append('updateHistory', JSON.stringify([...existingHistory, newEntry]));
         }
       }
       if (iconImage) {
