@@ -71,6 +71,9 @@
   let characterSheetOpen = $state(false);
   let contributorSheetOpen = $state(false);
 
+  // Track which field opened the contributor sheet ('contributors' or 'additionalCredits')
+  let contributorSheetContext = $state<'contributors' | 'additionalCredits'>('contributors');
+
   // Sheet form states
   let teamForm = $state({ name: '' });
   let officialGameForm = $state({ name: '', year: '' });
@@ -158,7 +161,14 @@
   function openSeriesSheet() { seriesSheetOpen = true; }
   function openSectionSheet() { sectionSheetOpen = true; }
   function openCharacterSheet() { characterSheetOpen = true; }
-  function openContributorSheet() { contributorSheetOpen = true; }
+  function openContributorSheet() {
+    contributorSheetContext = 'contributors';
+    contributorSheetOpen = true;
+  }
+  function openAdditionalCreditsSheet() {
+    contributorSheetContext = 'additionalCredits';
+    contributorSheetOpen = true;
+  }
 
   // Sheet close handlers (reset forms)
   function closeTeamSheet() {
@@ -547,14 +557,18 @@
       const result = await response.json();
       const newContributorId = result.doc.id.toString();
       const newContributorName = result.doc.name;
+      const newOption = { value: newContributorId, label: newContributorName };
 
-      // Add to the contributors dropdown options
-      contributors = [...contributors, { value: newContributorId, label: newContributorName }];
-
-      // Add to selected contributors
-      selectedContributors = [...selectedContributors, newContributorId];
-
-      toast.success(`Contributor "${newContributorName}" created and added!`);
+      // Add to the appropriate dropdown options and selected array based on context
+      if (contributorSheetContext === 'additionalCredits') {
+        additionalCredits = [...additionalCredits, newOption];
+        selectedAdditionalCredits = [...selectedAdditionalCredits, newContributorId];
+        toast.success(`"${newContributorName}" created and added to Additional Credits!`);
+      } else {
+        contributors = [...contributors, newOption];
+        selectedContributors = [...selectedContributors, newContributorId];
+        toast.success(`Contributor "${newContributorName}" created and added!`);
+      }
       contributorSheetOpen = false;
       closeContributorSheet();
     } catch (error) {
@@ -1128,7 +1142,7 @@
           bind:value={selectedAdditionalCredits}
           placeholder="Select additional credits"
           helperText="Credit people who should be acknowledged but didn't directly contribute (optional)"
-          onAddNew={openContributorSheet}
+          onAddNew={openAdditionalCreditsSheet}
         />
       </div>
     </div>

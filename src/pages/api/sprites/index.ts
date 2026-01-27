@@ -97,6 +97,17 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       }
     }
 
+    // Handle additional credits (array)
+    const additionalCreditsJson = formData.get('additionalCredits');
+    if (additionalCreditsJson && typeof additionalCreditsJson === 'string') {
+      try {
+        const parsed = JSON.parse(additionalCreditsJson);
+        spriteData.additionalCredits = parseIdArray(Array.isArray(parsed) ? parsed : []);
+      } catch (e) {
+        // Ignore parse errors
+      }
+    }
+
     // Handle characters (array)
     const charactersJson = formData.get('characters');
     if (charactersJson && typeof charactersJson === 'string') {
