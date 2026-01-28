@@ -103,6 +103,7 @@
 	let isFetchingInProgress = $state(false);
 	let searchTerm = $state('');
 	let activeSearchTerm = $state(''); // The search term that triggers API call
+	let fetchAbortController: AbortController | null = null;
 
 	// OPTIMIZATION: Track if initial memoization is complete
 	let isMemoized = $state(false);
@@ -140,8 +141,9 @@
 
 	const API_BASE_URL = `${import.meta.env.PUBLIC_PAYLOAD_URL}/api/sprites`;
 	const MOCK_DATA_MULTIPLIER = 1;
+	const SPRITES_PER_PAGE = 40;
 	// Derived values
-	const pageCount = $derived(Math.ceil(totalResults / 21));
+	const pageCount = $derived(Math.ceil(totalResults / SPRITES_PER_PAGE));
 
 	// Helper function to create individual character sprite
 	function createCharacterSprite(char: string, characterMap: any, isAltNumberMap: boolean, index: number) {
@@ -346,7 +348,7 @@
 	// OPTIMIZATION: Deferred memoization using requestIdleCallback or setTimeout fallback
 	function memoizeSpritesDeferred(spritesToMemoize: SpriteWithMemoized[], onComplete?: () => void): void {
 		// Increased batch size for faster processing (process full page at once)
-		const BATCH_SIZE = 21;
+		const BATCH_SIZE = SPRITES_PER_PAGE;
 		let index = 0;
 
 		function processBatch(deadline?: IdleDeadline) {
@@ -476,63 +478,91 @@
 		}
 	}
 
-	// Fetching logic - Updated to use new /api/sprites/search endpoint
+	// Map sortBy values to Payload CMS sort format
+	function getSortParam(sortByValue: string): string {
+		const sortMapping: Record<string, string> = {
+			'newest': '-createdAt',
+			'oldest': 'createdAt',
+			'title-asc': 'title',
+			'title-desc': '-title',
+			'recently-updated': '-updatedAt',
+			'id-desc': '-id',
+			'id-asc': 'id',
+			'most-liked': '-likes',
+			'most-viewed': '-views',
+			'most-commented': '-comments'
+		};
+		return sortMapping[sortByValue] || '-createdAt';
+	}
+
+	// Fetching logic - Uses standard Payload CMS endpoint for reliable pagination
 	async function fetchSprites() {
-		// OPTIMIZATION: Prevent concurrent fetches
-		if (isFetchingInProgress) {
-			return;
+		// Cancel any in-progress fetch to ensure we get the latest requested page
+		if (fetchAbortController) {
+			fetchAbortController.abort();
 		}
+		fetchAbortController = new AbortController();
+		const signal = fetchAbortController.signal;
 
 		isFetchingInProgress = true;
 		try {
 			const params = new URLSearchParams();
 
-			// Add keyword search
-			if (activeSearchTerm) {
-				params.set('q', activeSearchTerm);
-			}
-
-			// Add sort
-			params.set('sortBy', sortBy);
-
-			// Add pagination
+			// Add standard Payload params
+			params.set('depth', '1');
+			params.set('draft', 'false');
+			params.set('limit', SPRITES_PER_PAGE.toString());
 			params.set('page', currentPage.toString());
-			params.set('limit', '21');
+			params.set('sort', getSortParam(sortBy));
 
-			// Add filters
+			// Add filters using Payload's where query syntax
 			if (authorFilter) {
-				params.set('author', authorFilter);
+				params.set('where[author][equals]', authorFilter);
 			}
 
 			if (sectionFilter) {
-				params.set('section', sectionFilter);
+				params.set('where[section][equals]', sectionFilter);
 			}
 
 			if (characterFilter) {
-				params.set('characters', characterFilter);
+				params.set('where[characters][contains]', characterFilter);
 			}
 
 			if (styleSourceType) {
-				params.set('styleSourceType', styleSourceType);
+				params.set('where[styleSourceType][equals]', styleSourceType);
 			}
 
 			if (styleSourceId) {
-				params.set('styleSourceId', styleSourceId);
+				if (styleSourceType === 'officialGame') {
+					params.set('where[styleOfficialGame][equals]', styleSourceId);
+				} else if (styleSourceType === 'fanGame') {
+					params.set('where[styleFanGame][equals]', styleSourceId);
+				} else if (styleSourceType === 'series') {
+					params.set('where[styleSeries][equals]', styleSourceId);
+				} else if (styleSourceType === 'team') {
+					params.set('where[styleTeam][equals]', styleSourceId);
+				}
 			}
 
-			// Use proxy route to avoid CORS issues
-			const url = `/api/proxy/sprites/search?${params.toString()}`;
-			const response = await fetch(url);
+			// Add keyword search if present (searches title field)
+			if (activeSearchTerm) {
+				params.set('where[title][contains]', activeSearchTerm);
+			}
+
+			// Use the standard sprites endpoint for reliable pagination
+			const url = `/api/sprites?${params.toString()}`;
+			const response = await fetch(url, { signal });
 			const data = await response.json();
 
 			let fetchedSprites: SpriteWithMemoized[];
 
 			// Check if the API call was successful
-			// Note: API returns 'results' array, not 'docs'
-			const spriteResults = data.results || data.docs || [];
-			if (data.success && spriteResults.length >= 0) {
-				// Extract sprite data from the results (each item has type and data properties)
-				const extractedSprites = spriteResults.map((item: any) => item.data || item);
+			// Standard Payload endpoint returns { docs, totalDocs, ... }
+			const spriteResults = data.docs || [];
+			const hasValidData = data.totalDocs !== undefined || spriteResults.length > 0;
+			if (hasValidData) {
+				// Use the docs directly from Payload response
+				const extractedSprites = spriteResults;
 
 				// Multiply the data for testing purposes
 				if (MOCK_DATA_MULTIPLIER > 1 && extractedSprites.length > 0) {
@@ -562,11 +592,18 @@
 				totalResults = 0;
 			}
 		} catch (error) {
+			// Ignore abort errors - these are expected when a new fetch cancels an old one
+			if (error instanceof Error && error.name === 'AbortError') {
+				return;
+			}
 			console.error('Error fetching sprites:', error);
 			sprites = [];
 			totalResults = 0;
 		} finally {
-			isFetchingInProgress = false;
+			// Only set to false if this fetch wasn't aborted
+			if (!signal.aborted) {
+				isFetchingInProgress = false;
+			}
 		}
 	}
 
@@ -991,7 +1028,7 @@
 						style="background-color: var(--page-color);
 						border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white); border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white); box-shadow: var(--box-shadow); position: relative; z-index: 1;"
 					>
-						<Pagination.Root bind:page={currentPage} count={totalResults} perPage={21} siblingCount={2}>
+						<Pagination.Root bind:page={currentPage} count={totalResults} perPage={SPRITES_PER_PAGE} siblingCount={2}>
 							{#snippet children({ pages, range })}
 								<Pagination.Content>
 									<Pagination.Item>

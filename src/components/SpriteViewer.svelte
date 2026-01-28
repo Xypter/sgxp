@@ -3,7 +3,7 @@
     import { Button, Toaster } from '$lib/components';
 
     // Import Lucide icons
-    import { X, Eye, ArrowLeft } from 'lucide-svelte';
+    import { X, Maximize2, ArrowLeft } from 'lucide-svelte';
 
     // Import custom components
     import CommentSection from './comments/CommentSection.svelte';
@@ -601,20 +601,18 @@
                     <div class="sprite-sheet-container">
                         <!-- svelte-ignore a11y_click_events_have_key_events -->
                         <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-                        <img
-                            src={sprite.image.url}
-                            alt={sprite.image.alt || sprite.title}
-                            class="sprite-sheet-image"
-                            class:loaded={imageLoaded}
-                            loading="eager"
-                            onclick={openViewer}
-                            onload={() => imageLoaded = true}
-                        />
-                        <button class="sprite-sheet-overlay" onclick={openViewer}>
-                            <Eye class="overlay-icon" />
-                            <span>Click to view fullscreen</span>
-                        </button>
-                    </div>
+                        <div class="sprite-image-wrapper">
+                            <img
+                                src={sprite.image.url}
+                                alt={sprite.image.alt || sprite.title}
+                                class="sprite-sheet-image"
+                                class:loaded={imageLoaded}
+                                loading="eager"
+                                onclick={openViewer}
+                                onload={() => imageLoaded = true}
+                            />
+                        </div>
+                                            </div>
 
                     <!-- Sprite Actions (Like/Favorite) -->
                     <SpriteActions {spriteId} {sprite} {user} />
@@ -778,6 +776,8 @@
     }
 
     .sprite-sheet-image {
+        position: relative;
+        z-index: 1;
         max-width: 100%;
         height: auto;
         image-rendering: pixelated;
@@ -796,35 +796,66 @@
         opacity: 1;
     }
 
-    .sprite-sheet-overlay {
+    /* Register custom property for smooth angle animation */
+    @property --border-angle {
+        syntax: '<angle>';
+        initial-value: 0deg;
+        inherits: false;
+    }
+
+    /* Image wrapper for animated gradient border */
+    .sprite-image-wrapper {
+        position: relative;
+        display: inline-block;
+        --border-angle: 0deg;
+        border: 1px solid transparent;
+        background: var(--page-color) padding-box;
+    }
+
+    /* Rotating glow effect behind the border */
+    .sprite-image-wrapper::before {
+        content: '';
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: color-mix(in srgb, var(--bg-color) 80%, transparent);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 8px;
+        inset: -8px;
+        background: conic-gradient(
+            from var(--border-angle),
+            color-mix(in srgb, #f896d8 65%, var(--font-link-color)) 0deg,
+            color-mix(in srgb, #edf67d 65%, var(--font-link-color)) 60deg,
+            color-mix(in srgb, #affc41 65%, var(--font-link-color)) 120deg,
+            color-mix(in srgb, #1dd3b0 65%, var(--font-link-color)) 180deg,
+            color-mix(in srgb, #affc41 65%, var(--font-link-color)) 240deg,
+            color-mix(in srgb, #edf67d 65%, var(--font-link-color)) 300deg,
+            color-mix(in srgb, #f896d8 65%, var(--font-link-color)) 360deg
+        );
+        filter: blur(12px);
         opacity: 0;
+        z-index: -1;
         transition: opacity 0.2s ease;
-        cursor: pointer;
-        border: none;
-        color: var(--font-color);
-        font-family: 'saira';
-        font-weight: 700;
-        font-size: 16px;
     }
 
-    .sprite-sheet-container:hover .sprite-sheet-overlay {
-        opacity: 1;
+    .sprite-image-wrapper:hover {
+        background:
+            linear-gradient(var(--page-color), var(--page-color)) padding-box,
+            conic-gradient(
+                from var(--border-angle),
+                color-mix(in srgb, #f896d8 65%, var(--font-link-color)) 0deg,
+                color-mix(in srgb, #edf67d 65%, var(--font-link-color)) 60deg,
+                color-mix(in srgb, #affc41 65%, var(--font-link-color)) 120deg,
+                color-mix(in srgb, #1dd3b0 65%, var(--font-link-color)) 180deg,
+                color-mix(in srgb, #affc41 65%, var(--font-link-color)) 240deg,
+                color-mix(in srgb, #edf67d 65%, var(--font-link-color)) 300deg,
+                color-mix(in srgb, #f896d8 65%, var(--font-link-color)) 360deg
+            ) border-box;
+        animation: rotateBorder 3s linear infinite;
     }
 
-    .sprite-sheet-overlay :global(.overlay-icon) {
-        width: 48px;
-        height: 48px;
+    .sprite-image-wrapper:hover::before {
+        opacity: 0.7;
+        animation: rotateBorder 3s linear infinite;
+    }
+
+    @keyframes rotateBorder {
+        to { --border-angle: 360deg; }
     }
 
     .no-image {

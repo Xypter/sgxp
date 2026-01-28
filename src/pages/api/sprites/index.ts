@@ -319,6 +319,9 @@ export const GET: APIRoute = async ({ url, cookies }) => {
     // Forward query parameters to Payload CMS
     const searchParams = new URLSearchParams(url.search);
 
+    // Always filter to only show approved sprites (security: enforced server-side)
+    searchParams.set('where[status][equals]', 'approved');
+
     const response = await fetch(`${payloadUrl}/api/sprites?${searchParams.toString()}`, {
       headers: token ? { 'Cookie': `payload-token=${token}` } : {}
     });

@@ -38,8 +38,9 @@ try {
     try {
       const fetchStart = performance.now();
       // OPTIMIZATION: Reduced depth from 2 to 1 for 3x faster API response (210ms vs 667ms)
+      // Only fetch approved sprites (security: enforced server-side)
       const response = await fetch(
-        `${API_BASE_URL}?depth=1&draft=false&locale=undefined&trash=false&limit=21&page=1&sort=-createdAt`,
+        `${API_BASE_URL}?depth=1&draft=false&locale=undefined&trash=false&limit=40&page=1&sort=-createdAt&where[status][equals]=approved`,
         { signal: controller.signal }
       );
       const fetchDuration = performance.now() - fetchStart;
