@@ -18,7 +18,7 @@ if (!token) {
 try {
   // Fetch current user (depth=0 since we don't need populated relations)
   const meResponse = await fetch(
-    `${import.meta.env.PUBLIC_PAYLOAD_URL}/api/users/me?depth=0`,
+    `${import.meta.env.PAYLOAD_URL}/api/users/me?depth=0`,
     {
       headers: { 'Cookie': `payload-token=${token}` }
     }
@@ -37,7 +37,7 @@ try {
 
   // Fetch initial sprites for SSR
   const spritesResponse = await fetch(
-    `${import.meta.env.PUBLIC_PAYLOAD_URL}/api/sprites?where[author][equals]=${currentUser.id}&depth=1&limit=10&page=1&sort=-createdAt`,
+    `${import.meta.env.PAYLOAD_URL}/api/sprites?where[author][equals]=${currentUser.id}&depth=1&limit=10&page=1&sort=-createdAt`,
     {
       headers: { 'Cookie': `payload-token=${token}` }
     }

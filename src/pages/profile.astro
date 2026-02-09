@@ -48,7 +48,7 @@ try {
 
       try {
         const response = await fetch(
-          `${import.meta.env.PUBLIC_PAYLOAD_URL}/api/users/${userId}?depth=3`,
+          `${import.meta.env.PAYLOAD_URL}/api/users/${userId}?depth=3`,
           { signal: controller.signal }
         );
         clearTimeout(timeoutId);
@@ -82,7 +82,7 @@ try {
     if (token && profileUser) {
       try {
         const meResponse = await fetch(
-          `${import.meta.env.PUBLIC_PAYLOAD_URL}/api/users/me?depth=3`,
+          `${import.meta.env.PAYLOAD_URL}/api/users/me?depth=3`,
           {
             headers: { 'Cookie': `payload-token=${token}` }
           }
@@ -103,7 +103,7 @@ try {
 
     try {
       const response = await fetch(
-        `${import.meta.env.PUBLIC_PAYLOAD_URL}/api/users/me?depth=3`,
+        `${import.meta.env.PAYLOAD_URL}/api/users/me?depth=3`,
         {
           headers: {
             'Cookie': `payload-token=${token}`

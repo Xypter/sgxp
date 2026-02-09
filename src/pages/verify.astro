@@ -10,7 +10,7 @@ let errorMessage = '';
 
 if (token && email) {
   try {
-    const response = await fetch(`${import.meta.env.PUBLIC_PAYLOAD_URL}/api/users/verify/${token}`, {
+    const response = await fetch(`${import.meta.env.PAYLOAD_URL}/api/users/verify/${token}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

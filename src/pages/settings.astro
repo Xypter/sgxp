@@ -22,7 +22,7 @@ try {
   const timeoutId = setTimeout(() => controller.abort(), 5000);
 
   const response = await fetch(
-    `${import.meta.env.PUBLIC_PAYLOAD_URL}/api/users/me`,
+    `${import.meta.env.PAYLOAD_URL}/api/users/me`,
     {
       headers: {
         'Cookie': `payload-token=${token}`

@@ -51,7 +51,7 @@ if (token) {
       try {
         const fetchStart = performance.now();
         // Use the environment variable for the Payload URL
-        const response = await fetch(`${import.meta.env.PUBLIC_PAYLOAD_URL}/api/users/me`, {
+        const response = await fetch(`${import.meta.env.PAYLOAD_URL}/api/users/me`, {
           headers: {
             // Forward the cookie to Payload for verification
             'Cookie': `payload-token=${token}`

@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 
-const PAYLOAD_URL = import.meta.env.PUBLIC_PAYLOAD_URL;
+const PAYLOAD_URL = import.meta.env.PAYLOAD_URL;
 
 export const DELETE: APIRoute = async ({ params, cookies }) => {
   try {

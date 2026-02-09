@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro'
 
 export const GET: APIRoute = async ({ request }) => {
-  const PAYLOAD_URL = import.meta.env.PUBLIC_PAYLOAD_URL
+  const PAYLOAD_URL = import.meta.env.PAYLOAD_URL
 
   try {
     const response = await fetch(`${PAYLOAD_URL}/api/sprites/filters`)

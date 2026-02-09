@@ -110,14 +110,23 @@
       try {
         const dimensions = await getImageDimensions(file);
 
-        if (maxWidth && dimensions.width > maxWidth) {
-          alert(`Image width (${dimensions.width}px) exceeds maximum allowed width of ${maxWidth}px`);
-          return false;
-        }
+        // If both maxWidth and maxHeight are set, require exact dimensions
+        if (maxWidth && maxHeight) {
+          if (dimensions.width !== maxWidth || dimensions.height !== maxHeight) {
+            alert(`Image must be exactly ${maxWidth}x${maxHeight}px. Current image is ${dimensions.width}x${dimensions.height}px.`);
+            return false;
+          }
+        } else {
+          // If only one dimension is set, check maximum
+          if (maxWidth && dimensions.width > maxWidth) {
+            alert(`Image width (${dimensions.width}px) exceeds maximum allowed width of ${maxWidth}px`);
+            return false;
+          }
 
-        if (maxHeight && dimensions.height > maxHeight) {
-          alert(`Image height (${dimensions.height}px) exceeds maximum allowed height of ${maxHeight}px`);
-          return false;
+          if (maxHeight && dimensions.height > maxHeight) {
+            alert(`Image height (${dimensions.height}px) exceeds maximum allowed height of ${maxHeight}px`);
+            return false;
+          }
         }
       } catch (error) {
         console.error('Failed to load image:', error);

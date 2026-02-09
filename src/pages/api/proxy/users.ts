@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro'
 
 export const GET: APIRoute = async ({ url, request }) => {
-  const PAYLOAD_URL = import.meta.env.PUBLIC_PAYLOAD_URL
+  const PAYLOAD_URL = import.meta.env.PAYLOAD_URL
 
   // Forward all query parameters
   const searchParams = url.searchParams.toString()

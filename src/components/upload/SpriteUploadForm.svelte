@@ -806,12 +806,13 @@
         formData.append('styleSeries', styleSeries);
       }
 
-      // Terms of use
-      formData.append('termsOfUse', JSON.stringify({
-        contactForPermissions,
-        informWhenUsed,
-        creditWhereUsed
-      }));
+      // Terms of use - send as JSON string for proper boolean parsing
+      const termsOfUseData = {
+        contactForPermissions: contactForPermissions === true,
+        informWhenUsed: informWhenUsed === true,
+        creditWhereUsed: creditWhereUsed === true
+      };
+      formData.append('termsOfUse', JSON.stringify(termsOfUseData));
 
       // Categorization
       formData.append('section', section);

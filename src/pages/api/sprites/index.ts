@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { invalidateSpriteCache } from '../../../lib/redis';
 
 export const POST: APIRoute = async ({ request, cookies }) => {
+  console.log('[Sprite Upload API] POST request received');
   const token = cookies.get('payload-token')?.value;
 
   if (!token) {
@@ -14,6 +15,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   try {
     // Get the current user to set as author
     const payloadUrl = import.meta.env.PAYLOAD_URL;
+    console.log('[Sprite Upload API] PAYLOAD_URL:', payloadUrl);
+    console.log('[Sprite Upload API] Authenticating user...');
     const meResponse = await fetch(`${payloadUrl}/api/users/me`, {
       headers: { 'Cookie': `payload-token=${token}` }
     });
@@ -155,6 +158,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
 
+    console.log(`[Sprite Upload API] Uploading to: ${payloadUrl}/api/media`);
     let imageUploadResponse;
     try {
       imageUploadResponse = await fetch(`${payloadUrl}/api/media`, {
@@ -262,6 +266,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     spriteData.iconImage = uploadedIcon.doc.id;
 
     // Now create the sprite with all the data
+    console.log(`[Sprite Upload API] Creating sprite at: ${payloadUrl}/api/sprites`);
     const spriteResponse = await fetch(`${payloadUrl}/api/sprites`, {
       method: 'POST',
       headers: {
@@ -319,8 +324,34 @@ export const GET: APIRoute = async ({ url, cookies }) => {
     // Forward query parameters to Payload CMS
     const searchParams = new URLSearchParams(url.search);
 
-    // Always filter to only show approved sprites (security: enforced server-side)
-    searchParams.set('where[status][equals]', 'approved');
+    // Check if this is a request for a specific author's sprites
+    const authorFilter = searchParams.get('where[author][equals]');
+
+    // If querying by author, verify it's the logged-in user
+    if (authorFilter && token) {
+      // Get the current user to verify they're querying their own sprites
+      const meResponse = await fetch(`${payloadUrl}/api/users/me`, {
+        headers: { 'Cookie': `payload-token=${token}` }
+      });
+
+      if (meResponse.ok) {
+        const meData = await meResponse.json();
+        const currentUser = meData.user || meData;
+
+        // If user is querying their own sprites, allow all statuses
+        // Otherwise, only show approved sprites
+        if (currentUser?.id?.toString() !== authorFilter) {
+          searchParams.set('where[status][equals]', 'approved');
+        }
+        // else: user is viewing their own uploads, show all statuses
+      } else {
+        // Auth failed, only show approved sprites
+        searchParams.set('where[status][equals]', 'approved');
+      }
+    } else {
+      // Not filtering by author, only show approved sprites (security: enforced server-side)
+      searchParams.set('where[status][equals]', 'approved');
+    }
 
     const response = await fetch(`${payloadUrl}/api/sprites?${searchParams.toString()}`, {
       headers: token ? { 'Cookie': `payload-token=${token}` } : {}
