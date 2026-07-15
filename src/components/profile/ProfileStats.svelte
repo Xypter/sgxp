@@ -146,9 +146,10 @@
       <div class="activity-value">
         {#if user?.hideLastOnline}
           <span class="activity-hidden">Hidden</span>
-        {:else if user?.updatedAt}
-          {new Date(user.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-          <span class="activity-relative">{getRelativeTime(user.updatedAt)}</span>
+        {:else if user?.lastActiveAt || user?.lastLoginAt || user?.updatedAt}
+          {@const lastOnline = user.lastActiveAt || user.lastLoginAt || user.updatedAt}
+          {new Date(lastOnline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+          <span class="activity-relative">{getRelativeTime(lastOnline)}</span>
         {:else}
           <span class="activity-placeholder">Unknown</span>
         {/if}
