@@ -13,81 +13,14 @@ import Toaster from "../lib/components/ui/layout/Toaster.svelte";
 import ThemeValue from '../components/Navbar.svelte';
 import User from '../components/Navbar.svelte';
 
-// OPTIMIZATION: Import Redis caching utilities
-import { getCached, setCached, cacheKey, hashString, CACHE_TTL } from '../lib/redis';
+import { resolveUser } from '../lib/userCache';
 
 // Get the theme from the cookie during SSR to prevent flashing
 const themeFromCookie = (Astro.cookies.get('theme')?.value as ThemeValue) || "style_v7";
 
-let user: User | null = null;
-// Get the auth token from the request cookies on the server
-const token = Astro.cookies.get('payload-token')?.value;
-
-// OPTIMIZATION: Auth check with Redis caching and timeout
-const AUTH_TIMEOUT_MS = 1500; // 1.5 second timeout for auth check
-
-if (token) {
-  const authStart = performance.now();
-  try {
-    const tokenHash = hashString(token);
-    const authCacheKey = cacheKey.auth(tokenHash);
-
-    const cacheCheckStart = performance.now();
-    // Try to get cached auth result first
-    const cachedUser = await getCached<User>(authCacheKey);
-    const cacheCheckDuration = performance.now() - cacheCheckStart;
-
-    if (cachedUser) {
-      user = cachedUser;
-      const authDuration = performance.now() - authStart;
-      console.log(`[SSR Auth] ✅ Cache HIT - using cached user (${authDuration.toFixed(0)}ms total, ${cacheCheckDuration.toFixed(0)}ms cache)`);
-    } else {
-      console.log(`[SSR Auth] ❌ Cache MISS after ${cacheCheckDuration.toFixed(0)}ms`);
-
-      // Create an AbortController for timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), AUTH_TIMEOUT_MS);
-
-      try {
-        const fetchStart = performance.now();
-        // Use the environment variable for the Payload URL
-        const response = await fetch(`${import.meta.env.PAYLOAD_URL}/api/users/me`, {
-          headers: {
-            // Forward the cookie to Payload for verification
-            'Cookie': `payload-token=${token}`
-          },
-          signal: controller.signal
-        });
-        const fetchDuration = performance.now() - fetchStart;
-
-        clearTimeout(timeoutId);
-
-        if (response.ok) {
-          const parseStart = performance.now();
-          const data = await response.json();
-          const parseDuration = performance.now() - parseStart;
-          user = data.user || data; // Set the user object if the token is valid
-
-          // Cache the auth result (fire and forget - don't await)
-          setCached(authCacheKey, user, CACHE_TTL.AUTH);
-          const authDuration = performance.now() - authStart;
-          console.log(`[SSR Auth] 🌐 Fetched and cached user (${authDuration.toFixed(0)}ms total: ${fetchDuration.toFixed(0)}ms fetch + ${parseDuration.toFixed(0)}ms parse)`);
-        }
-      } catch (fetchError: any) {
-        clearTimeout(timeoutId);
-
-        if (fetchError.name === 'AbortError') {
-          console.warn(`[SSR Auth] ⚠️  Auth check timed out after ${AUTH_TIMEOUT_MS}ms - page will render without user`);
-        } else {
-          throw fetchError;
-        }
-      }
-    }
-  } catch (error) {
-    // Log the error on the server, but don't block the page from rendering
-    console.error('[SSR Auth] ❌ Auth Check Failed:', error);
-  }
-}
+// Assumes logged-in as long as payload-token is present; only round-trips to
+// Payload when the display cache is missing/stale (see src/lib/userCache.ts).
+const { user }: { user: User | null } = await resolveUser(Astro.cookies);
 
 // Any other props for your layout
 export interface Props {

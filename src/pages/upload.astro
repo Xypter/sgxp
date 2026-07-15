@@ -2,6 +2,7 @@
 import FrontPageLayout from "../layouts/FrontPageLayout.astro";
 import SpriteUploadForm from "../components/upload/SpriteUploadForm.svelte";
 import { Toaster } from '$lib/components';
+import { resolveUser } from '$lib/userCache';
 
 export const prerender = false;
 
@@ -13,27 +14,11 @@ if (!token) {
   return Astro.redirect('/login?redirect=/upload');
 }
 
-// Verify the user is logged in
 const payloadUrl = import.meta.env.PAYLOAD_URL;
-let currentUser = null;
 
-try {
-  const meResponse = await fetch(`${payloadUrl}/api/users/me`, {
-    headers: { 'Cookie': `payload-token=${token}` }
-  });
+const { user: currentUser, source } = await resolveUser(Astro.cookies);
 
-  if (!meResponse.ok) {
-    return Astro.redirect('/login?redirect=/upload');
-  }
-
-  const meData = await meResponse.json();
-  currentUser = meData.user || meData;
-
-  if (!currentUser?.id) {
-    return Astro.redirect('/login?redirect=/upload');
-  }
-} catch (error) {
-  console.error('[Upload] Auth check failed:', error);
+if (source === 'invalid' || !currentUser?.id) {
   return Astro.redirect('/login?redirect=/upload');
 }
 

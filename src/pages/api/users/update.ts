@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { invalidateUserCache } from '../../../lib/redis';
+import { USER_COOKIE, toCachedUser, userCookieOptions } from '$lib/userCache';
 
 export const PATCH: APIRoute = async ({ request, cookies }) => {
   const token = cookies.get('payload-token')?.value;
@@ -68,13 +68,13 @@ export const PATCH: APIRoute = async ({ request, cookies }) => {
     }
 
     const updatedUser = await response.json();
-    const updatedUserId = updatedUser.doc?.id || updatedUser.id;
+    const updatedUserDoc = updatedUser.doc || updatedUser;
 
-    console.log('[API] Profile updated successfully for user:', updatedUserId);
+    console.log('[API] Profile updated successfully for user:', updatedUserDoc?.id);
 
-    // Invalidate all caches for this user
-    if (updatedUserId) {
-      await invalidateUserCache(updatedUserId, token);
+    // Refresh the display cache so the navbar reflects the change immediately
+    if (updatedUserDoc?.id) {
+      cookies.set(USER_COOKIE, JSON.stringify(toCachedUser(updatedUserDoc)), userCookieOptions());
     }
 
     return new Response(

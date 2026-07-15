@@ -1,11 +1,11 @@
 ---
 import FrontPageLayout from "../../layouts/FrontPageLayout.astro";
 import UserUploadsViewer from "../../components/uploads/UserUploadsViewer.svelte";
+import { resolveUser } from '../../lib/userCache';
 
 // Get the auth token from the request cookies on the server
 const token = Astro.cookies.get('payload-token')?.value;
 
-let currentUser = null;
 let initialSprites: any[] = [];
 let initialTotal = 0;
 let initialError = null;
@@ -15,26 +15,13 @@ if (!token) {
   return Astro.redirect('/login?redirect=/profile/uploads');
 }
 
+const { user: currentUser, source } = await resolveUser(Astro.cookies);
+
+if (source === 'invalid' || !currentUser?.id) {
+  return Astro.redirect('/login?redirect=/profile/uploads');
+}
+
 try {
-  // Fetch current user (depth=0 since we don't need populated relations)
-  const meResponse = await fetch(
-    `${import.meta.env.PAYLOAD_URL}/api/users/me?depth=0`,
-    {
-      headers: { 'Cookie': `payload-token=${token}` }
-    }
-  );
-
-  if (!meResponse.ok) {
-    return Astro.redirect('/login?redirect=/profile/uploads');
-  }
-
-  const meData = await meResponse.json();
-  currentUser = meData.user || meData;
-
-  if (!currentUser?.id) {
-    return Astro.redirect('/login?redirect=/profile/uploads');
-  }
-
   // Fetch initial sprites for SSR
   const spritesResponse = await fetch(
     `${import.meta.env.PAYLOAD_URL}/api/sprites?where[author][equals]=${currentUser.id}&depth=1&limit=10&page=1&sort=-createdAt`,

@@ -1,5 +1,6 @@
 // src/pages/api/users/logout.ts
 import type { APIRoute } from 'astro';
+import { USER_COOKIE } from '$lib/userCache';
 
 export const POST: APIRoute = async ({ cookies }) => {
   try {
@@ -28,6 +29,14 @@ export const POST: APIRoute = async ({ cookies }) => {
       secure: isProduction, // Only use secure flag in production (HTTPS)
       sameSite: 'strict',
       maxAge: 0 // Immediately expire the cookie
+    });
+
+    // Clear the display-only user cache alongside the real auth token
+    cookies.set(USER_COOKIE, '', {
+      path: '/',
+      secure: isProduction,
+      sameSite: 'strict',
+      maxAge: 0
     });
 
     return new Response(JSON.stringify({ message: 'Logged out successfully' }), {

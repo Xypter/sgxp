@@ -1,6 +1,7 @@
 ---
 import FrontPageLayout from "../layouts/FrontPageLayout.astro";
 import SettingsForm from "../components/settings/SettingsForm.svelte";
+import { resolveUser } from '../lib/userCache';
 
 // Get the auth token from the request cookies on the server
 const token = Astro.cookies.get('payload-token')?.value;
@@ -8,48 +9,21 @@ const token = Astro.cookies.get('payload-token')?.value;
 let currentUser = null;
 let initialError = null;
 
-// Performance timing
-const perfStart = performance.now();
-console.log('[Settings SSR] Starting settings page load');
-
 // Must be logged in to access settings
 if (!token) {
   return Astro.redirect('/login?redirect=/settings');
 }
 
-try {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 5000);
+const { user, source } = await resolveUser(Astro.cookies);
 
-  const response = await fetch(
-    `${import.meta.env.PAYLOAD_URL}/api/users/me`,
-    {
-      headers: {
-        'Cookie': `payload-token=${token}`
-      },
-      signal: controller.signal
-    }
-  );
-  clearTimeout(timeoutId);
-
-  if (response.ok) {
-    const data = await response.json();
-    currentUser = data.user || data;
-  } else {
-    // Token invalid, redirect to login
-    return Astro.redirect('/login?redirect=/settings');
-  }
-} catch (fetchError: any) {
-  console.error('[Settings SSR] Error:', fetchError);
-  if (fetchError.name === 'AbortError') {
-    initialError = 'Request timed out. Please try again.';
-  } else {
-    initialError = 'Failed to load settings';
-  }
+if (source === 'invalid') {
+  return Astro.redirect('/login?redirect=/settings');
 }
 
-const perfEnd = performance.now();
-console.log(`[Settings SSR] Total processing time: ${(perfEnd - perfStart).toFixed(0)}ms`);
+currentUser = user;
+if (!currentUser) {
+  initialError = 'Failed to load settings';
+}
 ---
 
 <FrontPageLayout title="Account Settings">

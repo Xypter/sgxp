@@ -1,5 +1,6 @@
 // src/pages/api/users/login.ts
 import type { APIRoute } from 'astro';
+import { USER_COOKIE, toCachedUser, userCookieOptions } from '$lib/userCache';
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   const { email, password } = await request.json();
@@ -29,8 +30,14 @@ export const POST: APIRoute = async ({ request, cookies }) => {
           maxAge: 60 * 60 * 24 * 7, // 7 days
           path: '/'
         });
+
+        // Payload's login response already includes the full user object, so
+        // we can populate the display cache without an extra round-trip.
+        if (data.user) {
+          cookies.set(USER_COOKIE, JSON.stringify(toCachedUser(data.user)), userCookieOptions());
+        }
       }
-      
+
       return new Response(JSON.stringify(data), {
         status: 200,
         headers: { 'Content-Type': 'application/json' }

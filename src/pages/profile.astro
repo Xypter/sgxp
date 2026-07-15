@@ -4,6 +4,7 @@ import ProfileViewer from "../components/profile/ProfileViewer.svelte";
 
 // OPTIMIZATION: Import Redis caching utilities
 import { getCached, setCached, cacheKey, CACHE_TTL, deleteCached } from '../lib/redis';
+import { resolveUser } from '../lib/userCache';
 
 // Get user ID from query params (e.g., /profile?id=35)
 // If no ID provided, show the logged-in user's profile
@@ -78,18 +79,12 @@ try {
       }
     }
 
-    // Check if viewing own profile
+    // Check if viewing own profile (identity only - no need for a full,
+    // depth=3 fetch just to compare an id)
     if (token && profileUser) {
       try {
-        const meResponse = await fetch(
-          `${import.meta.env.PAYLOAD_URL}/api/users/me?depth=3`,
-          {
-            headers: { 'Cookie': `payload-token=${token}` }
-          }
-        );
-        if (meResponse.ok) {
-          const meData = await meResponse.json();
-          const currentUser = meData.user || meData;
+        const { user: currentUser } = await resolveUser(Astro.cookies);
+        if (currentUser) {
           isOwnProfile = currentUser.id === profileUser.id;
         }
       } catch (e) {
