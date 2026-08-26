@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { invalidateSpriteCache } from '../../../lib/redis';
+import { notifyDiscordBot } from '../../../lib/discordBot';
 
 /**
  * Webhook endpoint for Payload CMS to call when a sprite is created or updated
@@ -38,6 +39,13 @@ export const POST: APIRoute = async ({ request }) => {
     // Invalidate sprite cache
     // This clears all sprite list caches so the updated sprite appears immediately
     await invalidateSpriteCache(spriteId);
+
+    if (operation === 'create') {
+      await notifyDiscordBot('sprite.created', {
+        title: payload?.doc?.title,
+        author: payload?.doc?.author?.username ?? payload?.doc?.author,
+      });
+    }
 
     return new Response(
       JSON.stringify({
