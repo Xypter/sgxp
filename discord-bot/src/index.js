@@ -6,7 +6,9 @@ import { createNotifier } from './notify.js';
 import { startEventServer } from './server.js';
 import { scheduleJobs } from './jobs.js';
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
+});
 
 client.commands = new Collection();
 for (const cmd of [stats, leaderboard]) {
@@ -18,7 +20,7 @@ client.once(Events.ClientReady, (readyClient) => {
 
   const notifier = createNotifier(client);
   startEventServer(notifier);
-  scheduleJobs(notifier);
+  scheduleJobs(notifier, client);
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
