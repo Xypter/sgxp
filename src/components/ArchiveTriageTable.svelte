@@ -252,6 +252,13 @@
     return entry.reviewStage === 'reviewed' && !isAdmin;
   }
 
+  // Once uploaded, an entry is locked in - archivists can no longer edit
+  // anything on it, only true admins can (mirrors the backend's
+  // status-based Where-clause restriction on the update access check).
+  function rowLocked(entry: ArchiveEntry): boolean {
+    return entry.status === 'uploaded' && !isAdmin;
+  }
+
   const columns: ColumnDef<ArchiveEntry>[] = [
     {
       accessorKey: 'comicId',
@@ -286,7 +293,7 @@
           options: CATEGORY_EDIT_OPTIONS,
           placeholder: 'Uncategorized',
           searchPlaceholder: 'Search categories...',
-          disabled: !canEdit,
+          disabled: !canEdit || rowLocked(row.original),
           onSave: (value: string) => saveField(row.original, 'category', value === '' ? null : value),
         }),
     },
@@ -296,7 +303,7 @@
       cell: ({ row }) =>
         renderComponent(EditableCheckboxCell as any, {
           value: row.original.isSpriteComic ?? false,
-          disabled: !canEdit || flagsLocked(row.original),
+          disabled: !canEdit || flagsLocked(row.original) || rowLocked(row.original),
           onSave: (value: boolean) => saveField(row.original, 'isSpriteComic', value),
         }),
     },
@@ -308,7 +315,7 @@
           ? renderComponent(PlainTextCell as any, { value: 'N/A', class: 'entry-na' })
           : renderComponent(EditableCheckboxCell as any, {
               value: row.original.isGameRelated ?? false,
-              disabled: !canEdit || flagsLocked(row.original),
+              disabled: !canEdit || flagsLocked(row.original) || rowLocked(row.original),
               onSave: (value: boolean) => saveField(row.original, 'isGameRelated', value),
             }),
     },
@@ -320,7 +327,7 @@
           value: row.original.rating !== undefined && row.original.rating !== null ? String(row.original.rating) : '',
           options: RATING_OPTIONS,
           placeholder: 'Unset',
-          disabled: !canEdit,
+          disabled: !canEdit || rowLocked(row.original),
           onSave: (value: string) => saveField(row.original, 'rating', value === '' ? null : Number(value)),
         }),
     },
@@ -341,7 +348,7 @@
       cell: ({ row }) =>
         renderComponent(EditableNotesCell as any, {
           value: row.original.notes ?? '',
-          disabled: !canEdit,
+          disabled: !canEdit || rowLocked(row.original),
           onSave: (value: string) => saveField(row.original, 'notes', value),
         }),
       enableSorting: false,
@@ -367,7 +374,7 @@
           preparedBy: row.original.preparedBy,
           reviewedBy: row.original.reviewedBy,
           currentUserId,
-          canEdit,
+          canEdit: canEdit && !rowLocked(row.original),
           onMarkReady: () => markReady(row.original),
           onConfirm: () => confirmReview(row.original),
         }),
@@ -497,7 +504,7 @@
               options={CATEGORY_EDIT_OPTIONS}
               placeholder="Uncategorized"
               searchPlaceholder="Search categories..."
-              disabled={!canEdit}
+              disabled={!canEdit || rowLocked(entry)}
               onSave={(v) => saveField(entry, 'category', v === '' ? null : v)}
             />
           </div>
@@ -507,7 +514,7 @@
               <label>Sprite Comic?</label>
               <EditableCheckboxCell
                 value={entry.isSpriteComic ?? false}
-                disabled={!canEdit || flagsLocked(entry)}
+                disabled={!canEdit || flagsLocked(entry) || rowLocked(entry)}
                 onSave={(v) => saveField(entry, 'isSpriteComic', v)}
               />
             </div>
@@ -516,7 +523,7 @@
                 <label>Game Related?</label>
                 <EditableCheckboxCell
                   value={entry.isGameRelated ?? false}
-                  disabled={!canEdit || flagsLocked(entry)}
+                  disabled={!canEdit || flagsLocked(entry) || rowLocked(entry)}
                   onSave={(v) => saveField(entry, 'isGameRelated', v)}
                 />
               </div>
@@ -530,7 +537,7 @@
               preparedBy={entry.preparedBy}
               reviewedBy={entry.reviewedBy}
               {currentUserId}
-              {canEdit}
+              canEdit={canEdit && !rowLocked(entry)}
               onMarkReady={() => markReady(entry)}
               onConfirm={() => confirmReview(entry)}
             />
@@ -543,7 +550,7 @@
                 value={entry.rating !== undefined && entry.rating !== null ? String(entry.rating) : ''}
                 options={RATING_OPTIONS}
                 placeholder="Unset"
-                disabled={!canEdit}
+                disabled={!canEdit || rowLocked(entry)}
                 onSave={(v) => saveField(entry, 'rating', v === '' ? null : Number(v))}
               />
             </div>
@@ -568,7 +575,7 @@
 
           <div class="entry-card-field">
             <label>Notes</label>
-            <EditableNotesCell value={entry.notes ?? ''} disabled={!canEdit} onSave={(v) => saveField(entry, 'notes', v)} />
+            <EditableNotesCell value={entry.notes ?? ''} disabled={!canEdit || rowLocked(entry)} onSave={(v) => saveField(entry, 'notes', v)} />
           </div>
         </div>
       {/each}
@@ -717,9 +724,14 @@
   }
 
   :global(.entry-quality) {
+    display: block;
+    width: 150px;
     color: var(--font-color);
     opacity: 0.75;
     font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   :global(.entry-na) {
