@@ -1,0 +1,24 @@
+---
+import FrontPageLayout from "../layouts/FrontPageLayout.astro";
+import ArchiveTriageTable from "../components/ArchiveTriageTable.svelte";
+import { resolveUser } from "../lib/userCache";
+
+const { user } = await resolveUser(Astro.cookies);
+
+if (!user) {
+  return Astro.redirect("/login");
+}
+---
+
+<FrontPageLayout title="Archive Triage">
+  <div class="triage-page">
+    <ArchiveTriageTable user={user} client:only="svelte" />
+  </div>
+</FrontPageLayout>
+
+<style>
+  .triage-page {
+    width: 100%;
+    padding: 20px 1rem;
+  }
+</style>

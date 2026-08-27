@@ -1,0 +1,891 @@
+<script lang="ts">
+  import {
+    type ColumnDef,
+    type PaginationState,
+    type SortingState,
+    getCoreRowModel,
+    getPaginationRowModel,
+    getSortedRowModel,
+  } from '@tanstack/table-core';
+  import { createSvelteTable, renderComponent } from '$components/ui/data-table';
+  import { DataTable, Select, Combobox, Input } from '$lib/components';
+  import { ExternalLink, LoaderCircle, Check } from 'lucide-svelte';
+  import { toast } from 'svelte-sonner';
+
+  import EditableSelectCell from './archive/cells/EditableSelectCell.svelte';
+  import EditableComboboxCell from './archive/cells/EditableComboboxCell.svelte';
+  import EditableNotesCell from './archive/cells/EditableNotesCell.svelte';
+  import EditableCheckboxCell from './archive/cells/EditableCheckboxCell.svelte';
+  import ArchiveStatusBadge from './archive/cells/ArchiveStatusBadge.svelte';
+  import ReviewStatusCell from './archive/cells/ReviewStatusCell.svelte';
+  import PlainTextCell from './archive/cells/PlainTextCell.svelte';
+  import LinkCell from './archive/cells/LinkCell.svelte';
+  import SortableHeaderButton from './archive/cells/SortableHeaderButton.svelte';
+
+  function sortableHeader(label: string) {
+    return ({ column }: any) =>
+      renderComponent(SortableHeaderButton as any, {
+        label,
+        sorted: column.getIsSorted(),
+        onclick: column.getToggleSortingHandler(),
+      });
+  }
+
+  interface UserRef {
+    id: number | string;
+    username?: string;
+    displayName?: string;
+  }
+
+  interface ArchiveEntry {
+    id: string | number;
+    comicId: number;
+    title?: string;
+    author?: string;
+    category?: string | null;
+    isSpriteComic?: boolean;
+    isGameRelated?: boolean;
+    rating?: number | null;
+    quality?: string | null;
+    notes?: string;
+    status: string;
+    link?: string;
+    reviewStage: 'unprepared' | 'prepared' | 'reviewed';
+    preparedBy?: UserRef | number | string | null;
+    reviewedBy?: UserRef | number | string | null;
+  }
+
+  interface Props {
+    user: any;
+  }
+
+  let { user }: Props = $props();
+
+  const CATEGORY_OPTIONS = [
+    'Chrono Trigger', 'Digimon', 'Donkey Kong', 'Dragonball', 'Earthbound', 'Final Fantasy',
+    'Fire Emblem', 'Fox McCloud', 'Halo', 'Kingdom Hearts', 'Kirby', 'Klonoa Wolf', 'Mario',
+    'Megaman', 'Memes', 'Metroid', 'Mixed', 'Naruto', 'One Piece', 'Pokemon', 'Random', 'Sonic',
+    'Super Smash Bros', 'The Legend of Zelda', 'Yu-Gi-Oh',
+  ].map((v) => ({ value: v, label: v }));
+
+  // Separate from CATEGORY_OPTIONS (used as-is by the toolbar filter, whose
+  // blank option already means "all categories") - this variant's blank
+  // option is a real, selectable "clear the category" choice.
+  const CATEGORY_EDIT_OPTIONS = [{ value: '', label: '— Uncategorized —' }, ...CATEGORY_OPTIONS];
+
+  const STATUS_OPTIONS = [
+    { value: 'unsorted', label: 'Unsorted' },
+    { value: 'identified', label: 'Identified' },
+    { value: 'uploaded', label: 'Uploaded' },
+  ];
+
+  const REVIEW_STAGE_OPTIONS = [
+    { value: 'unprepared', label: 'Unprepared' },
+    { value: 'prepared', label: 'Prepared (awaiting review)' },
+    { value: 'reviewed', label: 'Reviewed' },
+  ];
+
+  // 0-10: some existing entries genuinely use a rating of 0 ("Questioned my
+  // sanity archiving this" quality tier), so it's included rather than 1-10.
+  const RATING_OPTIONS = [
+    { value: '', label: '— Unset —' },
+    ...Array.from({ length: 11 }, (_, i) => ({ value: String(i), label: String(i) })),
+  ];
+
+  const isAdmin = user?.role === 'admin' || user?.role === 'king-of-mobius';
+  // isArchivist is an additive grant layered on top of a user's existing
+  // role (e.g. Comic Creator keeps their role and also gets archive access).
+  const canEdit = isAdmin || user?.role === 'archivist' || user?.isArchivist === true;
+  const currentUserId = user?.id;
+
+  // State
+  let entries = $state<ArchiveEntry[]>([]);
+  let totalEntries = $state(0);
+  let isLoading = $state(true);
+  let error = $state<string | null>(null);
+
+  // Save status indicator (top-right of the toolbar box)
+  let saveStatus = $state<'idle' | 'saving' | 'saved'>('idle');
+  let activeSaveCount = 0;
+  let savedResetTimer: ReturnType<typeof setTimeout>;
+
+  // Filters
+  let searchInput = $state('');
+  let statusFilter = $state('');
+  let categoryFilter = $state('');
+  let reviewStageFilter = $state('');
+  let searchDebounceTimer: ReturnType<typeof setTimeout>;
+
+  // Table state
+  let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 25 });
+  // Postgres enum ordering for status matches declaration order
+  // (unsorted < identified < uploaded), so ascending sort surfaces
+  // unreviewed entries first - exactly the triage priority we want.
+  let sorting = $state<SortingState>([{ id: 'status', desc: false }]);
+
+  let pageCount = $derived(Math.ceil(totalEntries / pagination.pageSize));
+
+  function buildQuery(): string {
+    const params = new URLSearchParams();
+    params.set('limit', String(pagination.pageSize));
+    params.set('page', String(pagination.pageIndex + 1));
+    params.set('depth', '1');
+
+    const sortField = sorting[0]?.id || 'comicId';
+    const sortDir = sorting[0]?.desc ? '-' : '';
+    params.set('sort', `${sortDir}${sortField}`);
+
+    let clauseIndex = 0;
+    if (statusFilter) {
+      params.set(`where[and][${clauseIndex}][status][equals]`, statusFilter);
+      clauseIndex++;
+    }
+    if (categoryFilter) {
+      params.set(`where[and][${clauseIndex}][category][equals]`, categoryFilter);
+      clauseIndex++;
+    }
+    if (reviewStageFilter) {
+      params.set(`where[and][${clauseIndex}][reviewStage][equals]`, reviewStageFilter);
+      clauseIndex++;
+    }
+    if (searchInput.trim()) {
+      params.set(`where[and][${clauseIndex}][or][0][title][contains]`, searchInput.trim());
+      params.set(`where[and][${clauseIndex}][or][1][author][contains]`, searchInput.trim());
+      clauseIndex++;
+    }
+
+    return params.toString();
+  }
+
+  async function fetchEntries() {
+    isLoading = true;
+    error = null;
+    try {
+      const response = await fetch(`/api/archive-entries?${buildQuery()}`);
+      if (!response.ok) throw new Error('Failed to load archive entries');
+      const data = await response.json();
+      entries = data.docs || [];
+      totalEntries = data.totalDocs || 0;
+    } catch (err) {
+      error = err instanceof Error ? err.message : 'Failed to load archive entries';
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  $effect(() => {
+    const _ = [pagination.pageIndex, pagination.pageSize, sorting, statusFilter, categoryFilter, reviewStageFilter];
+    fetchEntries();
+  });
+
+  function handleSearchInput() {
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(() => {
+      pagination = { ...pagination, pageIndex: 0 };
+      fetchEntries();
+    }, 400);
+  }
+
+  async function saveField(entry: ArchiveEntry, field: string, value: unknown) {
+    if (!canEdit) return;
+
+    activeSaveCount++;
+    saveStatus = 'saving';
+    clearTimeout(savedResetTimer);
+
+    const previous = entries;
+    entries = entries.map((e) => (e.id === entry.id ? { ...e, [field]: value } : e));
+
+    let succeeded = false;
+    try {
+      const response = await fetch(`/api/archive-entries/${entry.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: value }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to save');
+      }
+      // Merge the server's returned doc back in - picks up server-computed
+      // fields (e.g. quality is derived from rating) that the optimistic
+      // update above wouldn't know about.
+      if (data.doc) {
+        entries = entries.map((e) => (e.id === entry.id ? { ...e, ...data.doc } : e));
+      }
+      succeeded = true;
+    } catch (err) {
+      entries = previous;
+      toast.error('Failed to save change', {
+        description: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      activeSaveCount--;
+      if (activeSaveCount === 0) {
+        if (succeeded) {
+          saveStatus = 'saved';
+          savedResetTimer = setTimeout(() => {
+            saveStatus = 'idle';
+          }, 2000);
+        } else {
+          saveStatus = 'idle';
+        }
+      }
+    }
+  }
+
+  function markReady(entry: ArchiveEntry) {
+    saveField(entry, 'reviewStage', 'prepared');
+  }
+
+  function confirmReview(entry: ArchiveEntry) {
+    saveField(entry, 'reviewStage', 'reviewed');
+  }
+
+  // Once reviewed, the identification flags lock for everyone except admins
+  // (mirrors the backend's field-level access.update check).
+  function flagsLocked(entry: ArchiveEntry): boolean {
+    return entry.reviewStage === 'reviewed' && !isAdmin;
+  }
+
+  const columns: ColumnDef<ArchiveEntry>[] = [
+    {
+      accessorKey: 'comicId',
+      header: sortableHeader('Comic #'),
+    },
+    {
+      accessorKey: 'title',
+      header: sortableHeader('Title'),
+      cell: ({ row }) =>
+        renderComponent(PlainTextCell as any, {
+          value: row.original.title,
+          fallback: '(untitled)',
+          class: 'entry-title',
+        }),
+    },
+    {
+      accessorKey: 'author',
+      header: sortableHeader('Author'),
+      cell: ({ row }) =>
+        renderComponent(PlainTextCell as any, {
+          value: row.original.author,
+          fallback: '—',
+          class: 'entry-author',
+        }),
+    },
+    {
+      accessorKey: 'category',
+      header: sortableHeader('Category'),
+      cell: ({ row }) =>
+        renderComponent(EditableComboboxCell as any, {
+          value: row.original.category ?? '',
+          options: CATEGORY_EDIT_OPTIONS,
+          placeholder: 'Uncategorized',
+          searchPlaceholder: 'Search categories...',
+          disabled: !canEdit,
+          onSave: (value: string) => saveField(row.original, 'category', value === '' ? null : value),
+        }),
+    },
+    {
+      accessorKey: 'isSpriteComic',
+      header: sortableHeader('Sprite Comic?'),
+      cell: ({ row }) =>
+        renderComponent(EditableCheckboxCell as any, {
+          value: row.original.isSpriteComic ?? false,
+          disabled: !canEdit || flagsLocked(row.original),
+          onSave: (value: boolean) => saveField(row.original, 'isSpriteComic', value),
+        }),
+    },
+    {
+      accessorKey: 'isGameRelated',
+      header: sortableHeader('Game Related?'),
+      cell: ({ row }) =>
+        row.original.isSpriteComic
+          ? renderComponent(PlainTextCell as any, { value: 'N/A', class: 'entry-na' })
+          : renderComponent(EditableCheckboxCell as any, {
+              value: row.original.isGameRelated ?? false,
+              disabled: !canEdit || flagsLocked(row.original),
+              onSave: (value: boolean) => saveField(row.original, 'isGameRelated', value),
+            }),
+    },
+    {
+      accessorKey: 'rating',
+      header: sortableHeader('Rating'),
+      cell: ({ row }) =>
+        renderComponent(EditableSelectCell as any, {
+          value: row.original.rating !== undefined && row.original.rating !== null ? String(row.original.rating) : '',
+          options: RATING_OPTIONS,
+          placeholder: 'Unset',
+          disabled: !canEdit,
+          onSave: (value: string) => saveField(row.original, 'rating', value === '' ? null : Number(value)),
+        }),
+    },
+    {
+      accessorKey: 'quality',
+      header: 'Quality',
+      cell: ({ row }) =>
+        renderComponent(PlainTextCell as any, {
+          value: row.original.quality,
+          fallback: '—',
+          class: 'entry-quality',
+        }),
+      enableSorting: false,
+    },
+    {
+      accessorKey: 'notes',
+      header: 'Notes',
+      cell: ({ row }) =>
+        renderComponent(EditableNotesCell as any, {
+          value: row.original.notes ?? '',
+          disabled: !canEdit,
+          onSave: (value: string) => saveField(row.original, 'notes', value),
+        }),
+      enableSorting: false,
+    },
+    {
+      accessorKey: 'status',
+      header: sortableHeader('Status'),
+      cell: ({ row }) =>
+        isAdmin
+          ? renderComponent(EditableSelectCell as any, {
+              value: row.original.status,
+              options: STATUS_OPTIONS,
+              onSave: (value: string) => saveField(row.original, 'status', value),
+            })
+          : renderComponent(ArchiveStatusBadge as any, { status: row.original.status }),
+    },
+    {
+      accessorKey: 'reviewStage',
+      header: sortableHeader('Review'),
+      cell: ({ row }) =>
+        renderComponent(ReviewStatusCell as any, {
+          reviewStage: row.original.reviewStage,
+          preparedBy: row.original.preparedBy,
+          reviewedBy: row.original.reviewedBy,
+          currentUserId,
+          canEdit,
+          onMarkReady: () => markReady(row.original),
+          onConfirm: () => confirmReview(row.original),
+        }),
+    },
+    {
+      id: 'link',
+      header: 'Link',
+      cell: ({ row }) => renderComponent(LinkCell as any, { href: row.original.link }),
+      enableSorting: false,
+    },
+  ];
+
+  // Derived (not a plain const) so a fresh table instance is built whenever
+  // entries/pagination/sorting/totalEntries change - avoids relying on
+  // createSvelteTable's internal getter-based option updates, which only
+  // reliably re-render for callers that pre-populate data via SSR props
+  // (see UserUploadsViewer.svelte) rather than starting empty and fetching.
+  let table = $derived.by(() =>
+    createSvelteTable({
+      data: entries,
+      columns,
+      state: { pagination, sorting },
+      getCoreRowModel: getCoreRowModel(),
+      getPaginationRowModel: getPaginationRowModel(),
+      getSortedRowModel: getSortedRowModel(),
+      manualPagination: true,
+      manualSorting: true,
+      pageCount: Math.ceil(totalEntries / pagination.pageSize),
+      onPaginationChange: (updater) => {
+        pagination = typeof updater === 'function' ? updater(pagination) : updater;
+      },
+      onSortingChange: (updater) => {
+        sorting = typeof updater === 'function' ? updater(sorting) : updater;
+        pagination = { ...pagination, pageIndex: 0 };
+      },
+    })
+  );
+</script>
+
+<div class="triage-table">
+  <div class="toolbar-panel">
+    <div class="toolbar-header">
+      <div class="toolbar-header-text">
+        <h1>Archive Triage</h1>
+        <p>
+          Help sort the SmackJeeves comic archive: flag whether each entry is actually a sprite
+          comic, and fill in category, rating, and quality for anything still unlabeled.
+        </p>
+      </div>
+
+      <div class="save-status save-status--{saveStatus}">
+        {#if saveStatus === 'saving'}
+          <LoaderCircle size={16} class="save-status-spinner" />
+          <span>Saving...</span>
+        {:else if saveStatus === 'saved'}
+          <Check size={16} />
+          <span>Saved</span>
+        {/if}
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <Input
+        bind:value={searchInput}
+        oninput={handleSearchInput}
+        placeholder="Search by title or author..."
+        themed
+        class="toolbar-search"
+      />
+      <Select
+        bind:value={statusFilter}
+        options={[{ value: '', label: 'All Statuses' }, ...STATUS_OPTIONS]}
+        placeholder="All Statuses"
+        themed
+      />
+      <Combobox
+        bind:value={categoryFilter}
+        options={[{ value: '', label: 'All Categories' }, ...CATEGORY_OPTIONS]}
+        placeholder="All Categories"
+        searchPlaceholder="Search categories..."
+        themed
+      />
+      <Select
+        bind:value={reviewStageFilter}
+        options={[{ value: '', label: 'All Review Stages' }, ...REVIEW_STAGE_OPTIONS]}
+        placeholder="All Review Stages"
+        themed
+      />
+    </div>
+
+    <div class="results-count">{totalEntries} entries</div>
+  </div>
+
+  {#if error}
+    <div class="error-state">
+      <p>{error}</p>
+    </div>
+  {:else if isLoading && entries.length === 0}
+    <div class="loading-state">
+      <p>Loading archive entries...</p>
+    </div>
+  {:else}
+    <!-- Desktop Table -->
+    <div class="desktop-table">
+      <DataTable {table} themed showPagination class="triage-data-table" emptyMessage="No entries match your filters." />
+    </div>
+
+    <!-- Mobile Cards -->
+    <div class="mobile-cards">
+      {#each entries as entry (entry.id)}
+        <div class="entry-card">
+          <div class="entry-card-header">
+            <span class="entry-card-id">#{entry.comicId}</span>
+            <span class="entry-card-title">{entry.title || '(untitled)'}</span>
+            {#if entry.link}
+              <a href="https://sgxp.me{entry.link}" target="_blank" rel="noopener noreferrer" class="entry-card-link">
+                <ExternalLink size={16} />
+              </a>
+            {/if}
+          </div>
+          <div class="entry-card-author">By {entry.author || 'Unknown'}</div>
+
+          <div class="entry-card-field">
+            <label>Category</label>
+            <EditableComboboxCell
+              value={entry.category ?? ''}
+              options={CATEGORY_EDIT_OPTIONS}
+              placeholder="Uncategorized"
+              searchPlaceholder="Search categories..."
+              disabled={!canEdit}
+              onSave={(v) => saveField(entry, 'category', v === '' ? null : v)}
+            />
+          </div>
+
+          <div class="entry-card-field-row">
+            <div class="entry-card-field entry-card-field--checkbox">
+              <label>Sprite Comic?</label>
+              <EditableCheckboxCell
+                value={entry.isSpriteComic ?? false}
+                disabled={!canEdit || flagsLocked(entry)}
+                onSave={(v) => saveField(entry, 'isSpriteComic', v)}
+              />
+            </div>
+            {#if !entry.isSpriteComic}
+              <div class="entry-card-field entry-card-field--checkbox">
+                <label>Game Related?</label>
+                <EditableCheckboxCell
+                  value={entry.isGameRelated ?? false}
+                  disabled={!canEdit || flagsLocked(entry)}
+                  onSave={(v) => saveField(entry, 'isGameRelated', v)}
+                />
+              </div>
+            {/if}
+          </div>
+
+          <div class="entry-card-field">
+            <label>Review</label>
+            <ReviewStatusCell
+              reviewStage={entry.reviewStage}
+              preparedBy={entry.preparedBy}
+              reviewedBy={entry.reviewedBy}
+              {currentUserId}
+              {canEdit}
+              onMarkReady={() => markReady(entry)}
+              onConfirm={() => confirmReview(entry)}
+            />
+          </div>
+
+          <div class="entry-card-field-row">
+            <div class="entry-card-field">
+              <label>Rating</label>
+              <EditableSelectCell
+                value={entry.rating !== undefined && entry.rating !== null ? String(entry.rating) : ''}
+                options={RATING_OPTIONS}
+                placeholder="Unset"
+                disabled={!canEdit}
+                onSave={(v) => saveField(entry, 'rating', v === '' ? null : Number(v))}
+              />
+            </div>
+            <div class="entry-card-field">
+              <label>Status</label>
+              {#if isAdmin}
+                <EditableSelectCell
+                  value={entry.status}
+                  options={STATUS_OPTIONS}
+                  onSave={(v) => saveField(entry, 'status', v)}
+                />
+              {:else}
+                <ArchiveStatusBadge status={entry.status} />
+              {/if}
+            </div>
+          </div>
+
+          <div class="entry-card-field">
+            <label>Quality</label>
+            <span class="entry-quality">{entry.quality || '— (set by rating)'}</span>
+          </div>
+
+          <div class="entry-card-field">
+            <label>Notes</label>
+            <EditableNotesCell value={entry.notes ?? ''} disabled={!canEdit} onSave={(v) => saveField(entry, 'notes', v)} />
+          </div>
+        </div>
+      {/each}
+
+      {#if pageCount > 1}
+        <div class="mobile-pagination">
+          <button
+            class="pagination-btn"
+            onclick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Previous
+          </button>
+          <span class="pagination-info">Page {pagination.pageIndex + 1} of {pageCount}</span>
+          <button
+            class="pagination-btn"
+            onclick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next
+          </button>
+        </div>
+      {/if}
+    </div>
+  {/if}
+</div>
+
+<style>
+  .triage-table {
+    width: 100%;
+  }
+
+  .toolbar-panel {
+    background: var(--page-color);
+    border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white);
+    box-shadow: var(--box-shadow);
+    padding: 16px;
+    margin-bottom: var(--gap, 20px);
+  }
+
+  .toolbar-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 70%, white);
+  }
+
+  .toolbar-header-text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .toolbar-header-text h1 {
+    font-family: 'saira';
+    font-weight: 800;
+    font-size: 24px;
+    color: var(--font-color);
+    margin: 0 0 8px 0;
+  }
+
+  .toolbar-header-text p {
+    font-family: 'saira';
+    font-size: 14px;
+    color: var(--font-color);
+    opacity: 0.8;
+    margin: 0;
+    max-width: 700px;
+  }
+
+  .save-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'saira';
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding-top: 2px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .save-status--saving {
+    color: var(--font-color);
+    opacity: 0.7;
+  }
+
+  .save-status--saved {
+    color: #22c55e;
+    opacity: 1;
+  }
+
+  :global(.save-status-spinner) {
+    animation: save-status-spin 0.8s linear infinite;
+  }
+
+  @keyframes save-status-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  :global(.toolbar-search) {
+    flex: 1;
+    min-width: 220px;
+    height: 42px !important;
+    min-height: 42px !important;
+  }
+
+  .results-count {
+    font-family: 'saira';
+    font-size: 13px;
+    color: var(--font-color);
+    opacity: 0.7;
+  }
+
+  .loading-state,
+  .error-state {
+    text-align: center;
+    padding: 40px 20px;
+    font-family: 'saira';
+    color: var(--font-color);
+  }
+
+  :global(.triage-data-table [data-slot="table-head"]) {
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+  }
+
+  :global(.triage-data-table [data-slot="table-cell"]) {
+    padding: 6px 10px !important;
+  }
+
+  :global(.entry-quality) {
+    color: var(--font-color);
+    opacity: 0.75;
+    font-size: 13px;
+  }
+
+  :global(.entry-na) {
+    color: var(--font-color);
+    opacity: 0.4;
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  :global(.entry-title),
+  :global(.entry-author) {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  :global(.entry-title) {
+    color: var(--font-color);
+    font-weight: 600;
+    max-width: 240px;
+  }
+
+  :global(.entry-author) {
+    color: var(--font-color);
+    opacity: 0.85;
+    max-width: 160px;
+  }
+
+  :global(.entry-link) {
+    color: var(--font-link-color);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  :global(.entry-link:hover) {
+    text-decoration: underline;
+  }
+
+
+  .desktop-table {
+    display: block;
+  }
+
+  .mobile-cards {
+    display: none;
+  }
+
+  /* Mobile Cards */
+  .entry-card {
+    background: var(--page-color);
+    border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white);
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: var(--box-shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .entry-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'saira';
+  }
+
+  .entry-card-id {
+    color: var(--font-color);
+    opacity: 0.6;
+    font-size: 13px;
+  }
+
+  .entry-card-title {
+    color: var(--font-color);
+    font-weight: 700;
+    font-size: 15px;
+    flex: 1;
+  }
+
+  .entry-card-link {
+    color: var(--font-link-color);
+    display: flex;
+    align-items: center;
+  }
+
+  .entry-card-author {
+    font-family: 'saira';
+    font-size: 13px;
+    color: var(--font-color);
+    opacity: 0.7;
+    margin-top: -6px;
+  }
+
+  .entry-card-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+  }
+
+  .entry-card-field--checkbox {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .entry-card-field--checkbox label {
+    margin: 0;
+  }
+
+  .entry-card-field label {
+    font-family: 'saira';
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--font-color);
+    opacity: 0.7;
+  }
+
+  .entry-card-field-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .mobile-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 15px;
+    background: var(--page-color);
+    border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white);
+    box-shadow: var(--box-shadow);
+  }
+
+  .pagination-btn {
+    padding: 8px 16px;
+    background: var(--font-link-color);
+    color: white;
+    border: none;
+    font-family: 'saira';
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .pagination-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .pagination-info {
+    font-family: 'saira';
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--font-color);
+  }
+
+  @media (max-width: 768px) {
+    .desktop-table {
+      display: none;
+    }
+
+    .mobile-cards {
+      display: block;
+    }
+
+    .toolbar {
+      flex-direction: column;
+    }
+  }
+</style>

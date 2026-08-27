@@ -1,0 +1,193 @@
+---
+import FrontPageLayout from "../../layouts/FrontPageLayout.astro";
+import { resolveUser } from "../../lib/userCache";
+
+const token = Astro.cookies.get("payload-token")?.value;
+if (!token) {
+  return Astro.redirect("/login?redirect=/smackjeevesarchivetriage/leaderboard");
+}
+
+const { user, source } = await resolveUser(Astro.cookies);
+if (source === "invalid" || !user) {
+  return Astro.redirect("/login?redirect=/smackjeevesarchivetriage/leaderboard");
+}
+
+interface LeaderboardUser {
+  id: number | string;
+  username?: string;
+  displayName?: string;
+  archivePreparedCount?: number;
+  archiveReviewedCount?: number;
+}
+
+async function fetchTop(sortField: string): Promise<LeaderboardUser[]> {
+  try {
+    const response = await fetch(
+      `${import.meta.env.PAYLOAD_URL}/api/users?sort=-${sortField}&limit=20&where[${sortField}][greater_than]=0`,
+      { headers: { Cookie: `payload-token=${token}` } }
+    );
+    if (!response.ok) return [];
+    const data = await response.json();
+    return data.docs || [];
+  } catch {
+    return [];
+  }
+}
+
+const [topPreparers, topReviewers] = await Promise.all([
+  fetchTop("archivePreparedCount"),
+  fetchTop("archiveReviewedCount"),
+]);
+
+function nameOf(u: LeaderboardUser): string {
+  return u.displayName || u.username || `User #${u.id}`;
+}
+---
+
+<FrontPageLayout title="Archive Leaderboard">
+  <div class="leaderboard-page">
+    <div class="leaderboard-header">
+      <h1>Archive Triage Leaderboard</h1>
+      <p>Who's identified the most entries, and who's reviewed the most.</p>
+    </div>
+
+    <div class="leaderboard-columns">
+      <div class="leaderboard-panel">
+        <h2>Top Preparers</h2>
+        {topPreparers.length === 0 ? (
+          <p class="empty-note">No one has prepared any entries yet.</p>
+        ) : (
+          <ol class="leaderboard-list">
+            {topPreparers.map((u, i) => (
+              <li>
+                <span class="rank">#{i + 1}</span>
+                <span class="name">{nameOf(u)}</span>
+                <span class="count">{u.archivePreparedCount}</span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
+
+      <div class="leaderboard-panel">
+        <h2>Top Reviewers</h2>
+        {topReviewers.length === 0 ? (
+          <p class="empty-note">No one has reviewed any entries yet.</p>
+        ) : (
+          <ol class="leaderboard-list">
+            {topReviewers.map((u, i) => (
+              <li>
+                <span class="rank">#{i + 1}</span>
+                <span class="name">{nameOf(u)}</span>
+                <span class="count">{u.archiveReviewedCount}</span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
+    </div>
+  </div>
+</FrontPageLayout>
+
+<style>
+  .leaderboard-page {
+    width: 100%;
+    padding: 20px 1rem;
+  }
+
+  .leaderboard-header {
+    margin-bottom: var(--gap, 20px);
+  }
+
+  .leaderboard-header h1 {
+    font-family: 'saira';
+    font-weight: 800;
+    font-size: 24px;
+    color: var(--font-color);
+    margin: 0 0 8px 0;
+  }
+
+  .leaderboard-header p {
+    font-family: 'saira';
+    font-size: 14px;
+    color: var(--font-color);
+    opacity: 0.8;
+    margin: 0;
+  }
+
+  .leaderboard-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--gap, 20px);
+  }
+
+  .leaderboard-panel {
+    background: var(--page-color);
+    border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white);
+    box-shadow: var(--box-shadow);
+    padding: 20px;
+  }
+
+  .leaderboard-panel h2 {
+    font-family: 'saira';
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--font-color);
+    margin: 0 0 16px 0;
+  }
+
+  .empty-note {
+    font-family: 'saira';
+    font-size: 14px;
+    color: var(--font-color);
+    opacity: 0.7;
+    margin: 0;
+  }
+
+  .leaderboard-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .leaderboard-list li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 70%, white);
+    font-family: 'saira';
+  }
+
+  .leaderboard-list li:last-child {
+    border-bottom: none;
+  }
+
+  .rank {
+    font-weight: 800;
+    color: var(--font-link-color);
+    width: 32px;
+    flex-shrink: 0;
+  }
+
+  .name {
+    flex: 1;
+    color: var(--font-color);
+    font-weight: 600;
+  }
+
+  .count {
+    color: var(--font-color);
+    opacity: 0.8;
+    font-weight: 700;
+  }
+
+  @media (max-width: 768px) {
+    .leaderboard-columns {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
