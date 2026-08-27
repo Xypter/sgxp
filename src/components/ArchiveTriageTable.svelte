@@ -205,7 +205,11 @@
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to save');
+        // Payload wraps thrown hook errors as { errors: [{ message }] } over
+        // HTTP - there's no top-level `message` field, so checking that
+        // alone always fell through to the generic fallback below.
+        const serverMessage = data.errors?.[0]?.message || data.message;
+        throw new Error(serverMessage || 'Failed to save');
       }
       // Merge the server's returned doc back in - picks up server-computed
       // fields (e.g. quality is derived from rating) that the optimistic
