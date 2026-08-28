@@ -243,7 +243,12 @@
   // the interval above only matters while a connection is down/reconnecting.
   $effect(() => {
     const source = new EventSource('/api/archive-entries/stream');
-    source.addEventListener('entry-updated', pollEntriesDebounced);
+    source.onopen = () => console.log('[SSE] connected');
+    source.onerror = (e) => console.warn('[SSE] error/reconnecting', e);
+    source.addEventListener('entry-updated', (e) => {
+      console.log('[SSE] entry-updated received', e.data);
+      pollEntriesDebounced();
+    });
     return () => {
       source.close();
       clearTimeout(pollDebounceTimer);
