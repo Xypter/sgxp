@@ -442,8 +442,8 @@
           value: row.original.rating !== undefined && row.original.rating !== null ? String(row.original.rating) : '',
           options: RATING_OPTIONS,
           placeholder: 'Unset',
-          disabled: !canEdit || !isRelevant(row.original) || rowLocked(row.original),
-          faded: !isRelevant(row.original),
+          disabled: !isAdmin || !isRelevant(row.original) || rowLocked(row.original),
+          faded: isAdmin && !isRelevant(row.original),
           onSave: (value: string) => saveField(row.original, 'rating', value === '' ? null : Number(value)),
         }),
     },
@@ -464,7 +464,7 @@
       cell: ({ row }) =>
         renderComponent(EditableNotesCell as any, {
           value: row.original.notes ?? '',
-          disabled: !canEdit || rowLocked(row.original),
+          disabled: !isAdmin || rowLocked(row.original),
           onSave: (value: string) => saveField(row.original, 'notes', value),
         }),
       enableSorting: false,
@@ -686,8 +686,8 @@
                 value={entry.rating !== undefined && entry.rating !== null ? String(entry.rating) : ''}
                 options={RATING_OPTIONS}
                 placeholder="Unset"
-                disabled={!canEdit || !isRelevant(entry) || rowLocked(entry)}
-                faded={!isRelevant(entry)}
+                disabled={!isAdmin || !isRelevant(entry) || rowLocked(entry)}
+                faded={isAdmin && !isRelevant(entry)}
                 onSave={(v) => saveField(entry, 'rating', v === '' ? null : Number(v))}
               />
             </div>
@@ -712,7 +712,7 @@
 
           <div class="entry-card-field">
             <label>Notes</label>
-            <EditableNotesCell value={entry.notes ?? ''} disabled={!canEdit || rowLocked(entry)} onSave={(v) => saveField(entry, 'notes', v)} />
+            <EditableNotesCell value={entry.notes ?? ''} disabled={!isAdmin || rowLocked(entry)} onSave={(v) => saveField(entry, 'notes', v)} />
           </div>
         </div>
       {/each}
