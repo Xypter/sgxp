@@ -1,4 +1,5 @@
 import express from 'express';
+import { buildArchivistRequestComponents } from './archivistActions.js';
 
 /**
  * Internal HTTP server that receives real-time event notifications
@@ -49,7 +50,8 @@ async function handleEvent(notifier, type, data) {
       await notifier.sendToOwner(
         `🗂️ Archivist access requested by **${data?.displayName ?? data?.username ?? 'unknown user'}**` +
           (data?.username ? ` (@${data.username})` : '') +
-          `\nUser ID: ${data?.userId ?? 'unknown'}`
+          `\nUser ID: ${data?.userId ?? 'unknown'}`,
+        { components: data?.userId ? buildArchivistRequestComponents(data.userId) : [] }
       );
       break;
     default:

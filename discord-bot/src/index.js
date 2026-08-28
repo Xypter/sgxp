@@ -5,6 +5,7 @@ import * as leaderboard from './commands/leaderboard.js';
 import { createNotifier } from './notify.js';
 import { startEventServer } from './server.js';
 import { scheduleJobs } from './jobs.js';
+import { isArchivistGrantButton, handleArchivistGrantButton } from './archivistActions.js';
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
@@ -24,6 +25,11 @@ client.once(Events.ClientReady, (readyClient) => {
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
+  if (isArchivistGrantButton(interaction)) {
+    await handleArchivistGrantButton(interaction);
+    return;
+  }
+
   if (!interaction.isChatInputCommand()) return;
 
   const command = client.commands.get(interaction.commandName);

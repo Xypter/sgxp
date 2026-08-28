@@ -1,9 +1,9 @@
 export function createNotifier(client) {
-  async function sendToOwner(content) {
+  async function sendToOwner(content, options = {}) {
     const ownerId = process.env.DISCORD_OWNER_USER_ID;
     if (!ownerId) return;
     const user = await client.users.fetch(ownerId);
-    await user.send(content);
+    return user.send({ content, ...options });
   }
 
   async function sendToAnnounceChannel(content) {
