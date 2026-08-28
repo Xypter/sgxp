@@ -14,6 +14,7 @@
     placeholder?: string;
     searchPlaceholder?: string;
     themed?: boolean;
+    disabled?: boolean;
     class?: string;
     onValueChange?: (value: string) => void;
   }
@@ -24,6 +25,7 @@
     placeholder = 'Select an option',
     searchPlaceholder = 'Search...',
     themed = false,
+    disabled = false,
     class: className,
     onValueChange
   }: ComboboxProps = $props();
@@ -56,7 +58,7 @@
 </script>
 
 <Popover.Root bind:open>
-  <Popover.Trigger class={triggerClass}>
+  <Popover.Trigger class={triggerClass} {disabled}>
     <span class="truncate">
       {selectedOption?.label || placeholder}
     </span>
@@ -117,8 +119,13 @@
     cursor: pointer;
   }
 
-  :global(.theme-combobox-trigger:hover) {
+  :global(.theme-combobox-trigger:hover:not(:disabled)) {
     border-color: color-mix(in srgb, var(--font-link-color) 80%, white) !important;
+  }
+
+  :global(.theme-combobox-trigger:disabled) {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
   }
 
   :global(.theme-combobox-trigger:focus),

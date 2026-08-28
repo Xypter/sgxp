@@ -12,6 +12,7 @@
     options: Option[];
     placeholder?: string;
     themed?: boolean;
+    disabled?: boolean;
     class?: string;
     children?: Snippet;
     onValueChange?: (value: string) => void;
@@ -23,6 +24,7 @@
     options,
     placeholder = 'Select an option',
     themed = false,
+    disabled = false,
     class: className,
     children,
     onValueChange,
@@ -43,8 +45,8 @@
   }
 </script>
 
-<SelectPrimitive.Root type="single" bind:value={value} onValueChange={handleValueChange}>
-  <SelectPrimitive.Trigger class={triggerClass}>
+<SelectPrimitive.Root type="single" bind:value={value} {disabled} onValueChange={handleValueChange}>
+  <SelectPrimitive.Trigger class={triggerClass} {disabled}>
     {#if children}
       {@render children()}
     {:else}

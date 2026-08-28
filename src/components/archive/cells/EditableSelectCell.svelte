@@ -11,10 +11,11 @@
     options: Option[];
     placeholder?: string;
     disabled?: boolean;
+    faded?: boolean;
     onSave: (value: string) => void;
   }
 
-  let { value = $bindable(), options, placeholder = 'Select...', disabled = false, onSave }: Props = $props();
+  let { value = $bindable(), options, placeholder = 'Select...', disabled = false, faded = false, onSave }: Props = $props();
 
   function handleChange(newValue: string) {
     if (newValue === value) return;
@@ -23,10 +24,10 @@
   }
 </script>
 
-{#if disabled}
+{#if disabled && !faded}
   <span class="readonly-value">{options.find(o => o.value === value)?.label || value || '—'}</span>
 {:else}
-  <Select {value} {options} {placeholder} themed onValueChange={handleChange} class="cell-select" />
+  <Select {value} {options} {placeholder} {disabled} themed onValueChange={handleChange} class="cell-select" />
 {/if}
 
 <style>

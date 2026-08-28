@@ -7,6 +7,7 @@ export { default as Label } from './Label.svelte';
 export { default as Badge } from './Badge.svelte';
 export { default as Textarea } from './Textarea.svelte';
 export { default as Select } from './Select.svelte';
+export { default as ToggleGroup } from './ToggleGroup.svelte';
 export { default as Combobox } from './Combobox.svelte';
 export { default as Switch } from './Switch.svelte';
 export { default as Checkbox } from './Checkbox.svelte';

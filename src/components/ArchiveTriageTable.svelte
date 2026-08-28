@@ -16,6 +16,7 @@
   import EditableComboboxCell from './archive/cells/EditableComboboxCell.svelte';
   import EditableNotesCell from './archive/cells/EditableNotesCell.svelte';
   import EditableCheckboxCell from './archive/cells/EditableCheckboxCell.svelte';
+  import EditableToggleButtonsCell from './archive/cells/EditableToggleButtonsCell.svelte';
   import ArchiveStatusBadge from './archive/cells/ArchiveStatusBadge.svelte';
   import ReviewStatusCell from './archive/cells/ReviewStatusCell.svelte';
   import PlainTextCell from './archive/cells/PlainTextCell.svelte';
@@ -53,6 +54,7 @@
     reviewStage: 'unprepared' | 'prepared' | 'reviewed';
     preparedBy?: UserRef | number | string | null;
     reviewedBy?: UserRef | number | string | null;
+    updatedAt?: string;
   }
 
   interface Props {
@@ -77,6 +79,11 @@
     { value: 'unsorted', label: 'Unsorted' },
     { value: 'identified', label: 'Identified' },
     { value: 'uploaded', label: 'Uploaded' },
+  ];
+
+  const YES_NO_OPTIONS = [
+    { value: 'true', label: 'Yes' },
+    { value: 'false', label: 'No' },
   ];
 
   const REVIEW_STAGE_OPTIONS = [
@@ -176,6 +183,71 @@
   $effect(() => {
     const _ = [pagination.pageIndex, pagination.pageSize, sorting, statusFilter, categoryFilter, reviewStageFilter];
     fetchEntries();
+  });
+
+  // The default sort funnels every archivist toward the same unreviewed rows
+  // at the top of page 1, so silent same-row edits from someone else are
+  // otherwise invisible until a manual refresh. The SSE connection below
+  // (fed by Payload's archive-entry-updated webhook) delivers near-instant
+  // notice of a change; this poll is just the fallback for when that
+  // connection is down or reconnecting. Always the current page (not the
+  // whole 34k-row collection).
+  const POLL_INTERVAL_MS = 60000;
+  const POLL_DEBOUNCE_MS = 500;
+  let pollDebounceTimer: ReturnType<typeof setTimeout>;
+
+  function pollEntriesDebounced() {
+    clearTimeout(pollDebounceTimer);
+    pollDebounceTimer = setTimeout(pollEntries, POLL_DEBOUNCE_MS);
+  }
+
+  async function pollEntries() {
+    // A save in flight means `entries` holds an optimistic local edit that
+    // hasn't round-tripped yet - overwriting it here would either flicker
+    // the field back to its old value or clobber the pending write.
+    if (activeSaveCount > 0) return;
+    try {
+      const response = await fetch(`/api/archive-entries?${buildQuery()}`);
+      if (!response.ok) return;
+      const data = await response.json();
+      const fresh: ArchiveEntry[] = data.docs || [];
+
+      const changedByOthers = fresh.filter((f) => {
+        const existing = entries.find((e) => e.id === f.id);
+        return existing && existing.updatedAt !== f.updatedAt;
+      });
+
+      entries = fresh;
+      totalEntries = data.totalDocs || 0;
+
+      if (changedByOthers.length > 0) {
+        toast.info(
+          changedByOthers.length === 1
+            ? `"${changedByOthers[0].title || '(untitled)'}" was just updated by someone else`
+            : `${changedByOthers.length} entries on this page were just updated by someone else`,
+          { description: 'Refreshed with their changes.' }
+        );
+      }
+    } catch {
+      // A background poll failing shouldn't interrupt the user - the next
+      // tick (or their next manual action) will retry.
+    }
+  }
+
+  $effect(() => {
+    const interval = setInterval(pollEntries, POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  });
+
+  // EventSource auto-reconnects on drop, so this is the "instant" path -
+  // the interval above only matters while a connection is down/reconnecting.
+  $effect(() => {
+    const source = new EventSource('/api/archive-entries/stream');
+    source.addEventListener('entry-updated', pollEntriesDebounced);
+    return () => {
+      source.close();
+      clearTimeout(pollDebounceTimer);
+    };
   });
 
   function handleSearchInput() {
@@ -285,6 +357,27 @@
         }),
     },
     {
+      accessorKey: 'isSpriteComic',
+      header: sortableHeader('Sprite Comic?'),
+      cell: ({ row }) =>
+        renderComponent(EditableToggleButtonsCell as any, {
+          value: String(row.original.isSpriteComic ?? false),
+          options: YES_NO_OPTIONS,
+          disabled: !canEdit || flagsLocked(row.original) || rowLocked(row.original),
+          onSave: (value: string) => saveField(row.original, 'isSpriteComic', value === 'true'),
+        }),
+    },
+    {
+      accessorKey: 'isGameRelated',
+      header: sortableHeader('Game Related?'),
+      cell: ({ row }) =>
+        renderComponent(EditableCheckboxCell as any, {
+          value: row.original.isGameRelated ?? false,
+          disabled: !canEdit || !row.original.isSpriteComic || flagsLocked(row.original) || rowLocked(row.original),
+          onSave: (value: boolean) => saveField(row.original, 'isGameRelated', value),
+        }),
+    },
+    {
       accessorKey: 'category',
       header: sortableHeader('Category'),
       cell: ({ row }) =>
@@ -293,31 +386,10 @@
           options: CATEGORY_EDIT_OPTIONS,
           placeholder: 'Uncategorized',
           searchPlaceholder: 'Search categories...',
-          disabled: !canEdit || rowLocked(row.original),
+          disabled: !canEdit || !row.original.isSpriteComic || rowLocked(row.original),
+          faded: !row.original.isSpriteComic,
           onSave: (value: string) => saveField(row.original, 'category', value === '' ? null : value),
         }),
-    },
-    {
-      accessorKey: 'isSpriteComic',
-      header: sortableHeader('Sprite Comic?'),
-      cell: ({ row }) =>
-        renderComponent(EditableCheckboxCell as any, {
-          value: row.original.isSpriteComic ?? false,
-          disabled: !canEdit || flagsLocked(row.original) || rowLocked(row.original),
-          onSave: (value: boolean) => saveField(row.original, 'isSpriteComic', value),
-        }),
-    },
-    {
-      accessorKey: 'isGameRelated',
-      header: sortableHeader('Game Related?'),
-      cell: ({ row }) =>
-        row.original.isSpriteComic
-          ? renderComponent(PlainTextCell as any, { value: 'N/A', class: 'entry-na' })
-          : renderComponent(EditableCheckboxCell as any, {
-              value: row.original.isGameRelated ?? false,
-              disabled: !canEdit || flagsLocked(row.original) || rowLocked(row.original),
-              onSave: (value: boolean) => saveField(row.original, 'isGameRelated', value),
-            }),
     },
     {
       accessorKey: 'rating',
@@ -327,7 +399,8 @@
           value: row.original.rating !== undefined && row.original.rating !== null ? String(row.original.rating) : '',
           options: RATING_OPTIONS,
           placeholder: 'Unset',
-          disabled: !canEdit || rowLocked(row.original),
+          disabled: !canEdit || !row.original.isSpriteComic || rowLocked(row.original),
+          faded: !row.original.isSpriteComic,
           onSave: (value: string) => saveField(row.original, 'rating', value === '' ? null : Number(value)),
         }),
     },
@@ -418,7 +491,7 @@
   <div class="toolbar-panel">
     <div class="toolbar-header">
       <div class="toolbar-header-text">
-        <h1>Archive Triage</h1>
+        <h1>Smack Jeeves Archive Triage</h1>
         <p>
           Help sort the SmackJeeves comic archive: flag whether each entry is actually a sprite
           comic, and fill in category, rating, and quality for anything still unlabeled.
@@ -497,6 +570,26 @@
           </div>
           <div class="entry-card-author">By {entry.author || 'Unknown'}</div>
 
+          <div class="entry-card-field-row">
+            <div class="entry-card-field entry-card-field--checkbox">
+              <label>Sprite Comic?</label>
+              <EditableToggleButtonsCell
+                value={String(entry.isSpriteComic ?? false)}
+                options={YES_NO_OPTIONS}
+                disabled={!canEdit || flagsLocked(entry) || rowLocked(entry)}
+                onSave={(v) => saveField(entry, 'isSpriteComic', v === 'true')}
+              />
+            </div>
+            <div class="entry-card-field entry-card-field--checkbox">
+              <label>Game Related?</label>
+              <EditableCheckboxCell
+                value={entry.isGameRelated ?? false}
+                disabled={!canEdit || !entry.isSpriteComic || flagsLocked(entry) || rowLocked(entry)}
+                onSave={(v) => saveField(entry, 'isGameRelated', v)}
+              />
+            </div>
+          </div>
+
           <div class="entry-card-field">
             <label>Category</label>
             <EditableComboboxCell
@@ -504,30 +597,10 @@
               options={CATEGORY_EDIT_OPTIONS}
               placeholder="Uncategorized"
               searchPlaceholder="Search categories..."
-              disabled={!canEdit || rowLocked(entry)}
+              disabled={!canEdit || !entry.isSpriteComic || rowLocked(entry)}
+              faded={!entry.isSpriteComic}
               onSave={(v) => saveField(entry, 'category', v === '' ? null : v)}
             />
-          </div>
-
-          <div class="entry-card-field-row">
-            <div class="entry-card-field entry-card-field--checkbox">
-              <label>Sprite Comic?</label>
-              <EditableCheckboxCell
-                value={entry.isSpriteComic ?? false}
-                disabled={!canEdit || flagsLocked(entry) || rowLocked(entry)}
-                onSave={(v) => saveField(entry, 'isSpriteComic', v)}
-              />
-            </div>
-            {#if !entry.isSpriteComic}
-              <div class="entry-card-field entry-card-field--checkbox">
-                <label>Game Related?</label>
-                <EditableCheckboxCell
-                  value={entry.isGameRelated ?? false}
-                  disabled={!canEdit || flagsLocked(entry) || rowLocked(entry)}
-                  onSave={(v) => saveField(entry, 'isGameRelated', v)}
-                />
-              </div>
-            {/if}
           </div>
 
           <div class="entry-card-field">
@@ -550,7 +623,8 @@
                 value={entry.rating !== undefined && entry.rating !== null ? String(entry.rating) : ''}
                 options={RATING_OPTIONS}
                 placeholder="Unset"
-                disabled={!canEdit || rowLocked(entry)}
+                disabled={!canEdit || !entry.isSpriteComic || rowLocked(entry)}
+                faded={!entry.isSpriteComic}
                 onSave={(v) => saveField(entry, 'rating', v === '' ? null : Number(v))}
               />
             </div>
@@ -734,12 +808,6 @@
     white-space: nowrap;
   }
 
-  :global(.entry-na) {
-    color: var(--font-color);
-    opacity: 0.4;
-    font-size: 13px;
-    font-style: italic;
-  }
 
   :global(.entry-title),
   :global(.entry-author) {

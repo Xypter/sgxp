@@ -12,6 +12,7 @@
     placeholder?: string;
     searchPlaceholder?: string;
     disabled?: boolean;
+    faded?: boolean;
     onSave: (value: string) => void;
   }
 
@@ -21,6 +22,7 @@
     placeholder = 'Select...',
     searchPlaceholder = 'Search...',
     disabled = false,
+    faded = false,
     onSave,
   }: Props = $props();
 
@@ -31,10 +33,10 @@
   }
 </script>
 
-{#if disabled}
+{#if disabled && !faded}
   <span class="readonly-value">{options.find(o => o.value === value)?.label || value || '—'}</span>
 {:else}
-  <Combobox {value} {options} {placeholder} {searchPlaceholder} themed onValueChange={handleChange} class="cell-combobox" />
+  <Combobox {value} {options} {placeholder} {searchPlaceholder} {disabled} themed onValueChange={handleChange} class="cell-combobox" />
 {/if}
 
 <style>
