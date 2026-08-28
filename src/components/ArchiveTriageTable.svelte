@@ -412,11 +412,13 @@
       accessorKey: 'isGameRelated',
       header: sortableHeader('Game Related?'),
       cell: ({ row }) =>
-        renderComponent(EditableCheckboxCell as any, {
-          value: row.original.isGameRelated ?? false,
-          disabled: !canEdit || flagsLocked(row.original) || rowLocked(row.original),
-          onSave: (value: boolean) => saveField(row.original, 'isGameRelated', value),
-        }),
+        row.original.isSpriteComic
+          ? renderComponent(PlainTextCell as any, { fallback: '—', class: 'entry-na' })
+          : renderComponent(EditableCheckboxCell as any, {
+              value: row.original.isGameRelated ?? false,
+              disabled: !canEdit || flagsLocked(row.original) || rowLocked(row.original),
+              onSave: (value: boolean) => saveField(row.original, 'isGameRelated', value),
+            }),
     },
     {
       accessorKey: 'category',
@@ -639,11 +641,15 @@
             </div>
             <div class="entry-card-field entry-card-field--checkbox">
               <label>Game Related?</label>
-              <EditableCheckboxCell
-                value={entry.isGameRelated ?? false}
-                disabled={!canEdit || flagsLocked(entry) || rowLocked(entry)}
-                onSave={(v) => saveField(entry, 'isGameRelated', v)}
-              />
+              {#if entry.isSpriteComic}
+                <span class="entry-na">—</span>
+              {:else}
+                <EditableCheckboxCell
+                  value={entry.isGameRelated ?? false}
+                  disabled={!canEdit || flagsLocked(entry) || rowLocked(entry)}
+                  onSave={(v) => saveField(entry, 'isGameRelated', v)}
+                />
+              {/if}
             </div>
           </div>
 
@@ -1062,5 +1068,12 @@
     .toolbar {
       flex-direction: column;
     }
+  }
+
+  :global(.entry-na) {
+    color: var(--font-color);
+    opacity: 0.4;
+    font-size: 13px;
+    font-style: italic;
   }
 </style>
