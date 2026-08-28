@@ -372,6 +372,48 @@
     return !!entry.isSpriteComic || !!entry.isGameRelated;
   }
 
+  // Rating/Quality/Notes are admin-only - hidden entirely for everyone else
+  // rather than shown locked, since archivists have no use for them.
+  const adminOnlyColumns: ColumnDef<ArchiveEntry>[] = isAdmin
+    ? [
+        {
+          accessorKey: 'rating',
+          header: sortableHeader('Rating'),
+          cell: ({ row }) =>
+            renderComponent(EditableSelectCell as any, {
+              value: row.original.rating !== undefined && row.original.rating !== null ? String(row.original.rating) : '',
+              options: RATING_OPTIONS,
+              placeholder: 'Unset',
+              disabled: !isRelevant(row.original) || rowLocked(row.original),
+              faded: !isRelevant(row.original),
+              onSave: (value: string) => saveField(row.original, 'rating', value === '' ? null : Number(value)),
+            }),
+        },
+        {
+          accessorKey: 'quality',
+          header: 'Quality',
+          cell: ({ row }) =>
+            renderComponent(PlainTextCell as any, {
+              value: row.original.quality,
+              fallback: '—',
+              class: 'entry-quality',
+            }),
+          enableSorting: false,
+        },
+        {
+          accessorKey: 'notes',
+          header: 'Notes',
+          cell: ({ row }) =>
+            renderComponent(EditableNotesCell as any, {
+              value: row.original.notes ?? '',
+              disabled: rowLocked(row.original),
+              onSave: (value: string) => saveField(row.original, 'notes', value),
+            }),
+          enableSorting: false,
+        },
+      ]
+    : [];
+
   const columns: ColumnDef<ArchiveEntry>[] = [
     {
       accessorKey: 'comicId',
@@ -434,41 +476,10 @@
           onSave: (value: string) => saveField(row.original, 'category', value === '' ? null : value),
         }),
     },
-    {
-      accessorKey: 'rating',
-      header: sortableHeader('Rating'),
-      cell: ({ row }) =>
-        renderComponent(EditableSelectCell as any, {
-          value: row.original.rating !== undefined && row.original.rating !== null ? String(row.original.rating) : '',
-          options: RATING_OPTIONS,
-          placeholder: 'Unset',
-          disabled: !isAdmin || !isRelevant(row.original) || rowLocked(row.original),
-          faded: isAdmin && !isRelevant(row.original),
-          onSave: (value: string) => saveField(row.original, 'rating', value === '' ? null : Number(value)),
-        }),
-    },
-    {
-      accessorKey: 'quality',
-      header: 'Quality',
-      cell: ({ row }) =>
-        renderComponent(PlainTextCell as any, {
-          value: row.original.quality,
-          fallback: '—',
-          class: 'entry-quality',
-        }),
-      enableSorting: false,
-    },
-    {
-      accessorKey: 'notes',
-      header: 'Notes',
-      cell: ({ row }) =>
-        renderComponent(EditableNotesCell as any, {
-          value: row.original.notes ?? '',
-          disabled: !isAdmin || rowLocked(row.original),
-          onSave: (value: string) => saveField(row.original, 'notes', value),
-        }),
-      enableSorting: false,
-    },
+    // Rating/Quality/Notes are admin-only fields - hidden entirely for
+    // everyone else rather than shown locked, since archivists (and any
+    // other logged-in viewer) have no use for them.
+    ...adminOnlyColumns,
     {
       accessorKey: 'status',
       header: sortableHeader('Status'),
@@ -680,17 +691,19 @@
           </div>
 
           <div class="entry-card-field-row">
-            <div class="entry-card-field">
-              <label>Rating</label>
-              <EditableSelectCell
-                value={entry.rating !== undefined && entry.rating !== null ? String(entry.rating) : ''}
-                options={RATING_OPTIONS}
-                placeholder="Unset"
-                disabled={!isAdmin || !isRelevant(entry) || rowLocked(entry)}
-                faded={isAdmin && !isRelevant(entry)}
-                onSave={(v) => saveField(entry, 'rating', v === '' ? null : Number(v))}
-              />
-            </div>
+            {#if isAdmin}
+              <div class="entry-card-field">
+                <label>Rating</label>
+                <EditableSelectCell
+                  value={entry.rating !== undefined && entry.rating !== null ? String(entry.rating) : ''}
+                  options={RATING_OPTIONS}
+                  placeholder="Unset"
+                  disabled={!isRelevant(entry) || rowLocked(entry)}
+                  faded={!isRelevant(entry)}
+                  onSave={(v) => saveField(entry, 'rating', v === '' ? null : Number(v))}
+                />
+              </div>
+            {/if}
             <div class="entry-card-field">
               <label>Status</label>
               {#if isAdmin}
@@ -705,15 +718,17 @@
             </div>
           </div>
 
-          <div class="entry-card-field">
-            <label>Quality</label>
-            <span class="entry-quality">{entry.quality || '— (set by rating)'}</span>
-          </div>
+          {#if isAdmin}
+            <div class="entry-card-field">
+              <label>Quality</label>
+              <span class="entry-quality">{entry.quality || '— (set by rating)'}</span>
+            </div>
 
-          <div class="entry-card-field">
-            <label>Notes</label>
-            <EditableNotesCell value={entry.notes ?? ''} disabled={!isAdmin || rowLocked(entry)} onSave={(v) => saveField(entry, 'notes', v)} />
-          </div>
+            <div class="entry-card-field">
+              <label>Notes</label>
+              <EditableNotesCell value={entry.notes ?? ''} disabled={rowLocked(entry)} onSave={(v) => saveField(entry, 'notes', v)} />
+            </div>
+          {/if}
         </div>
       {/each}
 
