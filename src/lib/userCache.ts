@@ -32,6 +32,7 @@ export interface CachedUser {
   role?: string;
   roleColor?: string;
   isArchivist?: boolean;
+  archivistRequestedAt?: string | null;
   prestigeRole?: string;
   prestigeColor?: string;
 }
@@ -49,6 +50,7 @@ export function toCachedUser(u: any): CachedUser {
     role: u.role,
     roleColor: u.roleColor,
     isArchivist: u.isArchivist,
+    archivistRequestedAt: u.archivistRequestedAt,
     prestigeRole: u.prestigeRole,
     prestigeColor: u.prestigeColor,
   };

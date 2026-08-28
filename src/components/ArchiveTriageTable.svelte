@@ -8,7 +8,7 @@
     getSortedRowModel,
   } from '@tanstack/table-core';
   import { createSvelteTable, renderComponent } from '$components/ui/data-table';
-  import { DataTable, Select, Combobox, Input } from '$lib/components';
+  import { DataTable, Select, Combobox, Input, Button } from '$lib/components';
   import { ExternalLink, LoaderCircle, Check } from 'lucide-svelte';
   import { toast } from 'svelte-sonner';
 
@@ -104,6 +104,27 @@
   // role (e.g. Comic Creator keeps their role and also gets archive access).
   const canEdit = isAdmin || user?.role === 'archivist' || user?.isArchivist === true;
   const currentUserId = user?.id;
+
+  // Archivist access request (see src/pages/api/request-archivist-access.ts)
+  let archivistRequestedAt = $state<string | null>(user?.archivistRequestedAt ?? null);
+  let requestingAccess = $state(false);
+
+  async function requestArchivistAccess() {
+    requestingAccess = true;
+    try {
+      const response = await fetch('/api/request-archivist-access', { method: 'POST' });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || 'Failed to send request');
+      archivistRequestedAt = data.archivistRequestedAt ?? new Date().toISOString();
+      toast.success('Request sent!', { description: "You'll be notified once access is granted." });
+    } catch (err) {
+      toast.error('Failed to send request', {
+        description: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      requestingAccess = false;
+    }
+  }
 
   // State
   let entries = $state<ArchiveEntry[]>([]);
@@ -503,14 +524,30 @@
         </p>
       </div>
 
-      <div class="save-status save-status--{saveStatus}">
-        {#if saveStatus === 'saving'}
-          <LoaderCircle size={16} class="save-status-spinner" />
-          <span>Saving...</span>
-        {:else if saveStatus === 'saved'}
-          <Check size={16} />
-          <span>Saved</span>
-        {/if}
+      <div class="header-side">
+        <div class="access-status">
+          {#if canEdit}
+            <span class="access-badge access-badge--granted">
+              <Check size={14} /> Archivist Access
+            </span>
+          {:else if archivistRequestedAt}
+            <span class="access-badge access-badge--pending">Archivist Request Pending</span>
+          {:else}
+            <Button themed size="sm" disabled={requestingAccess} onclick={requestArchivistAccess}>
+              {requestingAccess ? 'Sending...' : 'Request Archivist Access'}
+            </Button>
+          {/if}
+        </div>
+
+        <div class="save-status save-status--{saveStatus}">
+          {#if saveStatus === 'saving'}
+            <LoaderCircle size={16} class="save-status-spinner" />
+            <span>Saving...</span>
+          {:else if saveStatus === 'saved'}
+            <Check size={16} />
+            <span>Saved</span>
+          {/if}
+        </div>
       </div>
     </div>
 
@@ -725,6 +762,40 @@
     opacity: 0.8;
     margin: 0;
     max-width: 700px;
+  }
+
+  .header-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .access-status {
+    display: flex;
+    align-items: center;
+  }
+
+  .access-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'saira';
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    padding: 6px 10px;
+  }
+
+  .access-badge--granted {
+    color: #22c55e;
+  }
+
+  .access-badge--pending {
+    color: var(--font-color);
+    opacity: 0.7;
+    font-style: italic;
   }
 
   .save-status {

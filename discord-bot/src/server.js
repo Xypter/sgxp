@@ -45,6 +45,13 @@ async function handleEvent(notifier, type, data) {
         `New sprite uploaded: **${data?.title ?? 'Untitled'}** by ${data?.author ?? 'unknown'}`
       );
       break;
+    case 'archivist.requested':
+      await notifier.sendToOwner(
+        `🗂️ Archivist access requested by **${data?.displayName ?? data?.username ?? 'unknown user'}**` +
+          (data?.username ? ` (@${data.username})` : '') +
+          `\nUser ID: ${data?.userId ?? 'unknown'}`
+      );
+      break;
     default:
       console.warn(`[events] Unhandled event type: ${type}`);
   }
