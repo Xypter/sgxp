@@ -1,13 +1,15 @@
 // src/pages/api/archive-entries/stream.ts
 //
-// Server-Sent Events endpoint for the archive triage table. Payload calls
-// /api/webhooks/archive-entry-updated whenever an archive entry changes,
-// which broadcasts to every client connected here - lets the triage table
-// react to another archivist's edit within seconds instead of waiting on
-// the next poll (see ArchiveTriageTable.svelte).
+// Server-Sent Events endpoint for the archive triage table. Two things feed
+// into it: Payload's archive-entry-updated webhook (broadcasts to every
+// connected client, so the triage table reacts to another archivist's edit
+// without waiting on the next poll) and its user-access-granted webhook
+// (targeted at just the affected user, so their "Request Pending" badge
+// flips to "Archivist Access" the moment they're granted it - see
+// ArchiveTriageTable.svelte).
 import type { APIRoute } from 'astro';
 import { resolveUser } from '../../../lib/userCache';
-import { addArchiveEventClient, removeArchiveEventClient } from '../../../lib/archiveEventHub';
+import { addArchiveEventClient, removeArchiveEventClient, type ArchiveEventClient } from '../../../lib/archiveEventHub';
 
 export const prerender = false;
 
@@ -21,12 +23,11 @@ export const GET: APIRoute = async ({ cookies }) => {
   }
 
   let heartbeat: ReturnType<typeof setInterval>;
-  let thisController: ReadableStreamDefaultController<Uint8Array>;
+  let thisClient: ArchiveEventClient;
 
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
-      thisController = controller;
-      addArchiveEventClient(controller);
+      thisClient = addArchiveEventClient(controller, user.id);
       controller.enqueue(new TextEncoder().encode(': connected\n\n'));
 
       // Keeps proxies (Traefik) from timing out an idle-looking connection.
@@ -40,7 +41,7 @@ export const GET: APIRoute = async ({ cookies }) => {
     },
     cancel() {
       clearInterval(heartbeat);
-      removeArchiveEventClient(thisController);
+      removeArchiveEventClient(thisClient);
     },
   });
 

@@ -100,9 +100,12 @@
   ];
 
   const isAdmin = user?.role === 'admin' || user?.role === 'king-of-mobius';
+  // Flips true on a live access-granted SSE push (see the EventSource
+  // listener below) without needing a page reload.
+  let accessGrantedLive = $state(false);
   // isArchivist is an additive grant layered on top of a user's existing
   // role (e.g. Comic Creator keeps their role and also gets archive access).
-  const canEdit = isAdmin || user?.role === 'archivist' || user?.isArchivist === true;
+  const canEdit = $derived(isAdmin || user?.role === 'archivist' || user?.isArchivist === true || accessGrantedLive);
   const currentUserId = user?.id;
 
   // Archivist access request (see src/pages/api/request-archivist-access.ts)
@@ -269,6 +272,11 @@
     source.addEventListener('entry-updated', (e) => {
       console.log('[SSE] entry-updated received', e.data);
       pollEntriesDebounced();
+    });
+    source.addEventListener('access-granted', () => {
+      if (accessGrantedLive) return;
+      accessGrantedLive = true;
+      toast.success('🎉 Archivist access granted!', { description: 'You can now edit entries on this page.' });
     });
     return () => {
       source.close();

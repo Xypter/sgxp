@@ -85,9 +85,15 @@ export function isFresh(cached: CachedUser): boolean {
  * Central SSR/API identity resolver. Assumes the user is logged in as long as
  * `payload-token` is present, and only round-trips to Payload when the
  * `sgxp-user` cache is missing, unparseable, or older than REVALIDATE_MS.
+ *
+ * Pass `forceFresh: true` for permission-sensitive pages where a stale cache
+ * would show wrong access state - e.g. the archive triage page, where
+ * archivist access can be granted out-of-band (the Discord grant button
+ * PATCHes Payload directly) and the cache has no way to know that happened.
  */
 export async function resolveUser(
   cookies: AstroCookies,
+  opts: { forceFresh?: boolean } = {},
 ): Promise<{ user: any | null; source: ResolveSource }> {
   const token = cookies.get('payload-token')?.value;
   if (!token) {
@@ -95,7 +101,7 @@ export async function resolveUser(
   }
 
   const cached = parseUserCookie(cookies.get(USER_COOKIE)?.value);
-  if (cached && isFresh(cached)) {
+  if (!opts.forceFresh && cached && isFresh(cached)) {
     return { user: cached, source: 'cache' };
   }
 
