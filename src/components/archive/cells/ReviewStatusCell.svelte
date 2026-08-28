@@ -9,16 +9,19 @@
   }
 
   interface Props {
-    reviewStage: 'unprepared' | 'prepared' | 'reviewed';
+    status: 'unsorted' | 'ready-for-review' | 'ready-for-rating' | 'ready-to-upload' | 'uploaded';
     preparedBy?: UserRef | number | string | null;
     reviewedBy?: UserRef | number | string | null;
     currentUserId: number | string;
     canEdit: boolean;
+    isAdmin: boolean;
     onMarkReady: () => void;
     onConfirm: () => void;
+    onMarkReadyToUpload: () => void;
+    onMarkUploaded: () => void;
   }
 
-  let { reviewStage, preparedBy, reviewedBy, currentUserId, canEdit, onMarkReady, onConfirm }: Props = $props();
+  let { status, preparedBy, reviewedBy, currentUserId, canEdit, isAdmin, onMarkReady, onConfirm, onMarkReadyToUpload, onMarkUploaded }: Props = $props();
 
   function nameOf(ref: UserRef | number | string | null | undefined): string {
     if (!ref) return 'someone';
@@ -35,27 +38,45 @@
   let isPreparer = $derived(idOf(preparedBy) === String(currentUserId));
 </script>
 
-{#if reviewStage === 'unprepared'}
+{#if status === 'unsorted'}
   {#if canEdit}
     <label class="mark-ready-label">
       <Checkbox checked={false} themed onCheckedChange={(checked) => checked && onMarkReady()} />
       <span>Ready for review</span>
     </label>
   {:else}
-    <span class="review-badge review-badge--unprepared">Unprepared</span>
+    <span class="review-badge review-badge--unsorted">Unsorted</span>
   {/if}
-{:else if reviewStage === 'prepared'}
-  {#if isPreparer}
-    <span class="review-badge review-badge--prepared">Awaiting review</span>
-  {:else}
+{:else if status === 'ready-for-review'}
+  {#if canEdit && !isPreparer}
     <Button variant="outline" size="sm" onclick={onConfirm} themed class="confirm-review-btn">
       <CheckCircle2 size={14} />
       Confirm Review
     </Button>
+  {:else}
+    <span class="review-badge review-badge--pending">Awaiting review</span>
+  {/if}
+{:else if status === 'ready-for-rating'}
+  {#if isAdmin}
+    <Button variant="outline" size="sm" onclick={onMarkReadyToUpload} themed class="confirm-review-btn">
+      <CheckCircle2 size={14} />
+      Mark Ready to Upload
+    </Button>
+  {:else}
+    <span class="review-badge review-badge--locked" title="Reviewed by {nameOf(reviewedBy)}">Ready for rating</span>
+  {/if}
+{:else if status === 'ready-to-upload'}
+  {#if isAdmin}
+    <Button variant="outline" size="sm" onclick={onMarkUploaded} themed class="confirm-review-btn">
+      <CheckCircle2 size={14} />
+      Mark Uploaded
+    </Button>
+  {:else}
+    <span class="review-badge review-badge--locked">Ready to upload</span>
   {/if}
 {:else}
   <span class="review-badge review-badge--reviewed" title="Prepared by {nameOf(preparedBy)}, reviewed by {nameOf(reviewedBy)}">
-    Reviewed by {nameOf(reviewedBy)}
+    Uploaded
   </span>
 {/if}
 
@@ -81,13 +102,17 @@
     white-space: nowrap;
   }
 
-  .review-badge--unprepared {
+  .review-badge--unsorted {
     color: var(--font-color);
     opacity: 0.6;
   }
 
-  .review-badge--prepared {
+  .review-badge--pending {
     color: #f59e0b;
+  }
+
+  .review-badge--locked {
+    color: #8b5cf6;
   }
 
   .review-badge--reviewed {

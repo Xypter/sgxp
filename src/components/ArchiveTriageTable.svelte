@@ -49,9 +49,8 @@
     rating?: number | null;
     quality?: string | null;
     notes?: string;
-    status: string;
+    status: 'unsorted' | 'ready-for-review' | 'ready-for-rating' | 'ready-to-upload' | 'uploaded';
     link?: string;
-    reviewStage: 'unprepared' | 'prepared' | 'reviewed';
     preparedBy?: UserRef | number | string | null;
     reviewedBy?: UserRef | number | string | null;
     updatedAt?: string;
@@ -75,21 +74,19 @@
   // option is a real, selectable "clear the category" choice.
   const CATEGORY_EDIT_OPTIONS = [{ value: '', label: '— Uncategorized —' }, ...CATEGORY_OPTIONS];
 
+  // Declaration order doubles as the pipeline order (and Postgres's default
+  // sort order for this enum column) - keep it this way.
   const STATUS_OPTIONS = [
     { value: 'unsorted', label: 'Unsorted' },
-    { value: 'identified', label: 'Identified' },
+    { value: 'ready-for-review', label: 'Ready for Review' },
+    { value: 'ready-for-rating', label: 'Ready for Rating' },
+    { value: 'ready-to-upload', label: 'Ready to Upload' },
     { value: 'uploaded', label: 'Uploaded' },
   ];
 
   const YES_NO_OPTIONS = [
     { value: 'true', label: 'Yes' },
     { value: 'false', label: 'No' },
-  ];
-
-  const REVIEW_STAGE_OPTIONS = [
-    { value: 'unprepared', label: 'Unprepared' },
-    { value: 'prepared', label: 'Prepared (awaiting review)' },
-    { value: 'reviewed', label: 'Reviewed' },
   ];
 
   // 0-10: some existing entries genuinely use a rating of 0 ("Questioned my
@@ -144,14 +141,14 @@
   let searchInput = $state('');
   let statusFilter = $state('');
   let categoryFilter = $state('');
-  let reviewStageFilter = $state('');
   let searchDebounceTimer: ReturnType<typeof setTimeout>;
 
   // Table state
   let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 25 });
-  // Postgres enum ordering for status matches declaration order
-  // (unsorted < identified < uploaded), so ascending sort surfaces
-  // unreviewed entries first - exactly the triage priority we want.
+  // Postgres enum ordering for status matches declaration order (unsorted <
+  // ready-for-review < ready-for-rating < ready-to-upload < uploaded), so
+  // ascending sort surfaces the earliest-pipeline-stage entries first -
+  // exactly the triage priority we want.
   let sorting = $state<SortingState>([{ id: 'status', desc: false }]);
 
   let pageCount = $derived(Math.ceil(totalEntries / pagination.pageSize));
@@ -173,10 +170,6 @@
     }
     if (categoryFilter) {
       params.set(`where[and][${clauseIndex}][category][equals]`, categoryFilter);
-      clauseIndex++;
-    }
-    if (reviewStageFilter) {
-      params.set(`where[and][${clauseIndex}][reviewStage][equals]`, reviewStageFilter);
       clauseIndex++;
     }
     if (searchInput.trim()) {
@@ -205,7 +198,7 @@
   }
 
   $effect(() => {
-    const _ = [pagination.pageIndex, pagination.pageSize, sorting, statusFilter, categoryFilter, reviewStageFilter];
+    const _ = [pagination.pageIndex, pagination.pageSize, sorting, statusFilter, categoryFilter];
     fetchEntries();
   });
 
@@ -345,24 +338,30 @@
   }
 
   function markReady(entry: ArchiveEntry) {
-    saveField(entry, 'reviewStage', 'prepared');
+    saveField(entry, 'status', 'ready-for-review');
   }
 
   function confirmReview(entry: ArchiveEntry) {
-    saveField(entry, 'reviewStage', 'reviewed');
+    saveField(entry, 'status', 'ready-for-rating');
   }
 
-  // Once reviewed, the identification flags lock for everyone except admins
-  // (mirrors the backend's field-level access.update check).
-  function flagsLocked(entry: ArchiveEntry): boolean {
-    return entry.reviewStage === 'reviewed' && !isAdmin;
+  function markReadyToUpload(entry: ArchiveEntry) {
+    saveField(entry, 'status', 'ready-to-upload');
   }
 
-  // Once uploaded, an entry is locked in - archivists can no longer edit
-  // anything on it, only true admins can (mirrors the backend's
-  // status-based Where-clause restriction on the update access check).
-  function rowLocked(entry: ArchiveEntry): boolean {
-    return entry.status === 'uploaded' && !isAdmin;
+  function markUploaded(entry: ArchiveEntry) {
+    saveField(entry, 'status', 'uploaded');
+  }
+
+  const STATUS_ORDER = ['unsorted', 'ready-for-review', 'ready-for-rating', 'ready-to-upload', 'uploaded'];
+
+  // Once an entry reaches "ready for rating" it's locked in for everyone
+  // except admins (mirrors the backend's archivistAccess Where-clause
+  // restriction) - this single check replaces what used to be two separate
+  // locks (identification flags locking on review, then a full row lock on
+  // upload), since the whole pipeline is now one field.
+  function locked(entry: ArchiveEntry): boolean {
+    return !isAdmin && STATUS_ORDER.indexOf(entry.status) >= STATUS_ORDER.indexOf('ready-for-rating');
   }
 
   // Category/Rating only matter once an entry is actually worth archiving -
@@ -370,6 +369,12 @@
   // (e.g. a game fan comic that isn't a sprite comic but is still in scope).
   function isRelevant(entry: ArchiveEntry): boolean {
     return !!entry.isSpriteComic || !!entry.isGameRelated;
+  }
+
+  function nameOf(ref: UserRef | number | string | null | undefined): string | undefined {
+    if (!ref) return undefined;
+    if (typeof ref === 'object') return ref.displayName || ref.username || `User #${ref.id}`;
+    return `User #${ref}`;
   }
 
   // Rating/Quality/Notes are admin-only - hidden entirely for everyone else
@@ -384,7 +389,7 @@
               value: row.original.rating !== undefined && row.original.rating !== null ? String(row.original.rating) : '',
               options: RATING_OPTIONS,
               placeholder: 'Unset',
-              disabled: !isRelevant(row.original) || rowLocked(row.original),
+              disabled: !isRelevant(row.original),
               faded: !isRelevant(row.original),
               onSave: (value: string) => saveField(row.original, 'rating', value === '' ? null : Number(value)),
             }),
@@ -406,7 +411,6 @@
           cell: ({ row }) =>
             renderComponent(EditableNotesCell as any, {
               value: row.original.notes ?? '',
-              disabled: rowLocked(row.original),
               onSave: (value: string) => saveField(row.original, 'notes', value),
             }),
           enableSorting: false,
@@ -446,7 +450,7 @@
         renderComponent(EditableToggleButtonsCell as any, {
           value: String(row.original.isSpriteComic ?? false),
           options: YES_NO_OPTIONS,
-          disabled: !canEdit || flagsLocked(row.original) || rowLocked(row.original),
+          disabled: !canEdit || locked(row.original),
           onSave: (value: string) => saveField(row.original, 'isSpriteComic', value === 'true'),
         }),
     },
@@ -458,7 +462,7 @@
           ? renderComponent(PlainTextCell as any, { fallback: '—', class: 'entry-na' })
           : renderComponent(EditableCheckboxCell as any, {
               value: row.original.isGameRelated ?? false,
-              disabled: !canEdit || flagsLocked(row.original) || rowLocked(row.original),
+              disabled: !canEdit || locked(row.original),
               onSave: (value: boolean) => saveField(row.original, 'isGameRelated', value),
             }),
     },
@@ -471,7 +475,7 @@
           options: CATEGORY_EDIT_OPTIONS,
           placeholder: 'Uncategorized',
           searchPlaceholder: 'Search categories...',
-          disabled: !canEdit || !isRelevant(row.original) || rowLocked(row.original),
+          disabled: !canEdit || !isRelevant(row.original) || locked(row.original),
           faded: !isRelevant(row.original),
           onSave: (value: string) => saveField(row.original, 'category', value === '' ? null : value),
         }),
@@ -493,18 +497,32 @@
           : renderComponent(ArchiveStatusBadge as any, { status: row.original.status }),
     },
     {
-      accessorKey: 'reviewStage',
-      header: sortableHeader('Review'),
+      id: 'preparedBy',
+      header: 'Preparer',
+      cell: ({ row }) =>
+        renderComponent(PlainTextCell as any, {
+          value: nameOf(row.original.preparedBy),
+          fallback: '—',
+        }),
+      enableSorting: false,
+    },
+    {
+      id: 'review',
+      header: 'Review',
       cell: ({ row }) =>
         renderComponent(ReviewStatusCell as any, {
-          reviewStage: row.original.reviewStage,
+          status: row.original.status,
           preparedBy: row.original.preparedBy,
           reviewedBy: row.original.reviewedBy,
           currentUserId,
-          canEdit: canEdit && !rowLocked(row.original),
+          canEdit,
+          isAdmin,
           onMarkReady: () => markReady(row.original),
           onConfirm: () => confirmReview(row.original),
+          onMarkReadyToUpload: () => markReadyToUpload(row.original),
+          onMarkUploaded: () => markUploaded(row.original),
         }),
+      enableSorting: false,
     },
     {
       id: 'link',
@@ -600,12 +618,6 @@
         searchPlaceholder="Search categories..."
         themed
       />
-      <Select
-        bind:value={reviewStageFilter}
-        options={[{ value: '', label: 'All Review Stages' }, ...REVIEW_STAGE_OPTIONS]}
-        placeholder="All Review Stages"
-        themed
-      />
     </div>
 
     <div class="results-count">{totalEntries} entries</div>
@@ -646,7 +658,7 @@
               <EditableToggleButtonsCell
                 value={String(entry.isSpriteComic ?? false)}
                 options={YES_NO_OPTIONS}
-                disabled={!canEdit || flagsLocked(entry) || rowLocked(entry)}
+                disabled={!canEdit || locked(entry)}
                 onSave={(v) => saveField(entry, 'isSpriteComic', v === 'true')}
               />
             </div>
@@ -657,7 +669,7 @@
               {:else}
                 <EditableCheckboxCell
                   value={entry.isGameRelated ?? false}
-                  disabled={!canEdit || flagsLocked(entry) || rowLocked(entry)}
+                  disabled={!canEdit || locked(entry)}
                   onSave={(v) => saveField(entry, 'isGameRelated', v)}
                 />
               {/if}
@@ -671,22 +683,30 @@
               options={CATEGORY_EDIT_OPTIONS}
               placeholder="Uncategorized"
               searchPlaceholder="Search categories..."
-              disabled={!canEdit || !isRelevant(entry) || rowLocked(entry)}
+              disabled={!canEdit || !isRelevant(entry) || locked(entry)}
               faded={!isRelevant(entry)}
               onSave={(v) => saveField(entry, 'category', v === '' ? null : v)}
             />
           </div>
 
           <div class="entry-card-field">
+            <label>Preparer</label>
+            <span class="entry-quality">{nameOf(entry.preparedBy) || '—'}</span>
+          </div>
+
+          <div class="entry-card-field">
             <label>Review</label>
             <ReviewStatusCell
-              reviewStage={entry.reviewStage}
+              status={entry.status}
               preparedBy={entry.preparedBy}
               reviewedBy={entry.reviewedBy}
               {currentUserId}
-              canEdit={canEdit && !rowLocked(entry)}
+              {canEdit}
+              {isAdmin}
               onMarkReady={() => markReady(entry)}
               onConfirm={() => confirmReview(entry)}
+              onMarkReadyToUpload={() => markReadyToUpload(entry)}
+              onMarkUploaded={() => markUploaded(entry)}
             />
           </div>
 
@@ -698,7 +718,7 @@
                   value={entry.rating !== undefined && entry.rating !== null ? String(entry.rating) : ''}
                   options={RATING_OPTIONS}
                   placeholder="Unset"
-                  disabled={!isRelevant(entry) || rowLocked(entry)}
+                  disabled={!isRelevant(entry)}
                   faded={!isRelevant(entry)}
                   onSave={(v) => saveField(entry, 'rating', v === '' ? null : Number(v))}
                 />
@@ -726,7 +746,7 @@
 
             <div class="entry-card-field">
               <label>Notes</label>
-              <EditableNotesCell value={entry.notes ?? ''} disabled={rowLocked(entry)} onSave={(v) => saveField(entry, 'notes', v)} />
+              <EditableNotesCell value={entry.notes ?? ''} onSave={(v) => saveField(entry, 'notes', v)} />
             </div>
           {/if}
         </div>
