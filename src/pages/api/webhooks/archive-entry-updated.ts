@@ -15,7 +15,10 @@ export const POST: APIRoute = async ({ request }) => {
     const webhookSecret = import.meta.env.WEBHOOK_SECRET || process.env.WEBHOOK_SECRET;
     const authHeader = request.headers.get('authorization');
 
+    console.log('[Webhook] archive-entry-updated received');
+
     if (webhookSecret && authHeader !== `Bearer ${webhookSecret}`) {
+      console.warn('[Webhook] archive-entry-updated: unauthorized (secret mismatch)');
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },
@@ -27,6 +30,8 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (doc?.id) {
       broadcastArchiveEntryChange({ id: doc.id, updatedAt: doc.updatedAt });
+    } else {
+      console.warn('[Webhook] archive-entry-updated: payload missing doc.id', payload);
     }
 
     return new Response(JSON.stringify({ success: true }), {

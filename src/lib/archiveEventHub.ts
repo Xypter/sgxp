@@ -11,13 +11,16 @@ const clients = new Set<Client>();
 
 export function addArchiveEventClient(controller: Client) {
   clients.add(controller);
+  console.log(`[archiveEventHub] client connected (${clients.size} total)`);
 }
 
 export function removeArchiveEventClient(controller: Client) {
   clients.delete(controller);
+  console.log(`[archiveEventHub] client disconnected (${clients.size} total)`);
 }
 
 export function broadcastArchiveEntryChange(payload: { id: string | number; updatedAt?: string }) {
+  console.log(`[archiveEventHub] broadcasting entry-updated for id=${payload.id} to ${clients.size} client(s)`);
   const message = encoder.encode(`event: entry-updated\ndata: ${JSON.stringify(payload)}\n\n`);
   for (const controller of clients) {
     try {

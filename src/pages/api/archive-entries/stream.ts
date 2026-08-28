@@ -16,6 +16,7 @@ const HEARTBEAT_MS = 25000;
 export const GET: APIRoute = async ({ cookies }) => {
   const { user } = await resolveUser(cookies);
   if (!user) {
+    console.warn('[archive-entries/stream] rejected connection: no authenticated user');
     return new Response('Unauthorized', { status: 401 });
   }
 
@@ -48,6 +49,10 @@ export const GET: APIRoute = async ({ cookies }) => {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       Connection: 'keep-alive',
+      // Some reverse proxies (nginx-based ones especially) buffer proxied
+      // responses by default, which silently kills SSE - this is a no-op if
+      // whatever's in front doesn't look at it.
+      'X-Accel-Buffering': 'no',
     },
   });
 };
