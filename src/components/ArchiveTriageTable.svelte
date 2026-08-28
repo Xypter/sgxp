@@ -365,6 +365,13 @@
     return entry.status === 'uploaded' && !isAdmin;
   }
 
+  // Category/Rating only matter once an entry is actually worth archiving -
+  // either it's a sprite comic outright, or it's been flagged game-related
+  // (e.g. a game fan comic that isn't a sprite comic but is still in scope).
+  function isRelevant(entry: ArchiveEntry): boolean {
+    return !!entry.isSpriteComic || !!entry.isGameRelated;
+  }
+
   const columns: ColumnDef<ArchiveEntry>[] = [
     {
       accessorKey: 'comicId',
@@ -407,7 +414,7 @@
       cell: ({ row }) =>
         renderComponent(EditableCheckboxCell as any, {
           value: row.original.isGameRelated ?? false,
-          disabled: !canEdit || !row.original.isSpriteComic || flagsLocked(row.original) || rowLocked(row.original),
+          disabled: !canEdit || flagsLocked(row.original) || rowLocked(row.original),
           onSave: (value: boolean) => saveField(row.original, 'isGameRelated', value),
         }),
     },
@@ -420,8 +427,8 @@
           options: CATEGORY_EDIT_OPTIONS,
           placeholder: 'Uncategorized',
           searchPlaceholder: 'Search categories...',
-          disabled: !canEdit || !row.original.isSpriteComic || rowLocked(row.original),
-          faded: !row.original.isSpriteComic,
+          disabled: !canEdit || !isRelevant(row.original) || rowLocked(row.original),
+          faded: !isRelevant(row.original),
           onSave: (value: string) => saveField(row.original, 'category', value === '' ? null : value),
         }),
     },
@@ -433,8 +440,8 @@
           value: row.original.rating !== undefined && row.original.rating !== null ? String(row.original.rating) : '',
           options: RATING_OPTIONS,
           placeholder: 'Unset',
-          disabled: !canEdit || !row.original.isSpriteComic || rowLocked(row.original),
-          faded: !row.original.isSpriteComic,
+          disabled: !canEdit || !isRelevant(row.original) || rowLocked(row.original),
+          faded: !isRelevant(row.original),
           onSave: (value: string) => saveField(row.original, 'rating', value === '' ? null : Number(value)),
         }),
     },
@@ -634,7 +641,7 @@
               <label>Game Related?</label>
               <EditableCheckboxCell
                 value={entry.isGameRelated ?? false}
-                disabled={!canEdit || !entry.isSpriteComic || flagsLocked(entry) || rowLocked(entry)}
+                disabled={!canEdit || flagsLocked(entry) || rowLocked(entry)}
                 onSave={(v) => saveField(entry, 'isGameRelated', v)}
               />
             </div>
@@ -647,8 +654,8 @@
               options={CATEGORY_EDIT_OPTIONS}
               placeholder="Uncategorized"
               searchPlaceholder="Search categories..."
-              disabled={!canEdit || !entry.isSpriteComic || rowLocked(entry)}
-              faded={!entry.isSpriteComic}
+              disabled={!canEdit || !isRelevant(entry) || rowLocked(entry)}
+              faded={!isRelevant(entry)}
               onSave={(v) => saveField(entry, 'category', v === '' ? null : v)}
             />
           </div>
@@ -673,8 +680,8 @@
                 value={entry.rating !== undefined && entry.rating !== null ? String(entry.rating) : ''}
                 options={RATING_OPTIONS}
                 placeholder="Unset"
-                disabled={!canEdit || !entry.isSpriteComic || rowLocked(entry)}
-                faded={!entry.isSpriteComic}
+                disabled={!canEdit || !isRelevant(entry) || rowLocked(entry)}
+                faded={!isRelevant(entry)}
                 onSave={(v) => saveField(entry, 'rating', v === '' ? null : Number(v))}
               />
             </div>
