@@ -1,7 +1,7 @@
 ---
 import FrontPageLayout from "../../layouts/FrontPageLayout.astro";
 import { resolveUser } from "../../lib/userCache";
-import ArchiveStatsBar from "../../components/archive/ArchiveStatsBar.svelte";
+import LeaderboardTable from "../../components/archive/LeaderboardTable.svelte";
 
 const token = Astro.cookies.get("payload-token")?.value;
 if (!token) {
@@ -35,31 +35,17 @@ async function fetchTop(sortField: string): Promise<LeaderboardUser[]> {
   }
 }
 
-async function fetchStatusCount(whereClause?: string): Promise<number> {
-  try {
-    const response = await fetch(
-      `${import.meta.env.PAYLOAD_URL}/api/archive-entries?limit=1${whereClause ? `&${whereClause}` : ""}`,
-      { headers: { Cookie: `payload-token=${token}` } }
-    );
-    if (!response.ok) return 0;
-    const data = await response.json();
-    return data.totalDocs || 0;
-  } catch {
-    return 0;
-  }
-}
-
-const [topPreparers, topReviewers, statsTotal, statsUnsorted, statsExcluded] = await Promise.all([
+const [topPreparers, topReviewers] = await Promise.all([
   fetchTop("archivePreparedCount"),
   fetchTop("archiveReviewedCount"),
-  fetchStatusCount(),
-  fetchStatusCount("where[status][equals]=unsorted"),
-  fetchStatusCount("where[status][equals]=excluded"),
 ]);
 
 function nameOf(u: LeaderboardUser): string {
   return u.displayName || u.username || `User #${u.id}`;
 }
+
+const preparerRows = topPreparers.map((u) => ({ id: u.id, name: nameOf(u), count: u.archivePreparedCount ?? 0 }));
+const reviewerRows = topReviewers.map((u) => ({ id: u.id, name: nameOf(u), count: u.archiveReviewedCount ?? 0 }));
 ---
 
 <FrontPageLayout title="Archive Leaderboard">
@@ -69,63 +55,15 @@ function nameOf(u: LeaderboardUser): string {
       <p>Who's identified the most entries, and who's reviewed the most.</p>
     </div>
 
-    <ArchiveStatsBar total={statsTotal} unsorted={statsUnsorted} excluded={statsExcluded} />
-
     <div class="leaderboard-columns">
       <div class="leaderboard-panel">
         <h2>Top Preparers</h2>
-        {topPreparers.length === 0 ? (
-          <p class="empty-note">No one has prepared any entries yet.</p>
-        ) : (
-          <table class="leaderboard-table">
-            <thead>
-              <tr>
-                <th class="col-rank">Rank</th>
-                <th class="col-name">Name</th>
-                <th class="col-count">Prepared</th>
-              </tr>
-            </thead>
-            <tbody>
-              {topPreparers.map((u, i) => (
-                <tr>
-                  <td class="col-rank">#{i + 1}</td>
-                  <td class="col-name">
-                    <a href={`/profile?id=${u.id}`} class="name-link">{nameOf(u)}</a>
-                  </td>
-                  <td class="col-count">{u.archivePreparedCount}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <LeaderboardTable rows={preparerRows} countLabel="Prepared" emptyMessage="No one has prepared any entries yet." />
       </div>
 
       <div class="leaderboard-panel">
         <h2>Top Reviewers</h2>
-        {topReviewers.length === 0 ? (
-          <p class="empty-note">No one has reviewed any entries yet.</p>
-        ) : (
-          <table class="leaderboard-table">
-            <thead>
-              <tr>
-                <th class="col-rank">Rank</th>
-                <th class="col-name">Name</th>
-                <th class="col-count">Reviewed</th>
-              </tr>
-            </thead>
-            <tbody>
-              {topReviewers.map((u, i) => (
-                <tr>
-                  <td class="col-rank">#{i + 1}</td>
-                  <td class="col-name">
-                    <a href={`/profile?id=${u.id}`} class="name-link">{nameOf(u)}</a>
-                  </td>
-                  <td class="col-count">{u.archiveReviewedCount}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <LeaderboardTable rows={reviewerRows} countLabel="Reviewed" emptyMessage="No one has reviewed any entries yet." />
       </div>
     </div>
   </div>
@@ -176,66 +114,6 @@ function nameOf(u: LeaderboardUser): string {
     font-size: 18px;
     color: var(--font-color);
     margin: 0 0 16px 0;
-  }
-
-  .empty-note {
-    font-family: 'saira';
-    font-size: 14px;
-    color: var(--font-color);
-    opacity: 0.7;
-    margin: 0;
-  }
-
-  .leaderboard-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-family: 'saira';
-  }
-
-  .leaderboard-table th {
-    text-align: left;
-    font-weight: 800;
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    color: var(--font-color);
-    opacity: 0.7;
-    padding: 0 0 10px 0;
-    border-bottom: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white);
-  }
-
-  .leaderboard-table td {
-    padding: 10px 0;
-    border-bottom: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 70%, white);
-  }
-
-  .leaderboard-table tbody tr:last-child td {
-    border-bottom: none;
-  }
-
-  .col-rank {
-    font-weight: 800;
-    color: var(--font-link-color);
-    width: 60px;
-  }
-
-  .col-count {
-    text-align: right;
-    color: var(--font-color);
-    opacity: 0.8;
-    font-weight: 700;
-    width: 100px;
-  }
-
-  .name-link {
-    color: var(--font-color);
-    font-weight: 600;
-    text-decoration: none;
-  }
-
-  .name-link:hover {
-    color: var(--font-link-color);
-    text-decoration: underline;
   }
 
   @media (max-width: 768px) {
