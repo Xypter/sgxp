@@ -3,14 +3,15 @@ import FrontPageLayout from "../layouts/FrontPageLayout.astro";
 import ArchiveTriageTable from "../components/ArchiveTriageTable.svelte";
 import { resolveUser } from "../lib/userCache";
 
+// The triage table is publicly viewable (only editing requires archivist
+// access) - user is null for anonymous visitors, and ArchiveTriageTable
+// handles that by rendering everything read-only and showing a login
+// prompt instead of the "Request Archivist Access" button.
+//
 // forceFresh: archivist access can be granted out-of-band (the Discord grant
 // button PATCHes Payload directly, bypassing this site entirely), so the
 // cached user snapshot can't be trusted to reflect it - always re-verify.
 const { user } = await resolveUser(Astro.cookies, { forceFresh: true });
-
-if (!user) {
-  return Astro.redirect("/login");
-}
 ---
 
 <FrontPageLayout title="Smack Jeeves Archive Triage">

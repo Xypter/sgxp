@@ -8,6 +8,7 @@
     getSortedRowModel,
   } from '@tanstack/table-core';
   import { createSvelteTable, renderComponent } from '$components/ui/data-table';
+  import * as Accordion from '$components/ui/accordion';
   import { DataTable, Select, Input, Button } from '$lib/components';
   import { ExternalLink, LoaderCircle, Check } from 'lucide-svelte';
   import { toast } from 'svelte-sonner';
@@ -110,6 +111,18 @@
   let archivistRequestedAt = $state<string | null>(user?.archivistRequestedAt ?? null);
   let requestingAccess = $state(false);
 
+  // Intro/instructions area starts expanded, but returning archivists who
+  // already know the process can collapse it to get straight to the table -
+  // that choice is remembered per-browser (this component is client:only,
+  // so localStorage is always available, no SSR guard needed) so it stays
+  // collapsed across page loads until they reopen it.
+  const INTRO_STORAGE_KEY = 'archive-triage-intro-open';
+  let introValue = $state(localStorage.getItem(INTRO_STORAGE_KEY) === 'closed' ? '' : 'intro');
+
+  $effect(() => {
+    localStorage.setItem(INTRO_STORAGE_KEY, introValue ? 'open' : 'closed');
+  });
+
   async function requestArchivistAccess() {
     requestingAccess = true;
     try {
@@ -148,10 +161,7 @@
 
   // Table state
   let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 25 });
-  // Postgres enum ordering for status matches declaration order (see
-  // STATUS_ORDER below), so ascending sort surfaces the earliest-pipeline-
-  // stage entries first - exactly the triage priority we want.
-  let sorting = $state<SortingState>([{ id: 'status', desc: false }]);
+  let sorting = $state<SortingState>([{ id: 'comicId', desc: false }]);
 
   let pageCount = $derived(Math.ceil(totalEntries / pagination.pageSize));
 
@@ -630,15 +640,57 @@
     <div class="toolbar-header">
       <div class="toolbar-header-text">
         <h1>Smack Jeeves Archive Triage</h1>
-        <p>
-          Help sort the SmackJeeves comic archive: flag whether each entry is actually a sprite
-          comic, and fill in category, rating, and quality for anything still unlabeled.
-        </p>
+        <Accordion.Root type="single" bind:value={introValue} class="intro-accordion">
+          <Accordion.Item value="intro" class="intro-accordion-item">
+            <Accordion.Trigger class="intro-accordion-trigger">
+              About This Project
+              <span class="intro-toggle-label">({introValue ? 'Collapse' : 'Expand'})</span>
+            </Accordion.Trigger>
+            <Accordion.Content class="intro-accordion-content">
+              <div class="intro">
+                <p>
+                  We're sorting through the old SmackJeeves comic archive to find out what's worth
+                  preserving.
+                </p>
+
+                <p class="intro-label">What counts:</p>
+                <ul>
+                  <li>- Any sprite comic. No exceptions on quality.</li>
+                  <li>- Any game-related comic that isn't a sprite comic, and high enough quality to be worth preserving.</li>
+                  <li>
+                    <strong>- Sprite compilations, no matter how crappy they look.</strong> Sometimes these might have hidden gems in them that spriters might want to use. They are a lot like dumpster diving. There's a lot of trash, but every once in awhile you might find something valuable.
+                  </li>
+                </ul>
+
+                <p class="intro-label">How it works:</p>
+                <ol>
+                  <li><strong>Identify</strong> — mark whether the entry is a sprite comic and/or game-related.</li>
+                  <li><strong>Categorize</strong> — tag it with the game or series it belongs to.</li>
+                  <li><strong>Submit for review</strong> — a second person double-checks your call before it's locked in.</li>
+                </ol>
+
+                <p>
+                  Request the <strong>Archivist</strong> role to join and start working through unsorted
+                  entries. Questions? Ping <strong>Xypter</strong> in the server or by DM.
+                </p>
+
+                <p>
+                  Check out the <a href="/smackjeevesarchivetriage/leaderboard">leaderboard</a> to see where
+                  you stand.
+                </p>
+              </div>
+            </Accordion.Content>
+          </Accordion.Item>
+        </Accordion.Root>
       </div>
 
       <div class="header-side">
         <div class="access-status">
-          {#if canEdit}
+          {#if !user}
+            <Button themed size="sm" href="/login?redirect=/smackjeevesarchivetriage" class="login-cta-button">
+              Log In to Participate
+            </Button>
+          {:else if canEdit}
             <span class="access-badge access-badge--granted">
               <Check size={14} /> Archivist Access
             </span>
@@ -680,10 +732,10 @@
     </div>
 
     <div class="results-count">
-      {totalEntries} entries
+      {totalEntries} Entries
       {#if collectionStats.total > 0}
         <span class="stat-divider">—</span>
-        <span>{collectionStats.total.toLocaleString()} total comics</span>
+        <span>{collectionStats.total.toLocaleString()} Total Comics</span>
         <span class="stat-divider">—</span>
         <span title="{sortedCount.toLocaleString()} of {collectionStats.total.toLocaleString()} entries not unsorted">
           {sortedCount.toLocaleString()} Sorted ({percentSorted.toFixed(2)}%)
@@ -904,13 +956,100 @@
     margin: 0 0 8px 0;
   }
 
-  .toolbar-header-text p {
+  :global(.intro-accordion) {
+    max-width: 700px;
+  }
+
+  :global(.intro-accordion-item) {
+    border: none !important;
+  }
+
+  :global(.intro-accordion-trigger) {
+    font-family: 'saira' !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--font-color) !important;
+    opacity: 0.75;
+    padding: 0 0 4px 0 !important;
+    display: inline-flex !important;
+    flex: none !important;
+    width: auto !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 6px !important;
+  }
+
+  :global(.intro-accordion-trigger:hover) {
+    opacity: 1;
+    text-decoration: none !important;
+  }
+
+  :global(.intro-toggle-label) {
+    font-style: italic;
+    font-weight: 400 !important;
+    text-transform: none;
+    opacity: 0.65;
+  }
+
+  :global(.intro-accordion-content) {
+    font-size: inherit !important;
+  }
+
+  :global(.intro-accordion-content > div) {
+    padding: 4px 0 0 0 !important;
+  }
+
+  .intro {
+    max-width: 700px;
+  }
+
+  .intro p,
+  .intro li {
     font-family: 'saira';
     font-size: 14px;
     color: var(--font-color);
-    opacity: 0.8;
-    margin: 0;
-    max-width: 700px;
+    opacity: 0.85;
+    line-height: 1.5;
+  }
+
+  .intro p {
+    margin: 0 0 8px 0;
+  }
+
+  .intro p:last-child {
+    margin-bottom: 0;
+  }
+
+  .intro-label {
+    font-weight: 700;
+    opacity: 1 !important;
+    margin-bottom: 4px !important;
+  }
+
+  .intro strong {
+    color: var(--font-color);
+    opacity: 1;
+  }
+
+  .intro a {
+    color: var(--font-link-color);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .intro a:hover {
+    text-decoration: underline;
+  }
+
+  .intro ul,
+  .intro ol {
+    margin: 0 0 8px 0;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 
   .header-side {
@@ -945,6 +1084,18 @@
     color: var(--font-color);
     opacity: 0.7;
     font-style: italic;
+  }
+
+  /* Rendered as an <a> (has an href) rather than a <button> - the global
+     `a { color: var(--font-link-color); }` rule in main.css otherwise wins
+     out over .theme-button's own color in some cases, so pin it explicitly
+     to match the "Request Archivist Access" button right next to it. */
+  :global(.login-cta-button) {
+    color: var(--page-color) !important;
+  }
+
+  :global(.login-cta-button:hover) {
+    color: var(--page-color) !important;
   }
 
   .save-status {

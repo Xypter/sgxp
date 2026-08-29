@@ -4,11 +4,9 @@ import type { APIRoute } from 'astro';
 const PAYLOAD_URL = import.meta.env.PAYLOAD_URL;
 
 export const GET: APIRoute = async ({ request, cookies }) => {
+  // The leaderboard is publicly viewable - the cookie is forwarded when
+  // present just for consistency, not because it's required.
   const token = cookies.get('payload-token')?.value;
-
-  if (!token) {
-    return new Response(JSON.stringify({ message: 'Unauthorized: No token found' }), { status: 401 });
-  }
 
   try {
     const url = new URL(request.url);
@@ -20,7 +18,7 @@ export const GET: APIRoute = async ({ request, cookies }) => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Cookie': `payload-token=${token}`,
+          ...(token ? { Cookie: `payload-token=${token}` } : {}),
         },
       }
     );

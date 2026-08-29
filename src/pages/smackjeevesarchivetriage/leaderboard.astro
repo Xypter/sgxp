@@ -1,17 +1,8 @@
 ---
 import FrontPageLayout from "../../layouts/FrontPageLayout.astro";
-import { resolveUser } from "../../lib/userCache";
 import LeaderboardBoard from "../../components/archive/LeaderboardBoard.svelte";
 
-const token = Astro.cookies.get("payload-token")?.value;
-if (!token) {
-  return Astro.redirect("/login?redirect=/smackjeevesarchivetriage/leaderboard");
-}
-
-const { user, source } = await resolveUser(Astro.cookies);
-if (source === "invalid" || !user) {
-  return Astro.redirect("/login?redirect=/smackjeevesarchivetriage/leaderboard");
-}
+// Publicly viewable, like the triage table itself.
 ---
 
 <FrontPageLayout title="Archive Leaderboard">

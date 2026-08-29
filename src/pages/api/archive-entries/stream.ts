@@ -16,18 +16,18 @@ export const prerender = false;
 const HEARTBEAT_MS = 25000;
 
 export const GET: APIRoute = async ({ cookies }) => {
+  // The triage table/leaderboard are publicly viewable, so anonymous
+  // visitors get live updates too - only the access-granted event (targeted
+  // by user id) is meaningless for them, and simply never matches.
   const { user } = await resolveUser(cookies);
-  if (!user) {
-    console.warn('[archive-entries/stream] rejected connection: no authenticated user');
-    return new Response('Unauthorized', { status: 401 });
-  }
+  const clientKey = user?.id ?? 'anon';
 
   let heartbeat: ReturnType<typeof setInterval>;
   let thisClient: ArchiveEventClient;
 
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
-      thisClient = addArchiveEventClient(controller, user.id);
+      thisClient = addArchiveEventClient(controller, clientKey);
       controller.enqueue(new TextEncoder().encode(': connected\n\n'));
 
       // Keeps proxies (Traefik) from timing out an idle-looking connection.

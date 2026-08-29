@@ -4,11 +4,10 @@ import type { APIRoute } from 'astro';
 const PAYLOAD_URL = import.meta.env.PAYLOAD_URL;
 
 export const GET: APIRoute = async ({ request, cookies }) => {
+  // Archive entries are publicly readable (matches Payload's access config) -
+  // the cookie is forwarded when present just so an authenticated request
+  // still resolves the same way it always has, not because it's required.
   const token = cookies.get('payload-token')?.value;
-
-  if (!token) {
-    return new Response(JSON.stringify({ message: 'Unauthorized: No token found' }), { status: 401 });
-  }
 
   try {
     const url = new URL(request.url);
@@ -20,7 +19,7 @@ export const GET: APIRoute = async ({ request, cookies }) => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Cookie': `payload-token=${token}`,
+          ...(token ? { Cookie: `payload-token=${token}` } : {}),
         },
       }
     );
