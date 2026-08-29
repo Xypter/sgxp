@@ -586,7 +586,14 @@
     {
       id: 'link',
       header: 'Link',
-      cell: ({ row }) => renderComponent(LinkCell as any, { href: row.original.link }),
+      cell: ({ row }) =>
+        renderComponent(LinkCell as any, {
+          // Always this exact pattern - derive it from comicId rather than
+          // trusting the stored `link` field, which is missing/inconsistent
+          // for most of the archive. Only shown once the comic is actually
+          // live on the site.
+          href: row.original.status === 'uploaded' ? `/jeevespage?comic_id=${row.original.comicId}` : undefined,
+        }),
       enableSorting: false,
     },
   ];
@@ -717,8 +724,13 @@
           <div class="entry-card-header">
             <span class="entry-card-id">#{entry.comicId}</span>
             <span class="entry-card-title">{entry.title || '(untitled)'}</span>
-            {#if entry.link}
-              <a href="https://sgxp.me{entry.link}" target="_blank" rel="noopener noreferrer" class="entry-card-link">
+            {#if entry.status === 'uploaded'}
+              <a
+                href="https://sgxp.me/jeevespage?comic_id={entry.comicId}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="entry-card-link"
+              >
                 <ExternalLink size={16} />
               </a>
             {/if}
