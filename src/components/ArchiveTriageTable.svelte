@@ -507,6 +507,16 @@
       enableSorting: false,
     },
     {
+      id: 'reviewedBy',
+      header: 'Reviewer',
+      cell: ({ row }) =>
+        renderComponent(PlainTextCell as any, {
+          value: nameOf(row.original.reviewedBy),
+          fallback: '—',
+        }),
+      enableSorting: false,
+    },
+    {
       id: 'review',
       header: 'Review',
       cell: ({ row }) =>
@@ -689,9 +699,15 @@
             />
           </div>
 
-          <div class="entry-card-field">
-            <label>Preparer</label>
-            <span class="entry-quality">{nameOf(entry.preparedBy) || '—'}</span>
+          <div class="entry-card-field-row">
+            <div class="entry-card-field">
+              <label>Preparer</label>
+              <span class="entry-quality">{nameOf(entry.preparedBy) || '—'}</span>
+            </div>
+            <div class="entry-card-field">
+              <label>Reviewer</label>
+              <span class="entry-quality">{nameOf(entry.reviewedBy) || '—'}</span>
+            </div>
           </div>
 
           <div class="entry-card-field">
