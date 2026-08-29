@@ -11,13 +11,12 @@
 
 <style>
   .name-link {
-    color: var(--font-color);
+    color: var(--font-link-color);
     font-weight: 600;
     text-decoration: none;
   }
 
   .name-link:hover {
-    color: var(--font-link-color);
     text-decoration: underline;
   }
 </style>

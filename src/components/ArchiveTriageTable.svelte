@@ -687,7 +687,7 @@
       <div class="header-side">
         <div class="access-status">
           {#if !user}
-            <Button themed size="sm" href="/login?redirect=/smackjeevesarchivetriage" class="login-cta-button">
+            <Button themed size="sm" href="/login?redirect=/smackjeevesarchivetriage">
               Log In to Participate
             </Button>
           {:else if canEdit}
@@ -1086,17 +1086,6 @@
     font-style: italic;
   }
 
-  /* Rendered as an <a> (has an href) rather than a <button> - the global
-     `a { color: var(--font-link-color); }` rule in main.css otherwise wins
-     out over .theme-button's own color in some cases, so pin it explicitly
-     to match the "Request Archivist Access" button right next to it. */
-  :global(.login-cta-button) {
-    color: var(--page-color) !important;
-  }
-
-  :global(.login-cta-button:hover) {
-    color: var(--page-color) !important;
-  }
 
   .save-status {
     display: flex;

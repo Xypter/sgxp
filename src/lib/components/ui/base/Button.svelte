@@ -30,6 +30,11 @@
   :global(.theme-button) {
     background: var(--font-link-color) !important;
     color: var(--page-color) !important;
+    /* When rendered as an <a> (href set), the site-wide `a { text-shadow }`
+       rule (main.css) - meant to outline link text against the page
+       background - otherwise bleeds through here too and looks wrong
+       against this button's own solid background. */
+    text-shadow: none !important;
     border: none !important;
     border-radius: 0px !important;
     font-family: 'saira', monospace !important;
