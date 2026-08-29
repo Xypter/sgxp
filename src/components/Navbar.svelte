@@ -533,7 +533,7 @@ async function checkAuthStatus(): Promise<void> {
                 Archive
               </DropdownMenu.Trigger>
               <DropdownMenu.Content
-                class="no-theme-styles w-[150px]"
+                class="no-theme-styles w-[190px]"
                 align="start"
                 alignOffset={0}
                 sideOffset={8}
@@ -577,6 +577,72 @@ async function checkAuthStatus(): Promise<void> {
                   onclick={() => (window.location.href = '/smackjeeves')}
                 >
                   Smack Jeeves
+                </DropdownMenu.Item>
+                <DropdownMenu.Item
+                  class="cursor-pointer focus:outline-none no-theme-styles"
+                  style="
+                    background-color: color-mix(in srgb, var(--page-color) 99%, black);
+                    padding-bottom: 10px;
+                    color: var(--font-color);
+                    font-family: nav;
+                    font-size: 16px;
+                    line-height: 12px;
+                    text-shadow:
+                      -1px -1px 0 var(--bg-color),
+                      0px -1px 0 var(--bg-color),
+                      1px -1px 0 var(--bg-color),
+                      1px 0px 0 var(--bg-color),
+                      1px 1px 0 var(--bg-color),
+                      0px 1px 0 var(--bg-color),
+                      -1px 1px 0 var(--bg-color),
+                      -1px 0px 0 var(--bg-color);
+                  "
+                  onmouseenter={(e: MouseEvent) => {
+                    if (e.currentTarget instanceof HTMLElement) {
+                      e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+                    }
+                  }}
+                  onmouseleave={(e: MouseEvent) => {
+                    if (e.currentTarget instanceof HTMLElement) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
+                  onclick={() => (window.location.href = '/smackjeevesarchivetriage')}
+                >
+                  Archive Triage
+                </DropdownMenu.Item>
+                <DropdownMenu.Item
+                  class="cursor-pointer focus:outline-none no-theme-styles"
+                  style="
+                    background-color: color-mix(in srgb, var(--page-color) 99%, black);
+                    padding-bottom: 10px;
+                    color: var(--font-color);
+                    font-family: nav;
+                    font-size: 16px;
+                    line-height: 12px;
+                    text-shadow:
+                      -1px -1px 0 var(--bg-color),
+                      0px -1px 0 var(--bg-color),
+                      1px -1px 0 var(--bg-color),
+                      1px 0px 0 var(--bg-color),
+                      1px 1px 0 var(--bg-color),
+                      0px 1px 0 var(--bg-color),
+                      -1px 1px 0 var(--bg-color),
+                      -1px 0px 0 var(--bg-color);
+                  "
+                  onmouseenter={(e: MouseEvent) => {
+                    if (e.currentTarget instanceof HTMLElement) {
+                      e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+                    }
+                  }}
+                  onmouseleave={(e: MouseEvent) => {
+                    if (e.currentTarget instanceof HTMLElement) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
+                  onclick={() => (window.location.href = '/smackjeevesarchivetriage/leaderboard')}
+                >
+                  Archive Leaderboard
                 </DropdownMenu.Item>
               </DropdownMenu.Content>
             </DropdownMenu.Root>
@@ -1175,6 +1241,8 @@ async function checkAuthStatus(): Promise<void> {
           <div class="mb-4">
             <div class="mobile-nav-section-title">Archive</div>
             <a href="/smackjeeves" class="mobile-nav-link" onclick={() => (isMobileMenuOpen = false)}>Smack Jeeves</a>
+            <a href="/smackjeevesarchivetriage" class="mobile-nav-link" onclick={() => (isMobileMenuOpen = false)}>Archive Triage</a>
+            <a href="/smackjeevesarchivetriage/leaderboard" class="mobile-nav-link" onclick={() => (isMobileMenuOpen = false)}>Archive Leaderboard</a>
             <a href="http://old.sgxp.me" target="_blank" rel="noopener noreferrer" class="mobile-nav-link" onclick={() => (isMobileMenuOpen = false)}>
               Old Site
               <svg class="w-3 h-3 ml-1 inline-block opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
