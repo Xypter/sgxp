@@ -11,6 +11,7 @@
   import * as Accordion from '$components/ui/accordion';
   import { DataTable, Select, Input, Button } from '$lib/components';
   import { ExternalLink, LoaderCircle, Check } from 'lucide-svelte';
+  import { fade } from 'svelte/transition';
   import { toast } from 'svelte-sonner';
 
   import EditableSelectCell from './archive/cells/EditableSelectCell.svelte';
@@ -336,7 +337,22 @@
     clearTimeout(savedResetTimer);
 
     const previous = entries;
-    entries = entries.map((e) => (e.id === entry.id ? { ...e, [field]: value } : e));
+    const previousTotal = totalEntries;
+
+    // A status change that moves the entry out of the currently-filtered
+    // view (e.g. marking an "unsorted"-filtered row ready for review)
+    // should remove it right away instead of flashing its new state first -
+    // without this, the row briefly re-renders with its new status (e.g.
+    // the "Confirm Review" button) before the next poll/SSE refetch removes
+    // it, which reads as a jarring double-transition.
+    const movesOutOfView = field === 'status' && !!statusFilter && value !== statusFilter;
+
+    if (movesOutOfView) {
+      entries = entries.filter((e) => e.id !== entry.id);
+      totalEntries = Math.max(0, totalEntries - 1);
+    } else {
+      entries = entries.map((e) => (e.id === entry.id ? { ...e, [field]: value } : e));
+    }
 
     let succeeded = false;
     try {
@@ -355,13 +371,15 @@
       }
       // Merge the server's returned doc back in - picks up server-computed
       // fields (e.g. quality is derived from rating) that the optimistic
-      // update above wouldn't know about.
-      if (data.doc) {
+      // update above wouldn't know about. Skipped when the row was already
+      // removed from view above - there's nothing left to merge it into.
+      if (data.doc && !movesOutOfView) {
         entries = entries.map((e) => (e.id === entry.id ? { ...e, ...data.doc } : e));
       }
       succeeded = true;
     } catch (err) {
       entries = previous;
+      totalEntries = previousTotal;
       toast.error('Failed to save change', {
         description: err instanceof Error ? err.message : String(err),
       });
@@ -618,6 +636,13 @@
       data: entries,
       columns,
       state: { pagination, sorting },
+      // Without this, TanStack's default row id is just the array index -
+      // when a row is optimistically removed (see saveField), every row
+      // after it shifts up an index and Svelte's keyed each-block in
+      // DataTable.svelte ends up reusing/reassigning DOM nodes instead of
+      // actually removing the departing one, breaking any fade-out
+      // transition on it.
+      getRowId: (row) => String(row.id),
       getCoreRowModel: getCoreRowModel(),
       getPaginationRowModel: getPaginationRowModel(),
       getSortedRowModel: getSortedRowModel(),
@@ -771,7 +796,7 @@
     <!-- Mobile Cards -->
     <div class="mobile-cards">
       {#each entries as entry (entry.id)}
-        <div class="entry-card">
+        <div class="entry-card" out:fade={{ duration: 150 }}>
           <div class="entry-card-header">
             <span class="entry-card-id">#{entry.comicId}</span>
             <span class="entry-card-title">{entry.title || '(untitled)'}</span>
