@@ -1037,6 +1037,18 @@
     padding: 6px 10px !important;
   }
 
+  /* DataTable.svelte's pagination controls render outside .triage-data-table
+     (a sibling of the table, not inside it), so this can't be scoped through
+     that class - reaches directly into the shared component's own markup.
+     Matches .mobile-pagination's boxed look below for consistency. */
+  :global(.desktop-table .pagination-controls) {
+    padding: 15px !important;
+    background: var(--page-color) !important;
+    border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white) !important;
+    box-shadow: var(--box-shadow) !important;
+    margin-top: 16px;
+  }
+
   :global(.entry-quality) {
     display: block;
     width: 150px;
