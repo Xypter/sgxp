@@ -139,7 +139,10 @@
 
   // Filters
   let searchInput = $state('');
-  let statusFilter = $state('');
+  // Unsorted is the overwhelming majority of the 34k+ row backlog and the
+  // actual triage starting point - default to it instead of "All Statuses"
+  // so the page opens on what there's actually work to do on.
+  let statusFilter = $state('unsorted');
   let categoryFilter = $state('');
   let searchDebounceTimer: ReturnType<typeof setTimeout>;
 
