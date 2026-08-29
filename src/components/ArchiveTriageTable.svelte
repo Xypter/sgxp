@@ -22,6 +22,7 @@
   import PlainTextCell from './archive/cells/PlainTextCell.svelte';
   import LinkCell from './archive/cells/LinkCell.svelte';
   import SortableHeaderButton from './archive/cells/SortableHeaderButton.svelte';
+  import ArchiveStatsBar from './archive/ArchiveStatsBar.svelte';
 
   function sortableHeader(label: string) {
     return ({ column }: any) =>
@@ -184,19 +185,11 @@
     return params.toString();
   }
 
-  // Collection-wide totals for the header stats - independent of the
-  // current page/filters, so these always reflect the whole 34k+ row
-  // archive rather than whatever's currently filtered/paginated.
+  // Collection-wide totals for the stats bar - independent of the current
+  // page/filters, so these always reflect the whole 34k+ row archive rather
+  // than whatever's currently filtered/paginated. Percent/Kept math lives in
+  // ArchiveStatsBar.svelte (shared with the leaderboard page).
   let collectionStats = $state({ total: 0, unsorted: 0, excluded: 0 });
-
-  let percentSorted = $derived(
-    collectionStats.total > 0 ? ((collectionStats.total - collectionStats.unsorted) / collectionStats.total) * 100 : 0
-  );
-  let percentExcluded = $derived(collectionStats.total > 0 ? (collectionStats.excluded / collectionStats.total) * 100 : 0);
-  // Kept is defined as "sorted but not excluded" (not a separate query) so
-  // it and Excluded always add up to exactly Sorted - anything that's left
-  // unsorted isn't counted as either yet.
-  let percentKept = $derived(percentSorted - percentExcluded);
 
   async function fetchStats() {
     try {
@@ -691,26 +684,10 @@
       />
     </div>
 
-    <div class="results-count">
-      {totalEntries} entries
-      {#if collectionStats.total > 0}
-        <span class="stat-divider">•</span>
-        <span title="{collectionStats.total - collectionStats.unsorted} of {collectionStats.total} entries not unsorted">
-          {percentSorted.toFixed(2)}% Sorted
-        </span>
-        <span class="stat-divider">•</span>
-        <span
-          title="{collectionStats.total - collectionStats.unsorted - collectionStats.excluded} sorted entries not excluded, out of {collectionStats.total}"
-        >
-          {percentKept.toFixed(2)}% Kept
-        </span>
-        <span class="stat-divider">•</span>
-        <span title="{collectionStats.excluded} of {collectionStats.total} entries excluded">
-          {percentExcluded.toFixed(2)}% Excluded
-        </span>
-      {/if}
-    </div>
+    <div class="results-count">{totalEntries} entries</div>
   </div>
+
+  <ArchiveStatsBar total={collectionStats.total} unsorted={collectionStats.unsorted} excluded={collectionStats.excluded} />
 
   {#if error}
     <div class="error-state">
@@ -1012,11 +989,6 @@
     font-size: 13px;
     color: var(--font-color);
     opacity: 0.7;
-  }
-
-  .stat-divider {
-    margin: 0 6px;
-    opacity: 0.5;
   }
 
   .loading-state,

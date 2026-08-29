@@ -1,6 +1,7 @@
 ---
 import FrontPageLayout from "../../layouts/FrontPageLayout.astro";
 import { resolveUser } from "../../lib/userCache";
+import ArchiveStatsBar from "../../components/archive/ArchiveStatsBar.svelte";
 
 const token = Astro.cookies.get("payload-token")?.value;
 if (!token) {
@@ -34,9 +35,26 @@ async function fetchTop(sortField: string): Promise<LeaderboardUser[]> {
   }
 }
 
-const [topPreparers, topReviewers] = await Promise.all([
+async function fetchStatusCount(whereClause?: string): Promise<number> {
+  try {
+    const response = await fetch(
+      `${import.meta.env.PAYLOAD_URL}/api/archive-entries?limit=1${whereClause ? `&${whereClause}` : ""}`,
+      { headers: { Cookie: `payload-token=${token}` } }
+    );
+    if (!response.ok) return 0;
+    const data = await response.json();
+    return data.totalDocs || 0;
+  } catch {
+    return 0;
+  }
+}
+
+const [topPreparers, topReviewers, statsTotal, statsUnsorted, statsExcluded] = await Promise.all([
   fetchTop("archivePreparedCount"),
   fetchTop("archiveReviewedCount"),
+  fetchStatusCount(),
+  fetchStatusCount("where[status][equals]=unsorted"),
+  fetchStatusCount("where[status][equals]=excluded"),
 ]);
 
 function nameOf(u: LeaderboardUser): string {
@@ -50,6 +68,8 @@ function nameOf(u: LeaderboardUser): string {
       <h1>Archive Triage Leaderboard</h1>
       <p>Who's identified the most entries, and who's reviewed the most.</p>
     </div>
+
+    <ArchiveStatsBar total={statsTotal} unsorted={statsUnsorted} excluded={statsExcluded} />
 
     <div class="leaderboard-columns">
       <div class="leaderboard-panel">
