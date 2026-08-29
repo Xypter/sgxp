@@ -8,6 +8,23 @@ async function payloadFetch(path) {
   return res.json();
 }
 
+// archive-entries requires a logged-in user to read at all (unlike sprites/
+// users, which have public read) - authenticate as the same admin API key
+// used for grantArchivistAccess rather than adding a second credential.
+async function payloadFetchAsAdmin(path) {
+  const apiKey = process.env.PAYLOAD_API_KEY;
+  if (!apiKey) {
+    throw new Error('PAYLOAD_API_KEY is not configured');
+  }
+  const res = await fetch(`${PAYLOAD_URL}${path}`, {
+    headers: { Authorization: `users API-Key ${apiKey}` },
+  });
+  if (!res.ok) {
+    throw new Error(`Payload request failed: ${path} -> ${res.status}`);
+  }
+  return res.json();
+}
+
 /**
  * Grants archivist access to a user, called from the "Grant Archivist
  * Access" button on the archivist.requested DM (see index.js /
@@ -61,4 +78,27 @@ export async function getSiteStats() {
     totalSprites: sprites.totalDocs ?? 0,
     totalUsers: users.totalDocs ?? 0,
   };
+}
+
+// Top N users by live count of archive_entries.prepared_by/reviewed_by -
+// see the site's src/pages/api/archive-entries/leaderboard.ts and the CMS's
+// getArchiveLeaderboardHandler for how this is computed.
+export async function getArchiveLeaderboard(type, limit = 5) {
+  const data = await payloadFetchAsAdmin(`/api/archive-entries/leaderboard?type=${type}`);
+  return (data.docs ?? []).slice(0, limit);
+}
+
+export async function getArchiveStats() {
+  const [total, unsorted, excluded] = await Promise.all([
+    payloadFetchAsAdmin('/api/archive-entries?limit=1'),
+    payloadFetchAsAdmin('/api/archive-entries?limit=1&where[status][equals]=unsorted'),
+    payloadFetchAsAdmin('/api/archive-entries?limit=1&where[status][equals]=excluded'),
+  ]);
+  const totalCount = total.totalDocs ?? 0;
+  const unsortedCount = unsorted.totalDocs ?? 0;
+  const excludedCount = excluded.totalDocs ?? 0;
+  const sortedCount = totalCount - unsortedCount;
+  // Kept is "sorted but not excluded" - matches the site's ArchiveStatsBar.
+  const keptCount = sortedCount - excludedCount;
+  return { total: totalCount, sorted: sortedCount, kept: keptCount, excluded: excludedCount };
 }

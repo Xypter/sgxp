@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { Client, GatewayIntentBits, Collection, Events } from 'discord.js';
 import * as stats from './commands/stats.js';
 import * as leaderboard from './commands/leaderboard.js';
+import * as archiveleaderboard from './commands/archiveleaderboard.js';
 import { createNotifier } from './notify.js';
 import { startEventServer } from './server.js';
 import { scheduleJobs } from './jobs.js';
@@ -12,7 +13,7 @@ const client = new Client({
 });
 
 client.commands = new Collection();
-for (const cmd of [stats, leaderboard]) {
+for (const cmd of [stats, leaderboard, archiveleaderboard]) {
   client.commands.set(cmd.data.name, cmd);
 }
 

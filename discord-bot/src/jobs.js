@@ -2,6 +2,7 @@ import cron from 'node-cron';
 import { EmbedBuilder } from 'discord.js';
 import { getTopSprites } from './payload.js';
 import { fetchBirthdayEntries } from './birthdays.js';
+import { buildArchiveLeaderboardEmbed } from './archiveLeaderboardEmbed.js';
 
 export function scheduleJobs(notifier, client) {
   // Daily leaderboard, 9am server time
@@ -23,6 +24,25 @@ export function scheduleJobs(notifier, client) {
       await notifier.sendToAnnounceChannel({ embeds: [embed] });
     } catch (err) {
       console.error('[jobs] Daily leaderboard failed:', err);
+    }
+  });
+
+  // Daily archive triage leaderboard, 9:15am server time - staggered a
+  // few minutes after the sprite leaderboard so they don't land as one
+  // back-to-back wall of messages. Posts to its own channel if configured
+  // (DISCORD_ARCHIVE_CHANNEL_ID), otherwise falls back to the same
+  // announce channel as the sprite leaderboard.
+  cron.schedule('15 9 * * *', async () => {
+    try {
+      const embed = await buildArchiveLeaderboardEmbed();
+      const archiveChannelId = process.env.DISCORD_ARCHIVE_CHANNEL_ID;
+      if (archiveChannelId) {
+        await notifier.sendToChannel(archiveChannelId, { embeds: [embed] });
+      } else {
+        await notifier.sendToAnnounceChannel({ embeds: [embed] });
+      }
+    } catch (err) {
+      console.error('[jobs] Daily archive leaderboard failed:', err);
     }
   });
 
