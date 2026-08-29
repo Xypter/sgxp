@@ -77,15 +77,26 @@ function nameOf(u: LeaderboardUser): string {
         {topPreparers.length === 0 ? (
           <p class="empty-note">No one has prepared any entries yet.</p>
         ) : (
-          <ol class="leaderboard-list">
-            {topPreparers.map((u, i) => (
-              <li>
-                <span class="rank">#{i + 1}</span>
-                <span class="name">{nameOf(u)}</span>
-                <span class="count">{u.archivePreparedCount}</span>
-              </li>
-            ))}
-          </ol>
+          <table class="leaderboard-table">
+            <thead>
+              <tr>
+                <th class="col-rank">Rank</th>
+                <th class="col-name">Name</th>
+                <th class="col-count">Prepared</th>
+              </tr>
+            </thead>
+            <tbody>
+              {topPreparers.map((u, i) => (
+                <tr>
+                  <td class="col-rank">#{i + 1}</td>
+                  <td class="col-name">
+                    <a href={`/profile?id=${u.id}`} class="name-link">{nameOf(u)}</a>
+                  </td>
+                  <td class="col-count">{u.archivePreparedCount}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
 
@@ -94,15 +105,26 @@ function nameOf(u: LeaderboardUser): string {
         {topReviewers.length === 0 ? (
           <p class="empty-note">No one has reviewed any entries yet.</p>
         ) : (
-          <ol class="leaderboard-list">
-            {topReviewers.map((u, i) => (
-              <li>
-                <span class="rank">#{i + 1}</span>
-                <span class="name">{nameOf(u)}</span>
-                <span class="count">{u.archiveReviewedCount}</span>
-              </li>
-            ))}
-          </ol>
+          <table class="leaderboard-table">
+            <thead>
+              <tr>
+                <th class="col-rank">Rank</th>
+                <th class="col-name">Name</th>
+                <th class="col-count">Reviewed</th>
+              </tr>
+            </thead>
+            <tbody>
+              {topReviewers.map((u, i) => (
+                <tr>
+                  <td class="col-rank">#{i + 1}</td>
+                  <td class="col-name">
+                    <a href={`/profile?id=${u.id}`} class="name-link">{nameOf(u)}</a>
+                  </td>
+                  <td class="col-count">{u.archiveReviewedCount}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
     </div>
@@ -164,45 +186,56 @@ function nameOf(u: LeaderboardUser): string {
     margin: 0;
   }
 
-  .leaderboard-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .leaderboard-list li {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 8px 0;
-    border-bottom: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 70%, white);
+  .leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
     font-family: 'saira';
   }
 
-  .leaderboard-list li:last-child {
+  .leaderboard-table th {
+    text-align: left;
+    font-weight: 800;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--font-color);
+    opacity: 0.7;
+    padding: 0 0 10px 0;
+    border-bottom: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white);
+  }
+
+  .leaderboard-table td {
+    padding: 10px 0;
+    border-bottom: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 70%, white);
+  }
+
+  .leaderboard-table tbody tr:last-child td {
     border-bottom: none;
   }
 
-  .rank {
+  .col-rank {
     font-weight: 800;
     color: var(--font-link-color);
-    width: 32px;
-    flex-shrink: 0;
+    width: 60px;
   }
 
-  .name {
-    flex: 1;
-    color: var(--font-color);
-    font-weight: 600;
-  }
-
-  .count {
+  .col-count {
+    text-align: right;
     color: var(--font-color);
     opacity: 0.8;
     font-weight: 700;
+    width: 100px;
+  }
+
+  .name-link {
+    color: var(--font-color);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .name-link:hover {
+    color: var(--font-link-color);
+    text-decoration: underline;
   }
 
   @media (max-width: 768px) {
