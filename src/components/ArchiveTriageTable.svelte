@@ -184,6 +184,44 @@
     return params.toString();
   }
 
+  // Collection-wide totals for the header stats - independent of the
+  // current page/filters, so these always reflect the whole 34k+ row
+  // archive rather than whatever's currently filtered/paginated.
+  let collectionStats = $state({ total: 0, unsorted: 0, spriteComic: 0, gameRelated: 0 });
+
+  let percentSorted = $derived(
+    collectionStats.total > 0 ? ((collectionStats.total - collectionStats.unsorted) / collectionStats.total) * 100 : 0
+  );
+  // isSpriteComic and isGameRelated can never both be true on the same entry
+  // (the CMS resets isGameRelated to false the moment isSpriteComic is set),
+  // so summing their counts can't double-count a row.
+  let percentKept = $derived(
+    collectionStats.total > 0 ? ((collectionStats.spriteComic + collectionStats.gameRelated) / collectionStats.total) * 100 : 0
+  );
+
+  async function fetchStats() {
+    try {
+      const [total, unsorted, spriteComic, gameRelated] = await Promise.all([
+        fetch('/api/archive-entries?limit=1').then((r) => r.json()),
+        fetch('/api/archive-entries?limit=1&where[status][equals]=unsorted').then((r) => r.json()),
+        fetch('/api/archive-entries?limit=1&where[isSpriteComic][equals]=true').then((r) => r.json()),
+        fetch('/api/archive-entries?limit=1&where[isGameRelated][equals]=true').then((r) => r.json()),
+      ]);
+      collectionStats = {
+        total: total.totalDocs || 0,
+        unsorted: unsorted.totalDocs || 0,
+        spriteComic: spriteComic.totalDocs || 0,
+        gameRelated: gameRelated.totalDocs || 0,
+      };
+    } catch {
+      // Best-effort - a failed stats fetch just leaves the last known numbers showing.
+    }
+  }
+
+  $effect(() => {
+    fetchStats();
+  });
+
   async function fetchEntries() {
     isLoading = true;
     error = null;
@@ -226,6 +264,7 @@
     // hasn't round-tripped yet - overwriting it here would either flicker
     // the field back to its old value or clobber the pending write.
     if (activeSaveCount > 0) return;
+    fetchStats();
     try {
       const response = await fetch(`/api/archive-entries?${buildQuery()}`);
       if (!response.ok) return;
@@ -633,7 +672,19 @@
       />
     </div>
 
-    <div class="results-count">{totalEntries} entries</div>
+    <div class="results-count">
+      {totalEntries} entries
+      {#if collectionStats.total > 0}
+        <span class="stat-divider">•</span>
+        <span title="{collectionStats.total - collectionStats.unsorted} of {collectionStats.total} entries not unsorted">
+          {percentSorted.toFixed(1)}% Sorted
+        </span>
+        <span class="stat-divider">•</span>
+        <span title="{collectionStats.spriteComic} sprite comics + {collectionStats.gameRelated} game related">
+          {percentKept.toFixed(1)}% Kept
+        </span>
+      {/if}
+    </div>
   </div>
 
   {#if error}
@@ -929,6 +980,11 @@
     font-size: 13px;
     color: var(--font-color);
     opacity: 0.7;
+  }
+
+  .stat-divider {
+    margin: 0 6px;
+    opacity: 0.5;
   }
 
   .loading-state,
