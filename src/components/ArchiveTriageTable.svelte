@@ -49,7 +49,7 @@
     rating?: number | null;
     quality?: string | null;
     notes?: string;
-    status: 'unsorted' | 'ready-for-review' | 'ready-for-rating' | 'ready-to-upload' | 'uploaded' | 'excluded';
+    status: 'unsorted' | 'ready-for-review' | 'pending-exclusion' | 'ready-for-rating' | 'ready-to-upload' | 'uploaded' | 'excluded';
     link?: string;
     preparedBy?: UserRef | number | string | null;
     reviewedBy?: UserRef | number | string | null;
@@ -79,6 +79,7 @@
   const STATUS_OPTIONS = [
     { value: 'unsorted', label: 'Unsorted' },
     { value: 'ready-for-review', label: 'Ready for Review' },
+    { value: 'pending-exclusion', label: 'Pending Exclusion' },
     { value: 'ready-for-rating', label: 'Ready for Rating' },
     { value: 'ready-to-upload', label: 'Ready to Upload' },
     { value: 'uploaded', label: 'Uploaded' },
@@ -149,10 +150,9 @@
 
   // Table state
   let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 25 });
-  // Postgres enum ordering for status matches declaration order (unsorted <
-  // ready-for-review < ready-for-rating < ready-to-upload < uploaded), so
-  // ascending sort surfaces the earliest-pipeline-stage entries first -
-  // exactly the triage priority we want.
+  // Postgres enum ordering for status matches declaration order (see
+  // STATUS_ORDER below), so ascending sort surfaces the earliest-pipeline-
+  // stage entries first - exactly the triage priority we want.
   let sorting = $state<SortingState>([{ id: 'status', desc: false }]);
 
   let pageCount = $derived(Math.ceil(totalEntries / pagination.pageSize));
@@ -406,11 +406,27 @@
     saveField(entry, 'status', 'uploaded');
   }
 
-  function markExcluded(entry: ArchiveEntry) {
+  function proposeExclude(entry: ArchiveEntry) {
+    saveField(entry, 'status', 'pending-exclusion');
+  }
+
+  function confirmExclude(entry: ArchiveEntry) {
     saveField(entry, 'status', 'excluded');
   }
 
-  const STATUS_ORDER = ['unsorted', 'ready-for-review', 'ready-for-rating', 'ready-to-upload', 'uploaded', 'excluded'];
+  function rejectExclude(entry: ArchiveEntry) {
+    saveField(entry, 'status', 'unsorted');
+  }
+
+  const STATUS_ORDER = [
+    'unsorted',
+    'ready-for-review',
+    'pending-exclusion',
+    'ready-for-rating',
+    'ready-to-upload',
+    'uploaded',
+    'excluded',
+  ];
 
   // Once an entry reaches "ready for rating" it's locked in for everyone
   // except admins (mirrors the backend's archivistAccess Where-clause
@@ -590,7 +606,9 @@
           onConfirm: () => confirmReview(row.original),
           onMarkReadyToUpload: () => markReadyToUpload(row.original),
           onMarkUploaded: () => markUploaded(row.original),
-          onExclude: () => markExcluded(row.original),
+          onProposeExclude: () => proposeExclude(row.original),
+          onConfirmExclude: () => confirmExclude(row.original),
+          onRejectExclude: () => rejectExclude(row.original),
         }),
       enableSorting: false,
     },
@@ -815,7 +833,9 @@
               onConfirm={() => confirmReview(entry)}
               onMarkReadyToUpload={() => markReadyToUpload(entry)}
               onMarkUploaded={() => markUploaded(entry)}
-              onExclude={() => markExcluded(entry)}
+              onProposeExclude={() => proposeExclude(entry)}
+              onConfirmExclude={() => confirmExclude(entry)}
+              onRejectExclude={() => rejectExclude(entry)}
             />
           </div>
 

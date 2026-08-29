@@ -9,7 +9,7 @@
   }
 
   interface Props {
-    status: 'unsorted' | 'ready-for-review' | 'ready-for-rating' | 'ready-to-upload' | 'uploaded' | 'excluded';
+    status: 'unsorted' | 'ready-for-review' | 'pending-exclusion' | 'ready-for-rating' | 'ready-to-upload' | 'uploaded' | 'excluded';
     isSpriteComic?: boolean;
     isGameRelated?: boolean;
     preparedBy?: UserRef | number | string | null;
@@ -21,7 +21,9 @@
     onConfirm: () => void;
     onMarkReadyToUpload: () => void;
     onMarkUploaded: () => void;
-    onExclude: () => void;
+    onProposeExclude: () => void;
+    onConfirmExclude: () => void;
+    onRejectExclude: () => void;
   }
 
   let {
@@ -37,7 +39,9 @@
     onConfirm,
     onMarkReadyToUpload,
     onMarkUploaded,
-    onExclude,
+    onProposeExclude,
+    onConfirmExclude,
+    onRejectExclude,
   }: Props = $props();
 
   function nameOf(ref: UserRef | number | string | null | undefined): string {
@@ -63,7 +67,7 @@
         <span>Ready for review</span>
       </label>
       {#if !isSpriteComic && !isGameRelated}
-        <Button variant="outline" size="sm" onclick={onExclude} themed class="exclude-btn">
+        <Button variant="outline" size="sm" onclick={onProposeExclude} themed class="exclude-btn">
           Exclude
         </Button>
       {/if}
@@ -79,6 +83,20 @@
     </Button>
   {:else}
     <span class="review-badge review-badge--pending">Awaiting review</span>
+  {/if}
+{:else if status === 'pending-exclusion'}
+  {#if canEdit && !isPreparer}
+    <div class="unsorted-actions">
+      <Button variant="outline" size="sm" onclick={onConfirmExclude} themed class="exclude-btn">
+        <CheckCircle2 size={14} />
+        Confirm Exclude
+      </Button>
+      <Button variant="outline" size="sm" onclick={onRejectExclude} themed class="reject-exclude-btn">
+        Reject
+      </Button>
+    </div>
+  {:else}
+    <span class="review-badge review-badge--pending-exclusion">Pending exclusion</span>
   {/if}
 {:else if status === 'ready-for-rating'}
   {#if isAdmin}
@@ -144,6 +162,10 @@
     color: #f59e0b;
   }
 
+  .review-badge--pending-exclusion {
+    color: #f97316;
+  }
+
   .review-badge--locked {
     color: #8b5cf6;
   }
@@ -157,7 +179,8 @@
   }
 
   :global(.confirm-review-btn),
-  :global(.exclude-btn) {
+  :global(.exclude-btn),
+  :global(.reject-exclude-btn) {
     font-size: 12px !important;
     padding: 4px 10px !important;
     height: auto !important;
@@ -165,5 +188,10 @@
     align-items: center !important;
     gap: 4px !important;
     white-space: nowrap !important;
+  }
+
+  :global(.reject-exclude-btn) {
+    color: #ef4444 !important;
+    border-color: #ef4444 !important;
   }
 </style>
