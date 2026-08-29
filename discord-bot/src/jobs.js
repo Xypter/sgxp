@@ -1,38 +1,12 @@
 import cron from 'node-cron';
-import { EmbedBuilder } from 'discord.js';
-import { getTopSprites } from './payload.js';
 import { fetchBirthdayEntries } from './birthdays.js';
 import { buildArchiveLeaderboardEmbed } from './archiveLeaderboardEmbed.js';
 
 export function scheduleJobs(notifier, client) {
-  // Daily leaderboard, 9am server time
+  // Daily archive triage leaderboard, 9am server time. Posts to its own
+  // channel if configured (DISCORD_ARCHIVE_CHANNEL_ID), otherwise falls
+  // back to DISCORD_ANNOUNCE_CHANNEL_ID.
   cron.schedule('0 9 * * *', async () => {
-    try {
-      const sprites = await getTopSprites({ limit: 5 });
-      if (sprites.length === 0) return;
-
-      const lines = sprites.map(
-        (sprite, i) => `**${i + 1}.** ${sprite.title ?? 'Untitled'} — ${sprite.likes ?? 0} likes`
-      );
-
-      const embed = new EmbedBuilder()
-        .setTitle("Today's Leaderboard")
-        .setDescription(lines.join('\n'))
-        .setColor(0x5865f2)
-        .setTimestamp();
-
-      await notifier.sendToAnnounceChannel({ embeds: [embed] });
-    } catch (err) {
-      console.error('[jobs] Daily leaderboard failed:', err);
-    }
-  });
-
-  // Daily archive triage leaderboard, 9:15am server time - staggered a
-  // few minutes after the sprite leaderboard so they don't land as one
-  // back-to-back wall of messages. Posts to its own channel if configured
-  // (DISCORD_ARCHIVE_CHANNEL_ID), otherwise falls back to the same
-  // announce channel as the sprite leaderboard.
-  cron.schedule('15 9 * * *', async () => {
     try {
       const embed = await buildArchiveLeaderboardEmbed();
       const archiveChannelId = process.env.DISCORD_ARCHIVE_CHANNEL_ID;
