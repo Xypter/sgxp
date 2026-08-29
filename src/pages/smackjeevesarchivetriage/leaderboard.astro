@@ -1,7 +1,7 @@
 ---
 import FrontPageLayout from "../../layouts/FrontPageLayout.astro";
 import { resolveUser } from "../../lib/userCache";
-import LeaderboardTable from "../../components/archive/LeaderboardTable.svelte";
+import LeaderboardBoard from "../../components/archive/LeaderboardBoard.svelte";
 
 const token = Astro.cookies.get("payload-token")?.value;
 if (!token) {
@@ -12,40 +12,6 @@ const { user, source } = await resolveUser(Astro.cookies);
 if (source === "invalid" || !user) {
   return Astro.redirect("/login?redirect=/smackjeevesarchivetriage/leaderboard");
 }
-
-interface LeaderboardUser {
-  id: number | string;
-  username?: string;
-  displayName?: string;
-  archivePreparedCount?: number;
-  archiveReviewedCount?: number;
-}
-
-async function fetchTop(sortField: string): Promise<LeaderboardUser[]> {
-  try {
-    const response = await fetch(
-      `${import.meta.env.PAYLOAD_URL}/api/users?sort=-${sortField}&limit=20&where[${sortField}][greater_than]=0`,
-      { headers: { Cookie: `payload-token=${token}` } }
-    );
-    if (!response.ok) return [];
-    const data = await response.json();
-    return data.docs || [];
-  } catch {
-    return [];
-  }
-}
-
-const [topPreparers, topReviewers] = await Promise.all([
-  fetchTop("archivePreparedCount"),
-  fetchTop("archiveReviewedCount"),
-]);
-
-function nameOf(u: LeaderboardUser): string {
-  return u.displayName || u.username || `User #${u.id}`;
-}
-
-const preparerRows = topPreparers.map((u) => ({ id: u.id, name: nameOf(u), count: u.archivePreparedCount ?? 0 }));
-const reviewerRows = topReviewers.map((u) => ({ id: u.id, name: nameOf(u), count: u.archiveReviewedCount ?? 0 }));
 ---
 
 <FrontPageLayout title="Archive Leaderboard">
@@ -55,17 +21,7 @@ const reviewerRows = topReviewers.map((u) => ({ id: u.id, name: nameOf(u), count
       <p>Who's identified the most entries, and who's reviewed the most.</p>
     </div>
 
-    <div class="leaderboard-columns">
-      <div class="leaderboard-panel">
-        <h2>Top Preparers</h2>
-        <LeaderboardTable rows={preparerRows} countLabel="Prepared" emptyMessage="No one has prepared any entries yet." />
-      </div>
-
-      <div class="leaderboard-panel">
-        <h2>Top Reviewers</h2>
-        <LeaderboardTable rows={reviewerRows} countLabel="Reviewed" emptyMessage="No one has reviewed any entries yet." />
-      </div>
-    </div>
+    <LeaderboardBoard client:only="svelte" />
   </div>
 </FrontPageLayout>
 
@@ -76,6 +32,10 @@ const reviewerRows = topReviewers.map((u) => ({ id: u.id, name: nameOf(u), count
   }
 
   .leaderboard-header {
+    background: var(--page-color);
+    border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white);
+    box-shadow: var(--box-shadow);
+    padding: 16px 20px;
     margin-bottom: var(--gap, 20px);
   }
 
@@ -93,32 +53,5 @@ const reviewerRows = topReviewers.map((u) => ({ id: u.id, name: nameOf(u), count
     color: var(--font-color);
     opacity: 0.8;
     margin: 0;
-  }
-
-  .leaderboard-columns {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--gap, 20px);
-  }
-
-  .leaderboard-panel {
-    background: var(--page-color);
-    border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white);
-    box-shadow: var(--box-shadow);
-    padding: 20px;
-  }
-
-  .leaderboard-panel h2 {
-    font-family: 'saira';
-    font-weight: 800;
-    font-size: 18px;
-    color: var(--font-color);
-    margin: 0 0 16px 0;
-  }
-
-  @media (max-width: 768px) {
-    .leaderboard-columns {
-      grid-template-columns: 1fr;
-    }
   }
 </style>
