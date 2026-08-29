@@ -9,7 +9,9 @@
   }
 
   interface Props {
-    status: 'unsorted' | 'ready-for-review' | 'ready-for-rating' | 'ready-to-upload' | 'uploaded';
+    status: 'unsorted' | 'ready-for-review' | 'ready-for-rating' | 'ready-to-upload' | 'uploaded' | 'excluded';
+    isSpriteComic?: boolean;
+    isGameRelated?: boolean;
     preparedBy?: UserRef | number | string | null;
     reviewedBy?: UserRef | number | string | null;
     currentUserId: number | string;
@@ -19,9 +21,24 @@
     onConfirm: () => void;
     onMarkReadyToUpload: () => void;
     onMarkUploaded: () => void;
+    onExclude: () => void;
   }
 
-  let { status, preparedBy, reviewedBy, currentUserId, canEdit, isAdmin, onMarkReady, onConfirm, onMarkReadyToUpload, onMarkUploaded }: Props = $props();
+  let {
+    status,
+    isSpriteComic,
+    isGameRelated,
+    preparedBy,
+    reviewedBy,
+    currentUserId,
+    canEdit,
+    isAdmin,
+    onMarkReady,
+    onConfirm,
+    onMarkReadyToUpload,
+    onMarkUploaded,
+    onExclude,
+  }: Props = $props();
 
   function nameOf(ref: UserRef | number | string | null | undefined): string {
     if (!ref) return 'someone';
@@ -40,10 +57,17 @@
 
 {#if status === 'unsorted'}
   {#if canEdit}
-    <label class="mark-ready-label">
-      <Checkbox checked={false} themed onCheckedChange={(checked) => checked && onMarkReady()} />
-      <span>Ready for review</span>
-    </label>
+    <div class="unsorted-actions">
+      <label class="mark-ready-label">
+        <Checkbox checked={false} themed onCheckedChange={(checked) => checked && onMarkReady()} />
+        <span>Ready for review</span>
+      </label>
+      {#if !isSpriteComic && !isGameRelated}
+        <Button variant="outline" size="sm" onclick={onExclude} themed class="exclude-btn">
+          Exclude
+        </Button>
+      {/if}
+    </div>
   {:else}
     <span class="review-badge review-badge--unsorted">Unsorted</span>
   {/if}
@@ -74,6 +98,8 @@
   {:else}
     <span class="review-badge review-badge--locked">Ready to upload</span>
   {/if}
+{:else if status === 'excluded'}
+  <span class="review-badge review-badge--excluded">Excluded</span>
 {:else}
   <span class="review-badge review-badge--reviewed" title="Prepared by {nameOf(preparedBy)}, reviewed by {nameOf(reviewedBy)}">
     Uploaded
@@ -81,6 +107,13 @@
 {/if}
 
 <style>
+  .unsorted-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
   .mark-ready-label {
     display: flex;
     align-items: center;
@@ -119,7 +152,12 @@
     color: #22c55e;
   }
 
-  :global(.confirm-review-btn) {
+  .review-badge--excluded {
+    color: #ef4444;
+  }
+
+  :global(.confirm-review-btn),
+  :global(.exclude-btn) {
     font-size: 12px !important;
     padding: 4px 10px !important;
     height: auto !important;

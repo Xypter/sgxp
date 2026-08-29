@@ -49,7 +49,7 @@
     rating?: number | null;
     quality?: string | null;
     notes?: string;
-    status: 'unsorted' | 'ready-for-review' | 'ready-for-rating' | 'ready-to-upload' | 'uploaded';
+    status: 'unsorted' | 'ready-for-review' | 'ready-for-rating' | 'ready-to-upload' | 'uploaded' | 'excluded';
     link?: string;
     preparedBy?: UserRef | number | string | null;
     reviewedBy?: UserRef | number | string | null;
@@ -82,6 +82,7 @@
     { value: 'ready-for-rating', label: 'Ready for Rating' },
     { value: 'ready-to-upload', label: 'Ready to Upload' },
     { value: 'uploaded', label: 'Uploaded' },
+    { value: 'excluded', label: 'Excluded' },
   ];
 
   const YES_NO_OPTIONS = [
@@ -187,12 +188,13 @@
   // Collection-wide totals for the header stats - independent of the
   // current page/filters, so these always reflect the whole 34k+ row
   // archive rather than whatever's currently filtered/paginated.
-  let collectionStats = $state({ total: 0, unsorted: 0, spriteComic: 0, gameRelated: 0, uploaded: 0, kept: 0 });
+  let collectionStats = $state({ total: 0, unsorted: 0, spriteComic: 0, gameRelated: 0, uploaded: 0, kept: 0, excluded: 0 });
 
   let percentSorted = $derived(
     collectionStats.total > 0 ? ((collectionStats.total - collectionStats.unsorted) / collectionStats.total) * 100 : 0
   );
   let percentKept = $derived(collectionStats.total > 0 ? (collectionStats.kept / collectionStats.total) * 100 : 0);
+  let percentExcluded = $derived(collectionStats.total > 0 ? (collectionStats.excluded / collectionStats.total) * 100 : 0);
 
   async function fetchStats() {
     try {
@@ -202,7 +204,7 @@
       // never flagged that way in the first place. Fetched as a single OR
       // query (rather than summing three separate counts) so an entry that
       // happens to match more than one of these isn't double-counted.
-      const [total, unsorted, spriteComic, gameRelated, uploaded, kept] = await Promise.all([
+      const [total, unsorted, spriteComic, gameRelated, uploaded, kept, excluded] = await Promise.all([
         fetch('/api/archive-entries?limit=1').then((r) => r.json()),
         fetch('/api/archive-entries?limit=1&where[status][equals]=unsorted').then((r) => r.json()),
         fetch('/api/archive-entries?limit=1&where[isSpriteComic][equals]=true').then((r) => r.json()),
@@ -211,6 +213,7 @@
         fetch(
           '/api/archive-entries?limit=1&where[or][0][isSpriteComic][equals]=true&where[or][1][isGameRelated][equals]=true&where[or][2][status][equals]=uploaded'
         ).then((r) => r.json()),
+        fetch('/api/archive-entries?limit=1&where[status][equals]=excluded').then((r) => r.json()),
       ]);
       collectionStats = {
         total: total.totalDocs || 0,
@@ -219,6 +222,7 @@
         gameRelated: gameRelated.totalDocs || 0,
         uploaded: uploaded.totalDocs || 0,
         kept: kept.totalDocs || 0,
+        excluded: excluded.totalDocs || 0,
       };
     } catch {
       // Best-effort - a failed stats fetch just leaves the last known numbers showing.
@@ -402,7 +406,11 @@
     saveField(entry, 'status', 'uploaded');
   }
 
-  const STATUS_ORDER = ['unsorted', 'ready-for-review', 'ready-for-rating', 'ready-to-upload', 'uploaded'];
+  function markExcluded(entry: ArchiveEntry) {
+    saveField(entry, 'status', 'excluded');
+  }
+
+  const STATUS_ORDER = ['unsorted', 'ready-for-review', 'ready-for-rating', 'ready-to-upload', 'uploaded', 'excluded'];
 
   // Once an entry reaches "ready for rating" it's locked in for everyone
   // except admins (mirrors the backend's archivistAccess Where-clause
@@ -571,6 +579,8 @@
       cell: ({ row }) =>
         renderComponent(ReviewStatusCell as any, {
           status: row.original.status,
+          isSpriteComic: row.original.isSpriteComic,
+          isGameRelated: row.original.isGameRelated,
           preparedBy: row.original.preparedBy,
           reviewedBy: row.original.reviewedBy,
           currentUserId,
@@ -580,6 +590,7 @@
           onConfirm: () => confirmReview(row.original),
           onMarkReadyToUpload: () => markReadyToUpload(row.original),
           onMarkUploaded: () => markUploaded(row.original),
+          onExclude: () => markExcluded(row.original),
         }),
       enableSorting: false,
     },
@@ -699,6 +710,10 @@
         >
           {percentKept.toFixed(1)}% Kept
         </span>
+        <span class="stat-divider">•</span>
+        <span title="{collectionStats.excluded} of {collectionStats.total} entries excluded">
+          {percentExcluded.toFixed(1)}% Excluded
+        </span>
       {/if}
     </div>
   </div>
@@ -789,6 +804,8 @@
             <label>Review</label>
             <ReviewStatusCell
               status={entry.status}
+              isSpriteComic={entry.isSpriteComic}
+              isGameRelated={entry.isGameRelated}
               preparedBy={entry.preparedBy}
               reviewedBy={entry.reviewedBy}
               {currentUserId}
@@ -798,6 +815,7 @@
               onConfirm={() => confirmReview(entry)}
               onMarkReadyToUpload={() => markReadyToUpload(entry)}
               onMarkUploaded={() => markUploaded(entry)}
+              onExclude={() => markExcluded(entry)}
             />
           </div>
 

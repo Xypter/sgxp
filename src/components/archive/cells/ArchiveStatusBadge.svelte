@@ -14,6 +14,7 @@
       case 'ready-for-rating': return '#3b82f6';
       case 'ready-for-review': return '#f59e0b';
       case 'unsorted': return '#6b7280';
+      case 'excluded': return '#ef4444';
       default: return '#6b7280';
     }
   }
@@ -25,6 +26,7 @@
       case 'ready-for-rating': return 'Ready for Rating';
       case 'ready-for-review': return 'Ready for Review';
       case 'unsorted': return 'Unsorted';
+      case 'excluded': return 'Excluded';
       default: return status;
     }
   }
