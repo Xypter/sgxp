@@ -9,7 +9,7 @@
   }
 
   interface Props {
-    status: 'unsorted' | 'ready-for-review' | 'pending-exclusion' | 'ready-for-rating' | 'ready-to-upload' | 'uploaded' | 'excluded';
+    status: 'unsorted' | 'ready-for-review' | 'ready-for-rating' | 'ready-to-upload' | 'uploaded' | 'excluded';
     isSpriteComic?: boolean;
     isGameRelated?: boolean;
     preparedBy?: UserRef | number | string | null;
@@ -21,9 +21,6 @@
     onConfirm: () => void;
     onMarkReadyToUpload: () => void;
     onMarkUploaded: () => void;
-    onProposeExclude: () => void;
-    onConfirmExclude: () => void;
-    onRejectExclude: () => void;
   }
 
   let {
@@ -39,9 +36,6 @@
     onConfirm,
     onMarkReadyToUpload,
     onMarkUploaded,
-    onProposeExclude,
-    onConfirmExclude,
-    onRejectExclude,
   }: Props = $props();
 
   function nameOf(ref: UserRef | number | string | null | undefined): string {
@@ -57,46 +51,28 @@
   }
 
   let isPreparer = $derived(idOf(preparedBy) === String(currentUserId));
+  // Confirming review has two outcomes depending on the entry's flags - the
+  // button makes clear up front which one this confirm will lead to.
+  let willExclude = $derived(!isSpriteComic && !isGameRelated);
 </script>
 
 {#if status === 'unsorted'}
   {#if canEdit}
-    <div class="unsorted-actions">
-      <label class="mark-ready-label">
-        <Checkbox checked={false} themed onCheckedChange={(checked) => checked && onMarkReady()} />
-        <span>Ready for review</span>
-      </label>
-      {#if !isSpriteComic && !isGameRelated}
-        <Button variant="outline" size="sm" onclick={onProposeExclude} themed class="exclude-btn">
-          Exclude
-        </Button>
-      {/if}
-    </div>
+    <label class="mark-ready-label">
+      <Checkbox checked={false} themed onCheckedChange={(checked) => checked && onMarkReady()} />
+      <span>Ready for review</span>
+    </label>
   {:else}
     <span class="review-badge review-badge--unsorted">Unsorted</span>
   {/if}
 {:else if status === 'ready-for-review'}
   {#if canEdit && !isPreparer}
-    <Button variant="outline" size="sm" onclick={onConfirm} themed class="confirm-review-btn">
+    <Button variant="outline" size="sm" onclick={onConfirm} themed class={willExclude ? 'exclude-btn' : 'confirm-review-btn'}>
       <CheckCircle2 size={14} />
-      Confirm Review
+      {willExclude ? 'Confirm Exclusion' : 'Confirm Review'}
     </Button>
   {:else}
     <span class="review-badge review-badge--pending">Awaiting review</span>
-  {/if}
-{:else if status === 'pending-exclusion'}
-  {#if canEdit && !isPreparer}
-    <div class="unsorted-actions">
-      <Button variant="outline" size="sm" onclick={onConfirmExclude} themed class="exclude-btn">
-        <CheckCircle2 size={14} />
-        Confirm Exclude
-      </Button>
-      <Button variant="outline" size="sm" onclick={onRejectExclude} themed class="reject-exclude-btn">
-        Reject
-      </Button>
-    </div>
-  {:else}
-    <span class="review-badge review-badge--pending-exclusion">Pending exclusion</span>
   {/if}
 {:else if status === 'ready-for-rating'}
   {#if isAdmin}
@@ -117,7 +93,9 @@
     <span class="review-badge review-badge--locked">Ready to upload</span>
   {/if}
 {:else if status === 'excluded'}
-  <span class="review-badge review-badge--excluded">Excluded</span>
+  <span class="review-badge review-badge--excluded" title="Prepared by {nameOf(preparedBy)}, reviewed by {nameOf(reviewedBy)}">
+    Excluded
+  </span>
 {:else}
   <span class="review-badge review-badge--reviewed" title="Prepared by {nameOf(preparedBy)}, reviewed by {nameOf(reviewedBy)}">
     Uploaded
@@ -125,13 +103,6 @@
 {/if}
 
 <style>
-  .unsorted-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-
   .mark-ready-label {
     display: flex;
     align-items: center;
@@ -162,10 +133,6 @@
     color: #f59e0b;
   }
 
-  .review-badge--pending-exclusion {
-    color: #f97316;
-  }
-
   .review-badge--locked {
     color: #8b5cf6;
   }
@@ -179,8 +146,7 @@
   }
 
   :global(.confirm-review-btn),
-  :global(.exclude-btn),
-  :global(.reject-exclude-btn) {
+  :global(.exclude-btn) {
     font-size: 12px !important;
     padding: 4px 10px !important;
     height: auto !important;
@@ -190,7 +156,7 @@
     white-space: nowrap !important;
   }
 
-  :global(.reject-exclude-btn) {
+  :global(.exclude-btn) {
     color: #ef4444 !important;
     border-color: #ef4444 !important;
   }

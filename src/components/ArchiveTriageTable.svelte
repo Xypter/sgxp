@@ -49,7 +49,7 @@
     rating?: number | null;
     quality?: string | null;
     notes?: string;
-    status: 'unsorted' | 'ready-for-review' | 'pending-exclusion' | 'ready-for-rating' | 'ready-to-upload' | 'uploaded' | 'excluded';
+    status: 'unsorted' | 'ready-for-review' | 'ready-for-rating' | 'ready-to-upload' | 'uploaded' | 'excluded';
     link?: string;
     preparedBy?: UserRef | number | string | null;
     reviewedBy?: UserRef | number | string | null;
@@ -79,7 +79,6 @@
   const STATUS_OPTIONS = [
     { value: 'unsorted', label: 'Unsorted' },
     { value: 'ready-for-review', label: 'Ready for Review' },
-    { value: 'pending-exclusion', label: 'Pending Exclusion' },
     { value: 'ready-for-rating', label: 'Ready for Rating' },
     { value: 'ready-to-upload', label: 'Ready to Upload' },
     { value: 'uploaded', label: 'Uploaded' },
@@ -394,8 +393,14 @@
     saveField(entry, 'status', 'ready-for-review');
   }
 
+  // Confirming review has two possible outcomes, decided by whether the
+  // entry is actually worth archiving - sprite comic or game related lands
+  // it at ready-for-rating, neither means it gets excluded instead. Same
+  // "any archivist but the preparer" action either way (see
+  // ReviewStatusCell), just a different destination.
   function confirmReview(entry: ArchiveEntry) {
-    saveField(entry, 'status', 'ready-for-rating');
+    const target = entry.isSpriteComic || entry.isGameRelated ? 'ready-for-rating' : 'excluded';
+    saveField(entry, 'status', target);
   }
 
   function markReadyToUpload(entry: ArchiveEntry) {
@@ -406,22 +411,9 @@
     saveField(entry, 'status', 'uploaded');
   }
 
-  function proposeExclude(entry: ArchiveEntry) {
-    saveField(entry, 'status', 'pending-exclusion');
-  }
-
-  function confirmExclude(entry: ArchiveEntry) {
-    saveField(entry, 'status', 'excluded');
-  }
-
-  function rejectExclude(entry: ArchiveEntry) {
-    saveField(entry, 'status', 'unsorted');
-  }
-
   const STATUS_ORDER = [
     'unsorted',
     'ready-for-review',
-    'pending-exclusion',
     'ready-for-rating',
     'ready-to-upload',
     'uploaded',
@@ -606,9 +598,6 @@
           onConfirm: () => confirmReview(row.original),
           onMarkReadyToUpload: () => markReadyToUpload(row.original),
           onMarkUploaded: () => markUploaded(row.original),
-          onProposeExclude: () => proposeExclude(row.original),
-          onConfirmExclude: () => confirmExclude(row.original),
-          onRejectExclude: () => rejectExclude(row.original),
         }),
       enableSorting: false,
     },
@@ -833,9 +822,6 @@
               onConfirm={() => confirmReview(entry)}
               onMarkReadyToUpload={() => markReadyToUpload(entry)}
               onMarkUploaded={() => markUploaded(entry)}
-              onProposeExclude={() => proposeExclude(entry)}
-              onConfirmExclude={() => confirmExclude(entry)}
-              onRejectExclude={() => rejectExclude(entry)}
             />
           </div>
 
