@@ -16,6 +16,10 @@
     themed?: boolean;
     disabled?: boolean;
     class?: string;
+    // When true, typing a value that doesn't match any existing option
+    // offers an "Add <value>" entry (and Enter commits it directly) instead
+    // of being restricted to the fixed options list.
+    creatable?: boolean;
     onValueChange?: (value: string) => void;
   }
 
@@ -27,6 +31,7 @@
     themed = false,
     disabled = false,
     class: className,
+    creatable = false,
     onValueChange
   }: ComboboxProps = $props();
 
@@ -39,6 +44,13 @@
     )
   );
 
+  const trimmedSearch = $derived(searchTerm.trim());
+  const canCreate = $derived(
+    creatable &&
+    trimmedSearch.length > 0 &&
+    !options.some(option => option.label.toLowerCase() === trimmedSearch.toLowerCase())
+  );
+
   const selectedOption = $derived(
     options.find(opt => opt.value === value)
   );
@@ -48,6 +60,13 @@
     open = false;
     searchTerm = '';
     onValueChange?.(optionValue);
+  }
+
+  function handleSearchKeydown(event: KeyboardEvent) {
+    if (event.key === 'Enter' && canCreate) {
+      event.preventDefault();
+      selectOption(trimmedSearch);
+    }
   }
 
   const triggerClass = themed
@@ -71,9 +90,15 @@
         bind:value={searchTerm}
         placeholder={searchPlaceholder}
         class="theme-combobox-search"
+        onkeydown={handleSearchKeydown}
       />
       <div class="theme-combobox-list">
-        {#if filteredOptions.length === 0}
+        {#if canCreate}
+          <button type="button" class="{itemClass} theme-combobox-create" onclick={() => selectOption(trimmedSearch)}>
+            <span class="flex-1 text-left truncate">Add "{trimmedSearch}"</span>
+          </button>
+        {/if}
+        {#if filteredOptions.length === 0 && !canCreate}
           <div class="theme-combobox-empty">
             No results found
           </div>
@@ -182,6 +207,13 @@
   :global(.theme-combobox-item.selected) {
     background: color-mix(in srgb, var(--font-link-color) 30%, transparent) !important;
     color: var(--font-link-color) !important;
+  }
+
+  :global(.theme-combobox-create) {
+    color: var(--font-link-color) !important;
+    font-weight: 700 !important;
+    border-bottom: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white) !important;
+    margin-bottom: 2px;
   }
 
   :global(.theme-combobox-empty) {

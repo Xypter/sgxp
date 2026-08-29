@@ -8,7 +8,7 @@
     getSortedRowModel,
   } from '@tanstack/table-core';
   import { createSvelteTable, renderComponent } from '$components/ui/data-table';
-  import { DataTable, Select, Combobox, Input, Button } from '$lib/components';
+  import { DataTable, Select, Input, Button } from '$lib/components';
   import { ExternalLink, LoaderCircle, Check } from 'lucide-svelte';
   import { toast } from 'svelte-sonner';
 
@@ -144,7 +144,6 @@
   // actual triage starting point - default to it instead of "All Statuses"
   // so the page opens on what there's actually work to do on.
   let statusFilter = $state('unsorted');
-  let categoryFilter = $state('');
   let searchDebounceTimer: ReturnType<typeof setTimeout>;
 
   // Table state
@@ -169,10 +168,6 @@
     let clauseIndex = 0;
     if (statusFilter) {
       params.set(`where[and][${clauseIndex}][status][equals]`, statusFilter);
-      clauseIndex++;
-    }
-    if (categoryFilter) {
-      params.set(`where[and][${clauseIndex}][category][equals]`, categoryFilter);
       clauseIndex++;
     }
     if (searchInput.trim()) {
@@ -235,7 +230,7 @@
   }
 
   $effect(() => {
-    const _ = [pagination.pageIndex, pagination.pageSize, sorting, statusFilter, categoryFilter];
+    const _ = [pagination.pageIndex, pagination.pageSize, sorting, statusFilter];
     fetchEntries();
   });
 
@@ -525,9 +520,10 @@
           value: row.original.category ?? '',
           options: CATEGORY_EDIT_OPTIONS,
           placeholder: 'Uncategorized',
-          searchPlaceholder: 'Search categories...',
+          searchPlaceholder: 'Search or add a category...',
           disabled: !canEdit || !isRelevant(row.original) || locked(row.original),
           faded: !isRelevant(row.original),
+          creatable: true,
           onSave: (value: string) => saveField(row.original, 'category', value === '' ? null : value),
         }),
     },
@@ -681,13 +677,6 @@
         placeholder="All Statuses"
         themed
       />
-      <Combobox
-        bind:value={categoryFilter}
-        options={[{ value: '', label: 'All Categories' }, ...CATEGORY_OPTIONS]}
-        placeholder="All Categories"
-        searchPlaceholder="Search categories..."
-        themed
-      />
     </div>
 
     <div class="results-count">
@@ -777,9 +766,10 @@
               value={entry.category ?? ''}
               options={CATEGORY_EDIT_OPTIONS}
               placeholder="Uncategorized"
-              searchPlaceholder="Search categories..."
+              searchPlaceholder="Search or add a category..."
               disabled={!canEdit || !isRelevant(entry) || locked(entry)}
               faded={!isRelevant(entry)}
+              creatable={true}
               onSave={(v) => saveField(entry, 'category', v === '' ? null : v)}
             />
           </div>
