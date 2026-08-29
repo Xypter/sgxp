@@ -1,12 +1,11 @@
 <script lang="ts">
   import LeaderboardTable from './LeaderboardTable.svelte';
 
-  interface LeaderboardUser {
+  interface LeaderboardEntry {
     id: number | string;
     username?: string;
     displayName?: string;
-    archivePreparedCount?: number;
-    archiveReviewedCount?: number;
+    count: number;
   }
 
   interface Row {
@@ -15,7 +14,7 @@
     count: number;
   }
 
-  function nameOf(u: LeaderboardUser): string {
+  function nameOf(u: LeaderboardEntry): string {
     return u.displayName || u.username || `User #${u.id}`;
   }
 
@@ -25,9 +24,14 @@
   // "no one has..." empty message before the first fetch resolves.
   let isLoading = $state(true);
 
-  async function fetchTop(sortField: string): Promise<LeaderboardUser[]> {
+  // Backed by a live count of archive_entries.prepared_by/reviewed_by
+  // (see the CMS's /api/archive-entries/leaderboard endpoint), not a
+  // denormalized counter - that counter used to increment every time an
+  // entry transitioned into a status, so re-prepping the same entry more
+  // than once inflated it past the real distinct count.
+  async function fetchTop(type: 'prepared' | 'reviewed'): Promise<LeaderboardEntry[]> {
     try {
-      const response = await fetch(`/api/users?sort=-${sortField}&limit=20&where[${sortField}][greater_than]=0`);
+      const response = await fetch(`/api/archive-entries/leaderboard?type=${type}`);
       if (!response.ok) return [];
       const data = await response.json();
       return data.docs || [];
@@ -37,12 +41,9 @@
   }
 
   async function fetchLeaderboards() {
-    const [preparers, reviewers] = await Promise.all([
-      fetchTop('archivePreparedCount'),
-      fetchTop('archiveReviewedCount'),
-    ]);
-    preparerRows = preparers.map((u) => ({ id: u.id, name: nameOf(u), count: u.archivePreparedCount ?? 0 }));
-    reviewerRows = reviewers.map((u) => ({ id: u.id, name: nameOf(u), count: u.archiveReviewedCount ?? 0 }));
+    const [preparers, reviewers] = await Promise.all([fetchTop('prepared'), fetchTop('reviewed')]);
+    preparerRows = preparers.map((u) => ({ id: u.id, name: nameOf(u), count: u.count }));
+    reviewerRows = reviewers.map((u) => ({ id: u.id, name: nameOf(u), count: u.count }));
     isLoading = false;
   }
 

@@ -1,4 +1,4 @@
-// src/pages/api/users/index.ts
+// src/pages/api/archive-entries/leaderboard.ts
 import type { APIRoute } from 'astro';
 
 const PAYLOAD_URL = import.meta.env.PAYLOAD_URL;
@@ -15,7 +15,7 @@ export const GET: APIRoute = async ({ request, cookies }) => {
     const queryParams = url.searchParams.toString();
 
     const response = await fetch(
-      `${PAYLOAD_URL}/api/users${queryParams ? `?${queryParams}` : ''}`,
+      `${PAYLOAD_URL}/api/archive-entries/leaderboard${queryParams ? `?${queryParams}` : ''}`,
       {
         method: 'GET',
         headers: {
@@ -32,7 +32,7 @@ export const GET: APIRoute = async ({ request, cookies }) => {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Error in GET /api/users:', error);
+    console.error('Error in GET /api/archive-entries/leaderboard:', error);
     return new Response(JSON.stringify({ message: 'Internal Server Error' }), { status: 500 });
   }
 };
