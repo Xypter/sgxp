@@ -187,31 +187,38 @@
   // Collection-wide totals for the header stats - independent of the
   // current page/filters, so these always reflect the whole 34k+ row
   // archive rather than whatever's currently filtered/paginated.
-  let collectionStats = $state({ total: 0, unsorted: 0, spriteComic: 0, gameRelated: 0 });
+  let collectionStats = $state({ total: 0, unsorted: 0, spriteComic: 0, gameRelated: 0, uploaded: 0, kept: 0 });
 
   let percentSorted = $derived(
     collectionStats.total > 0 ? ((collectionStats.total - collectionStats.unsorted) / collectionStats.total) * 100 : 0
   );
-  // isSpriteComic and isGameRelated can never both be true on the same entry
-  // (the CMS resets isGameRelated to false the moment isSpriteComic is set),
-  // so summing their counts can't double-count a row.
-  let percentKept = $derived(
-    collectionStats.total > 0 ? ((collectionStats.spriteComic + collectionStats.gameRelated) / collectionStats.total) * 100 : 0
-  );
+  let percentKept = $derived(collectionStats.total > 0 ? (collectionStats.kept / collectionStats.total) * 100 : 0);
 
   async function fetchStats() {
     try {
-      const [total, unsorted, spriteComic, gameRelated] = await Promise.all([
+      // "Kept" is entries that are sprite comics, game-related, or already
+      // uploaded - the last one matters because everything uploaded predates
+      // the isSpriteComic/isGameRelated categorization scheme, so it was
+      // never flagged that way in the first place. Fetched as a single OR
+      // query (rather than summing three separate counts) so an entry that
+      // happens to match more than one of these isn't double-counted.
+      const [total, unsorted, spriteComic, gameRelated, uploaded, kept] = await Promise.all([
         fetch('/api/archive-entries?limit=1').then((r) => r.json()),
         fetch('/api/archive-entries?limit=1&where[status][equals]=unsorted').then((r) => r.json()),
         fetch('/api/archive-entries?limit=1&where[isSpriteComic][equals]=true').then((r) => r.json()),
         fetch('/api/archive-entries?limit=1&where[isGameRelated][equals]=true').then((r) => r.json()),
+        fetch('/api/archive-entries?limit=1&where[status][equals]=uploaded').then((r) => r.json()),
+        fetch(
+          '/api/archive-entries?limit=1&where[or][0][isSpriteComic][equals]=true&where[or][1][isGameRelated][equals]=true&where[or][2][status][equals]=uploaded'
+        ).then((r) => r.json()),
       ]);
       collectionStats = {
         total: total.totalDocs || 0,
         unsorted: unsorted.totalDocs || 0,
         spriteComic: spriteComic.totalDocs || 0,
         gameRelated: gameRelated.totalDocs || 0,
+        uploaded: uploaded.totalDocs || 0,
+        kept: kept.totalDocs || 0,
       };
     } catch {
       // Best-effort - a failed stats fetch just leaves the last known numbers showing.
@@ -680,7 +687,9 @@
           {percentSorted.toFixed(1)}% Sorted
         </span>
         <span class="stat-divider">•</span>
-        <span title="{collectionStats.spriteComic} sprite comics + {collectionStats.gameRelated} game related">
+        <span
+          title="{collectionStats.kept} kept out of {collectionStats.total} ({collectionStats.spriteComic} sprite comics, {collectionStats.gameRelated} game related, {collectionStats.uploaded} already uploaded)"
+        >
           {percentKept.toFixed(1)}% Kept
         </span>
       {/if}
