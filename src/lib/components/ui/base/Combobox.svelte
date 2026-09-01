@@ -2,6 +2,8 @@
   import * as Popover from '$components/ui/popover';
   import Input from './Input.svelte';
   import { ChevronDown, Check } from 'lucide-svelte';
+  import { fade } from 'svelte/transition';
+  import { flip } from 'svelte/animate';
 
   interface Option {
     value: string;
@@ -109,6 +111,8 @@
               class={itemClass}
               class:selected={value === option.value}
               onclick={() => selectOption(option.value)}
+              in:fade={{ duration: 150 }}
+              animate:flip={{ duration: 200 }}
             >
               <span class="flex-1 text-left truncate">
                 {option.label}

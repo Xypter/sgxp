@@ -42,6 +42,13 @@ export function broadcastArchiveEntryChange(payload: { id: string | number; upda
   }
 }
 
+export function broadcastCategoryAdded(payload: { id: string | number; name: string }) {
+  console.log(`[archiveEventHub] broadcasting category-added "${payload.name}" to ${clients.size} client(s)`);
+  for (const client of clients) {
+    send(client, 'category-added', payload);
+  }
+}
+
 export function notifyUserAccessGranted(userId: string | number) {
   const targets = [...clients].filter((c) => String(c.userId) === String(userId));
   console.log(`[archiveEventHub] notifying access-granted for user ${userId} to ${targets.length} connection(s)`);

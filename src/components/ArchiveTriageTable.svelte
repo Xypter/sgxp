@@ -64,17 +64,61 @@
 
   let { user }: Props = $props();
 
-  const CATEGORY_OPTIONS = [
-    'Chrono Trigger', 'Digimon', 'Donkey Kong', 'Dragonball', 'Earthbound', 'Final Fantasy',
-    'Fire Emblem', 'Fox McCloud', 'Halo', 'Kingdom Hearts', 'Kirby', 'Klonoa Wolf', 'Mario',
-    'Megaman', 'Memes', 'Metroid', 'Mixed', 'Naruto', 'One Piece', 'Pokemon', 'Random', 'Sonic',
-    'Super Smash Bros', 'The Legend of Zelda', 'Yu-Gi-Oh',
-  ].map((v) => ({ value: v, label: v }));
+  // Backed by the `archive-categories` collection instead of a hardcoded
+  // list, so a category any archivist adds becomes selectable for everyone
+  // else - kept in sync live over the same SSE connection as entry updates
+  // (see the EventSource listener below).
+  let categories = $state<string[]>([]);
+  const CATEGORY_OPTIONS = $derived(categories.map((v) => ({ value: v, label: v })));
+  const CATEGORY_EDIT_OPTIONS = $derived([{ value: '', label: '— Uncategorized —' }, ...CATEGORY_OPTIONS]);
 
-  // Separate from CATEGORY_OPTIONS (used as-is by the toolbar filter, whose
-  // blank option already means "all categories") - this variant's blank
-  // option is a real, selectable "clear the category" choice.
-  const CATEGORY_EDIT_OPTIONS = [{ value: '', label: '— Uncategorized —' }, ...CATEGORY_OPTIONS];
+  async function fetchCategories() {
+    try {
+      const response = await fetch('/api/archive-categories');
+      if (!response.ok) return;
+      const data = await response.json();
+      categories = (data.docs || []).map((d: { name: string }) => d.name);
+    } catch {
+      // Best-effort - the combobox just falls back to whatever it already had.
+    }
+  }
+
+  function addCategoryLocally(name: string) {
+    if (categories.some((c) => c.toLowerCase() === name.toLowerCase())) return;
+    categories = [...categories, name].sort((a, b) => a.localeCompare(b));
+  }
+
+  // Fire-and-forget: adds the category to the shared list (or resolves to
+  // the existing one if another archivist just added the same name) so it
+  // shows up as an option on every other row/entry, not just this one.
+  async function ensureCategoryExists(name: string) {
+    try {
+      const response = await fetch('/api/archive-categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.doc?.name) addCategoryLocally(data.doc.name);
+      }
+    } catch {
+      // Non-fatal - the category still gets saved onto this entry below
+      // even if adding it to the shared list failed.
+    }
+  }
+
+  // The combobox's "Add <value>" affordance funnels new category text
+  // through here instead of straight to saveField, so it also lands in the
+  // shared list rather than only ever existing on this one entry.
+  function saveCategoryField(entry: ArchiveEntry, value: string) {
+    const trimmed = value.trim();
+    if (trimmed && !categories.some((c) => c.toLowerCase() === trimmed.toLowerCase())) {
+      addCategoryLocally(trimmed);
+      ensureCategoryExists(trimmed);
+    }
+    saveField(entry, 'category', trimmed === '' ? null : trimmed);
+  }
 
   // Declaration order doubles as the pipeline order (and Postgres's default
   // sort order for this enum column) - keep it this way.
@@ -221,6 +265,10 @@
   }
 
   $effect(() => {
+    fetchCategories();
+  });
+
+  $effect(() => {
     fetchStats();
   });
 
@@ -309,6 +357,14 @@
     source.addEventListener('entry-updated', (e) => {
       console.log('[SSE] entry-updated received', e.data);
       pollEntriesDebounced();
+    });
+    source.addEventListener('category-added', (e) => {
+      try {
+        const { name } = JSON.parse(e.data);
+        if (name) addCategoryLocally(name);
+      } catch {
+        // Malformed event - ignore, the next fetchCategories poll/reload picks it up.
+      }
     });
     source.addEventListener('access-granted', () => {
       if (accessGrantedLive) return;
@@ -552,7 +608,7 @@
           disabled: !canEdit || !isRelevant(row.original) || locked(row.original),
           faded: !isRelevant(row.original),
           creatable: true,
-          onSave: (value: string) => saveField(row.original, 'category', value === '' ? null : value),
+          onSave: (value: string) => saveCategoryField(row.original, value),
         }),
     },
     // Rating/Quality/Notes are admin-only fields - hidden entirely for
@@ -847,7 +903,7 @@
               disabled={!canEdit || !isRelevant(entry) || locked(entry)}
               faded={!isRelevant(entry)}
               creatable={true}
-              onSave={(v) => saveField(entry, 'category', v === '' ? null : v)}
+              onSave={(v) => saveCategoryField(entry, v)}
             />
           </div>
 
