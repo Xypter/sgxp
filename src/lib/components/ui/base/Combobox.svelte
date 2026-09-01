@@ -81,7 +81,7 @@
 <Popover.Root bind:open>
   <Popover.Trigger class={triggerClass} {disabled}>
     <span class="truncate">
-      {selectedOption?.label || placeholder}
+      {selectedOption?.label || value || placeholder}
     </span>
     <ChevronDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
   </Popover.Trigger>

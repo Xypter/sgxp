@@ -49,6 +49,13 @@ export function broadcastCategoryAdded(payload: { id: string | number; name: str
   }
 }
 
+export function broadcastCategoryRemoved(payload: { id: string | number; name: string }) {
+  console.log(`[archiveEventHub] broadcasting category-removed "${payload.name}" to ${clients.size} client(s)`);
+  for (const client of clients) {
+    send(client, 'category-removed', payload);
+  }
+}
+
 export function notifyUserAccessGranted(userId: string | number) {
   const targets = [...clients].filter((c) => String(c.userId) === String(userId));
   console.log(`[archiveEventHub] notifying access-granted for user ${userId} to ${targets.length} connection(s)`);

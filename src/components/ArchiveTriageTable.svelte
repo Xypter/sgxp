@@ -88,6 +88,15 @@
     categories = [...categories, name].sort((a, b) => a.localeCompare(b));
   }
 
+  // A category deleted from the shared list (Payload admin panel) only
+  // drops it from the dropdown's suggestions - it doesn't touch entries
+  // that already have that text saved as their category (see Combobox's
+  // trigger-label fallback, which still shows the raw value even once it's
+  // no longer a selectable option).
+  function removeCategoryLocally(name: string) {
+    categories = categories.filter((c) => c.toLowerCase() !== name.toLowerCase());
+  }
+
   // Fire-and-forget: adds the category to the shared list (or resolves to
   // the existing one if another archivist just added the same name) so it
   // shows up as an option on every other row/entry, not just this one.
@@ -362,6 +371,14 @@
       try {
         const { name } = JSON.parse(e.data);
         if (name) addCategoryLocally(name);
+      } catch {
+        // Malformed event - ignore, the next fetchCategories poll/reload picks it up.
+      }
+    });
+    source.addEventListener('category-removed', (e) => {
+      try {
+        const { name } = JSON.parse(e.data);
+        if (name) removeCategoryLocally(name);
       } catch {
         // Malformed event - ignore, the next fetchCategories poll/reload picks it up.
       }
