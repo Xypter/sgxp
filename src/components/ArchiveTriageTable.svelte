@@ -165,17 +165,38 @@
   let archivistRequestedAt = $state<string | null>(user?.archivistRequestedAt ?? null);
   let requestingAccess = $state(false);
 
-  // Intro/instructions area starts expanded, but returning archivists who
-  // already know the process can collapse it to get straight to the table -
-  // that choice is remembered per-browser (this component is client:only,
-  // so localStorage is always available, no SSR guard needed) so it stays
-  // collapsed across page loads until they reopen it.
+  // Intro/instructions area starts collapsed - archivists can expand it
+  // when they need it, and that choice is remembered per-browser (this
+  // component is client:only, so localStorage is always available, no SSR
+  // guard needed) so it stays open across page loads once they've opened it.
   const INTRO_STORAGE_KEY = 'archive-triage-intro-open';
-  let introValue = $state(localStorage.getItem(INTRO_STORAGE_KEY) === 'closed' ? '' : 'intro');
+  let introValue = $state(localStorage.getItem(INTRO_STORAGE_KEY) === 'open' ? 'intro' : '');
 
   $effect(() => {
     localStorage.setItem(INTRO_STORAGE_KEY, introValue ? 'open' : 'closed');
   });
+
+  // Separate accordion (own open/closed state) reference-only guide to the
+  // status pipeline - same collapsed-by-default/remembered-once-opened
+  // behavior as the intro above, just tracked independently.
+  const STATUS_GUIDE_STORAGE_KEY = 'archive-triage-status-guide-open';
+  let statusGuideValue = $state(localStorage.getItem(STATUS_GUIDE_STORAGE_KEY) === 'open' ? 'statusGuide' : '');
+
+  $effect(() => {
+    localStorage.setItem(STATUS_GUIDE_STORAGE_KEY, statusGuideValue ? 'open' : 'closed');
+  });
+
+  // Mirrors ArchiveStatusBadge's own per-status copy (kept here instead of
+  // pulling from that component since these are guide-length descriptions,
+  // not the badge label itself).
+  const STATUS_GUIDE = [
+    { status: 'unsorted', description: "Not yet triaged - waiting for an archivist to identify and categorize it." },
+    { status: 'ready-for-review', description: 'Identified and categorized by an archivist - waiting for a second archivist to confirm the call.' },
+    { status: 'ready-for-rating', description: 'Confirmed as worth archiving - waiting on an admin to rate its quality.' },
+    { status: 'ready-to-upload', description: 'Rated and cleared for upload - queued for an admin to actually upload it to the site.' },
+    { status: 'uploaded', description: "Live on the site - the entry's archiving is complete." },
+    { status: 'excluded', description: 'Reviewed and determined to be neither a sprite comic nor game-related - not being archived.' },
+  ];
 
   async function requestArchivistAccess() {
     requestingAccess = true;
@@ -752,7 +773,7 @@
                 </p>
 
                 <p>
-                  Browse the <a href="https://archive.org/details/smackjeeves-web-comics" target="_blank" rel="noopener noreferrer">full archive on archive.org</a> to find comics worth sorting.
+                  This is the <a href="https://archive.org/details/smackjeeves-web-comics" target="_blank" rel="noopener noreferrer">official archive.org archive</a> we're referencing for this project.
                 </p>
 
                 <p class="intro-label">What counts:</p>
@@ -780,6 +801,25 @@
                   Check out the <a href="/smackjeevesarchivetriage/leaderboard">leaderboard</a> to see where
                   you stand.
                 </p>
+              </div>
+            </Accordion.Content>
+          </Accordion.Item>
+        </Accordion.Root>
+
+        <Accordion.Root type="single" bind:value={statusGuideValue} class="intro-accordion">
+          <Accordion.Item value="statusGuide" class="intro-accordion-item">
+            <Accordion.Trigger class="intro-accordion-trigger">
+              Status Guide
+              <span class="intro-toggle-label">({statusGuideValue ? 'Collapse' : 'Expand'})</span>
+            </Accordion.Trigger>
+            <Accordion.Content class="intro-accordion-content">
+              <div class="intro status-guide">
+                {#each STATUS_GUIDE as { status, description } (status)}
+                  <div class="status-guide-row">
+                    <ArchiveStatusBadge {status} />
+                    <p>{description}</p>
+                  </div>
+                {/each}
               </div>
             </Accordion.Content>
           </Accordion.Item>
@@ -830,6 +870,7 @@
         options={[{ value: '', label: 'All Statuses' }, ...STATUS_OPTIONS]}
         placeholder="All Statuses"
         themed
+        class="status-filter-select"
       />
     </div>
 
@@ -905,10 +946,11 @@
               {#if entry.isSpriteComic}
                 <span class="entry-na">—</span>
               {:else}
-                <EditableCheckboxCell
-                  value={entry.isGameRelated ?? false}
+                <EditableToggleButtonsCell
+                  value={String(entry.isGameRelated ?? false)}
+                  options={YES_NO_OPTIONS}
                   disabled={!canEdit || locked(entry)}
-                  onSave={(v) => saveField(entry, 'isGameRelated', v)}
+                  onSave={(v) => saveField(entry, 'isGameRelated', v === 'true')}
                 />
               {/if}
             </div>
@@ -925,35 +967,6 @@
               faded={!isRelevant(entry)}
               creatable={true}
               onSave={(v) => saveCategoryField(entry, v)}
-            />
-          </div>
-
-          <div class="entry-card-field-row">
-            <div class="entry-card-field">
-              <label>Preparer</label>
-              <span class="entry-quality">{nameOf(entry.preparedBy) || '—'}</span>
-            </div>
-            <div class="entry-card-field">
-              <label>Reviewer</label>
-              <span class="entry-quality">{nameOf(entry.reviewedBy) || '—'}</span>
-            </div>
-          </div>
-
-          <div class="entry-card-field">
-            <label>Review</label>
-            <ReviewStatusCell
-              status={entry.status}
-              isSpriteComic={entry.isSpriteComic}
-              isGameRelated={entry.isGameRelated}
-              preparedBy={entry.preparedBy}
-              reviewedBy={entry.reviewedBy}
-              {currentUserId}
-              {canEdit}
-              {isAdmin}
-              onMarkReady={() => markReady(entry)}
-              onConfirm={() => confirmReview(entry)}
-              onMarkReadyToUpload={() => markReadyToUpload(entry)}
-              onMarkUploaded={() => markUploaded(entry)}
             />
           </div>
 
@@ -996,6 +1009,35 @@
               <EditableNotesCell value={entry.notes ?? ''} onSave={(v) => saveField(entry, 'notes', v)} />
             </div>
           {/if}
+
+          <div class="entry-card-field-row">
+            <div class="entry-card-field">
+              <label>Preparer</label>
+              <span class="entry-quality">{nameOf(entry.preparedBy) || '—'}</span>
+            </div>
+            <div class="entry-card-field">
+              <label>Reviewer</label>
+              <span class="entry-quality">{nameOf(entry.reviewedBy) || '—'}</span>
+            </div>
+          </div>
+
+          <div class="entry-card-field entry-card-field--review">
+            <ReviewStatusCell
+              status={entry.status}
+              isSpriteComic={entry.isSpriteComic}
+              isGameRelated={entry.isGameRelated}
+              preparedBy={entry.preparedBy}
+              reviewedBy={entry.reviewedBy}
+              {currentUserId}
+              {canEdit}
+              {isAdmin}
+              onMarkReady={() => markReady(entry)}
+              onConfirm={() => confirmReview(entry)}
+              onMarkReadyToUpload={() => markReadyToUpload(entry)}
+              onMarkUploaded={() => markUploaded(entry)}
+              unsortedAsButton
+            />
+          </div>
         </div>
       {/each}
 
@@ -1152,6 +1194,26 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+  }
+
+  .status-guide {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .status-guide-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .status-guide-row :global(.theme-badge) {
+    flex-shrink: 0;
+  }
+
+  .status-guide-row p {
+    margin: 0 !important;
   }
 
   .header-side {
@@ -1386,13 +1448,9 @@
   }
 
   .entry-card-field--checkbox {
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .entry-card-field--checkbox label {
-    margin: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
   }
 
   .entry-card-field label {
@@ -1454,6 +1512,71 @@
 
     .toolbar {
       flex-direction: column;
+    }
+
+    :global(.status-filter-select) {
+      width: 100%;
+    }
+
+    .toolbar-header {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .toolbar-header-text h1 {
+      font-size: 20px;
+    }
+
+    .intro-accordion {
+      max-width: 100%;
+    }
+
+    .header-side {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .status-guide-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+
+    /* Card controls are sized for cramped table cells by default (the same
+       components render in both places) - full-width, taller versions are
+       much easier to tap here than their desktop-table dimensions. */
+    .entry-card :global(.cell-select),
+    .entry-card :global(.cell-combobox) {
+      width: 100% !important;
+      min-width: 0 !important;
+      height: 44px !important;
+      min-height: 44px !important;
+      font-size: 15px !important;
+    }
+
+    .entry-card :global(.cell-toggle-group) {
+      display: flex !important;
+      width: 100%;
+    }
+
+    .entry-card :global(.cell-toggle-group) :global(.theme-toggle-group-item) {
+      flex: 1;
+      height: 40px !important;
+      font-size: 13px !important;
+    }
+
+    .entry-card-field--review {
+      margin-top: 4px;
+    }
+
+    .entry-card-field--review :global(.confirm-review-btn),
+    .entry-card-field--review :global(.exclude-btn) {
+      width: 100%;
+      justify-content: center !important;
+      height: 44px !important;
+      font-size: 14px !important;
     }
   }
 

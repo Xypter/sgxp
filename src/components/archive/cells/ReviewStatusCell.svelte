@@ -21,6 +21,11 @@
     onConfirm: () => void;
     onMarkReadyToUpload: () => void;
     onMarkUploaded: () => void;
+    // Renders the "unsorted" state as a real Button matching Confirm
+    // Review/Confirm Exclusion's look, instead of the default checkbox +
+    // label - used on the mobile card so the button stack at the bottom
+    // reads as one consistent set of buttons.
+    unsortedAsButton?: boolean;
   }
 
   let {
@@ -36,6 +41,7 @@
     onConfirm,
     onMarkReadyToUpload,
     onMarkUploaded,
+    unsortedAsButton = false,
   }: Props = $props();
 
   function nameOf(ref: UserRef | number | string | null | undefined): string {
@@ -58,10 +64,17 @@
 
 {#if status === 'unsorted'}
   {#if canEdit}
-    <label class="mark-ready-label">
-      <Checkbox checked={false} themed onCheckedChange={(checked) => checked && onMarkReady()} />
-      <span>Ready for review</span>
-    </label>
+    {#if unsortedAsButton}
+      <Button variant="outline" size="sm" onclick={onMarkReady} themed class="confirm-review-btn">
+        <CheckCircle2 size={14} />
+        Ready for Review
+      </Button>
+    {:else}
+      <label class="mark-ready-label">
+        <Checkbox checked={false} themed onCheckedChange={(checked) => checked && onMarkReady()} />
+        <span>Ready for review</span>
+      </label>
+    {/if}
   {:else}
     <span class="review-badge review-badge--unsorted">Unsorted</span>
   {/if}
