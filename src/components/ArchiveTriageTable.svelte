@@ -751,6 +751,10 @@
                   preserving.
                 </p>
 
+                <p>
+                  Browse the <a href="https://archive.org/details/smackjeeves-web-comics" target="_blank" rel="noopener noreferrer">full archive on archive.org</a> to find comics worth sorting.
+                </p>
+
                 <p class="intro-label">What counts:</p>
                 <ul>
                   <li>- Any sprite comic. No exceptions on quality.</li>
