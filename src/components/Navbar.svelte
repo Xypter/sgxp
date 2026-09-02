@@ -34,6 +34,13 @@
   let uploadCount = $state<number>(0);
   // let unreadMessageCount = $state<number>(0);
 
+  // Mobile menu shows theme names as "First Letter Of Each Word" instead of
+  // the all-caps labels used by the desktop dropdown - the labels themselves
+  // stay uppercase (shared with desktop) so this only affects mobile display.
+  function toTitleCase(label: string): string {
+    return label.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+
   // Constants that don't need to be reactive
   const themes: { value: ThemeValue; label: string }[] = [
     { value: 'ark', label: 'SPACE COLONY ARK' },
@@ -1127,23 +1134,14 @@ async function checkAuthStatus(): Promise<void> {
       "
     >
       <!-- Header with close button -->
-      <div class="flex items-center justify-between px-4 py-3 border-b" style="border-color: rgba(255,255,255,0.15);">
+      <div class="flex items-center justify-between px-4 py-3 border-b" style="border-color: rgba(255,255,255,0.15); background-color: color-mix(in srgb, var(--page-color) 80%, black);">
         <a
           href="/"
           class="no-theme-styles"
           style="
             color: var(--font-color);
-            font-family: spritelogo;
-            font-size: 24px;
-            text-shadow: 
-            -2px -2px 0 var(--bg-color), 
-            0px -2px 0 var(--bg-color), 
-            2px -2px 0 var(--bg-color), 
-            2px 0px 0 var(--bg-color), 
-            2px 2px 0 var(--bg-color), 
-            0px 2px 0 var(--bg-color), 
-            -2px 2px 0 var(--bg-color), 
-            -2px 0px 0 var(--bg-color)
+            font-family: logo;
+            font-size: 32px;
           "
           onclick={() => (isMobileMenuOpen = false)}
         >
@@ -1262,7 +1260,7 @@ async function checkAuthStatus(): Promise<void> {
                   class:active={selectedTheme === theme.value}
                   style="border: none; background: transparent;"
                 >
-                  {theme.label}
+                  {toTitleCase(theme.label)}
                 </button>
               {/each}
             </div>
@@ -1336,7 +1334,7 @@ async function checkAuthStatus(): Promise<void> {
     padding: 0 10px 6px;
     color: var(--font-color);
     font-family: saira;
-    font-size: 10px;
+    font-size: 16px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;

@@ -702,6 +702,7 @@
           onConfirm: () => confirmReview(row.original),
           onMarkReadyToUpload: () => markReadyToUpload(row.original),
           onMarkUploaded: () => markUploaded(row.original),
+          hideBadge: true,
         }),
       enableSorting: false,
     },
@@ -755,6 +756,8 @@
 </script>
 
 <div class="triage-table">
+  <h1 class="mobile-page-title">Smack Jeeves Archive Triage</h1>
+
   <div class="toolbar-panel">
     <div class="toolbar-header">
       <div class="toolbar-header-text">
@@ -875,22 +878,23 @@
     </div>
 
     <div class="results-count">
-      {totalEntries} Entries
+      <span class="stat-chip stat-chip--primary">{totalEntries.toLocaleString()} Entries</span>
       {#if collectionStats.total > 0}
         <span class="stat-divider">—</span>
-        <span>{collectionStats.total.toLocaleString()} Total Comics</span>
+        <span class="stat-chip">{collectionStats.total.toLocaleString()} Total Comics</span>
         <span class="stat-divider">—</span>
-        <span title="{sortedCount.toLocaleString()} of {collectionStats.total.toLocaleString()} entries not unsorted">
+        <span class="stat-chip" title="{sortedCount.toLocaleString()} of {collectionStats.total.toLocaleString()} entries not unsorted">
           {sortedCount.toLocaleString()} Sorted ({percentSorted.toFixed(2)}%)
         </span>
         <span class="stat-divider">—</span>
         <span
+          class="stat-chip"
           title="{keptCount.toLocaleString()} sorted entries not excluded, out of {collectionStats.total.toLocaleString()}"
         >
           {keptCount.toLocaleString()} Kept ({percentKept.toFixed(2)}%)
         </span>
         <span class="stat-divider">—</span>
-        <span title="{collectionStats.excluded.toLocaleString()} of {collectionStats.total.toLocaleString()} entries excluded">
+        <span class="stat-chip" title="{collectionStats.excluded.toLocaleString()} of {collectionStats.total.toLocaleString()} entries excluded">
           {collectionStats.excluded.toLocaleString()} Excluded ({percentExcluded.toFixed(2)}%)
         </span>
       {/if}
@@ -987,11 +991,14 @@
             <div class="entry-card-field">
               <label>Status</label>
               {#if isAdmin}
-                <EditableSelectCell
-                  value={entry.status}
-                  options={STATUS_OPTIONS}
-                  onSave={(v) => saveField(entry, 'status', v)}
-                />
+                <div class="entry-card-status-edit">
+                  <ArchiveStatusBadge status={entry.status} />
+                  <EditableSelectCell
+                    value={entry.status}
+                    options={STATUS_OPTIONS}
+                    onSave={(v) => saveField(entry, 'status', v)}
+                  />
+                </div>
               {:else}
                 <ArchiveStatusBadge status={entry.status} />
               {/if}
@@ -1036,6 +1043,7 @@
               onMarkReadyToUpload={() => markReadyToUpload(entry)}
               onMarkUploaded={() => markUploaded(entry)}
               unsortedAsButton
+              hideBadge
             />
           </div>
         </div>
@@ -1067,6 +1075,10 @@
 <style>
   .triage-table {
     width: 100%;
+  }
+
+  .mobile-page-title {
+    display: none;
   }
 
   .toolbar-panel {
@@ -1101,7 +1113,7 @@
   }
 
   :global(.intro-accordion) {
-    max-width: 700px;
+    max-width: 100%;
   }
 
   :global(.intro-accordion-item) {
@@ -1146,7 +1158,7 @@
   }
 
   .intro {
-    max-width: 700px;
+    max-width: 100%;
   }
 
   .intro p,
@@ -1303,10 +1315,17 @@
   }
 
   .results-count {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     font-family: 'saira';
     font-size: 13px;
     color: var(--font-color);
     opacity: 0.7;
+  }
+
+  .stat-chip {
+    white-space: nowrap;
   }
 
   .stat-divider {
@@ -1416,7 +1435,7 @@
   .entry-card-id {
     color: var(--font-color);
     opacity: 0.6;
-    font-size: 13px;
+    font-size: 15px;
   }
 
   .entry-card-title {
@@ -1434,7 +1453,7 @@
 
   .entry-card-author {
     font-family: 'saira';
-    font-size: 13px;
+    font-size: 15px;
     color: var(--font-color);
     opacity: 0.7;
     margin-top: -6px;
@@ -1455,7 +1474,7 @@
 
   .entry-card-field label {
     font-family: 'saira';
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 700;
     text-transform: uppercase;
     color: var(--font-color);
@@ -1465,6 +1484,13 @@
   .entry-card-field-row {
     display: flex;
     gap: 10px;
+  }
+
+  .entry-card-status-edit {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
   }
 
   .mobile-pagination {
@@ -1523,12 +1549,75 @@
       align-items: stretch;
     }
 
+    .toolbar-panel {
+      border-left: none !important;
+      border-right: none !important;
+      box-shadow: none !important;
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
+    }
+
+    .entry-card {
+      border-left: none !important;
+      border-right: none !important;
+      box-shadow: none !important;
+      width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      margin-right: calc(-50vw + 50%) !important;
+    }
+
     .toolbar-header-text h1 {
-      font-size: 20px;
+      display: none;
+    }
+
+    .mobile-page-title {
+      display: block;
+      font-family: spritelogo;
+      font-weight: normal;
+      font-size: 10vw;
+      color: var(--font-color);
+      text-align: center;
+      padding: 0 0 20px 0;
+      margin: 0;
+      text-shadow:
+        -2px -2px 0 var(--bg-color),
+        0px -2px 0 var(--bg-color),
+        2px -2px 0 var(--bg-color),
+        2px 0px 0 var(--bg-color),
+        2px 2px 0 var(--bg-color),
+        0px 2px 0 var(--bg-color),
+        -2px 2px 0 var(--bg-color),
+        -2px 0px 0 var(--bg-color);
     }
 
     .intro-accordion {
       max-width: 100%;
+    }
+
+    .results-count {
+      gap: 6px;
+      opacity: 1;
+    }
+
+    .stat-divider {
+      display: none;
+    }
+
+    .stat-chip {
+      background: color-mix(in srgb, var(--page-color) 85%, white);
+      border: var(--border-width, 1px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 75%, white);
+      border-radius: 3px;
+      padding: 4px 8px;
+      font-size: 12px;
+      white-space: normal;
+    }
+
+    .stat-chip--primary {
+      background: var(--font-link-color);
+      border-color: var(--font-link-color);
+      color: white;
+      font-weight: 700;
     }
 
     .header-side {

@@ -26,6 +26,12 @@
     // label - used on the mobile card so the button stack at the bottom
     // reads as one consistent set of buttons.
     unsortedAsButton?: boolean;
+    // Suppresses the read-only status badge (e.g. "Awaiting review",
+    // "Unsorted") when there's no actionable button to show - used on the
+    // mobile card, which already shows the entry's status via
+    // ArchiveStatusBadge earlier in the card, so repeating it here as a
+    // second badge is redundant. Buttons still render as normal.
+    hideBadge?: boolean;
   }
 
   let {
@@ -42,6 +48,7 @@
     onMarkReadyToUpload,
     onMarkUploaded,
     unsortedAsButton = false,
+    hideBadge = false,
   }: Props = $props();
 
   function nameOf(ref: UserRef | number | string | null | undefined): string {
@@ -75,7 +82,7 @@
         <span>Ready for review</span>
       </label>
     {/if}
-  {:else}
+  {:else if !hideBadge}
     <span class="review-badge review-badge--unsorted">Unsorted</span>
   {/if}
 {:else if status === 'ready-for-review'}
@@ -84,7 +91,7 @@
       <CheckCircle2 size={14} />
       {willExclude ? 'Confirm Exclusion' : 'Confirm Review'}
     </Button>
-  {:else}
+  {:else if !hideBadge}
     <span class="review-badge review-badge--pending">Awaiting review</span>
   {/if}
 {:else if status === 'ready-for-rating'}
@@ -93,7 +100,7 @@
       <CheckCircle2 size={14} />
       Mark Ready to Upload
     </Button>
-  {:else}
+  {:else if !hideBadge}
     <span class="review-badge review-badge--locked" title="Reviewed by {nameOf(reviewedBy)}">Ready for rating</span>
   {/if}
 {:else if status === 'ready-to-upload'}
@@ -102,14 +109,16 @@
       <CheckCircle2 size={14} />
       Mark Uploaded
     </Button>
-  {:else}
+  {:else if !hideBadge}
     <span class="review-badge review-badge--locked">Ready to upload</span>
   {/if}
 {:else if status === 'excluded'}
-  <span class="review-badge review-badge--excluded" title="Prepared by {nameOf(preparedBy)}, reviewed by {nameOf(reviewedBy)}">
-    Excluded
-  </span>
-{:else}
+  {#if !hideBadge}
+    <span class="review-badge review-badge--excluded" title="Prepared by {nameOf(preparedBy)}, reviewed by {nameOf(reviewedBy)}">
+      Excluded
+    </span>
+  {/if}
+{:else if !hideBadge}
   <span class="review-badge review-badge--reviewed" title="Prepared by {nameOf(preparedBy)}, reviewed by {nameOf(reviewedBy)}">
     Uploaded
   </span>
