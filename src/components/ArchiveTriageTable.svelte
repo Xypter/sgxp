@@ -24,6 +24,7 @@
   import PlainTextCell from './archive/cells/PlainTextCell.svelte';
   import LinkCell from './archive/cells/LinkCell.svelte';
   import SortableHeaderButton from './archive/cells/SortableHeaderButton.svelte';
+  import ArchiveQuickSort from './archive/ArchiveQuickSort.svelte';
 
   function sortableHeader(label: string) {
     return ({ column }: any) =>
@@ -232,6 +233,7 @@
   // actual triage starting point - default to it instead of "All Statuses"
   // so the page opens on what there's actually work to do on.
   let statusFilter = $state('unsorted');
+  let quickSortOpen = $state(false);
   let searchDebounceTimer: ReturnType<typeof setTimeout>;
 
   // Table state
@@ -875,6 +877,9 @@
         themed
         class="status-filter-select"
       />
+      {#if canEdit}
+        <Button themed size="sm" class="quick-sort-btn" onclick={() => (quickSortOpen = true)}>Quick Sort</Button>
+      {/if}
     </div>
 
     <div class="results-count">
@@ -1071,6 +1076,18 @@
     </div>
   {/if}
 </div>
+
+<ArchiveQuickSort
+  bind:open={quickSortOpen}
+  {canEdit}
+  {isAdmin}
+  {currentUserId}
+  statusFilter={statusFilter || undefined}
+  searchTerm={searchInput}
+  sortField={sorting[0]?.id || 'comicId'}
+  sortDesc={!!sorting[0]?.desc}
+  onClose={() => (quickSortOpen = false)}
+/>
 
 <style>
   .triage-table {
@@ -1310,6 +1327,14 @@
   :global(.toolbar-search) {
     flex: 1;
     min-width: 220px;
+    height: 42px !important;
+    min-height: 42px !important;
+  }
+
+  /* Matches the search input/status Select's 42px height (they mismatch
+     by default - see the search input's own override above) rather than
+     the button's default shadcn `size="sm"` height. */
+  :global(.quick-sort-btn) {
     height: 42px !important;
     min-height: 42px !important;
   }
