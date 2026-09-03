@@ -429,14 +429,19 @@
       // status we sent, otherwise the modal keeps showing this entry as
       // un-prepared/un-reviewed until the next SSE refresh catches up.
       const result = await patchEntry(entry, { status: newStatus });
-      const updatedEntry = { ...entry, ...(result?.doc ?? {}), status: newStatus };
+      // The server can land on a different status than what was requested
+      // (e.g. an admin marking ready-for-review auto-collapses straight to
+      // ready-for-rating/excluded - see ArchiveEntries.ts's beforeChange),
+      // so trust the response's actual status over the one we asked for.
+      const finalStatus = result?.doc?.status ?? newStatus;
+      const updatedEntry = { ...entry, ...(result?.doc ?? {}), status: finalStatus };
       // Mirrors the parent table's movesOutOfView logic - only drop the
       // entry from the local list if there's an active status filter and
       // the new status no longer matches it. Under "All Statuses" the
       // entry stays put, same as the main table. Applies in target mode
       // too now - it's a real queue (just jumped to a starting position),
       // not a single-entry view.
-      if (statusFilter && newStatus !== statusFilter) {
+      if (statusFilter && finalStatus !== statusFilter) {
         entries = entries.filter((e) => e.id !== entry.id);
         totalDocs = totalDocs !== null ? Math.max(0, totalDocs - 1) : totalDocs;
         // Removing the entry shifts everything after it down one slot, so
