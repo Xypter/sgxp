@@ -10,7 +10,7 @@
   import { createSvelteTable, renderComponent } from '$components/ui/data-table';
   import * as Accordion from '$components/ui/accordion';
   import { DataTable, Select, Input, Button } from '$lib/components';
-  import { ExternalLink, LoaderCircle, Check } from 'lucide-svelte';
+  import { ExternalLink, LoaderCircle, Check, X } from 'lucide-svelte';
   import { fade } from 'svelte/transition';
   import { toast } from 'svelte-sonner';
 
@@ -23,7 +23,10 @@
   import ReviewStatusCell from './archive/cells/ReviewStatusCell.svelte';
   import PlainTextCell from './archive/cells/PlainTextCell.svelte';
   import LinkCell from './archive/cells/LinkCell.svelte';
+  import { applyArchiveFilters, BLANK_FILTER_VALUE } from '$lib/archiveFilterQuery';
   import SortableHeaderButton from './archive/cells/SortableHeaderButton.svelte';
+  import FilterableSortHeader from './archive/cells/FilterableSortHeader.svelte';
+  import QuickSortButtonCell from './archive/cells/QuickSortButtonCell.svelte';
   import ArchiveQuickSort from './archive/ArchiveQuickSort.svelte';
 
   function sortableHeader(label: string) {
@@ -32,6 +35,45 @@
         label,
         sorted: column.getIsSorted(),
         onclick: column.getToggleSortingHandler(),
+      });
+  }
+
+  // Excel-style column header filters (Category, Sprite Comic?, Game
+  // Related?) - options/selected are read live at render time via the
+  // passed-through getters, same as every other cell already does for
+  // reactive entry fields, so no extra memoization is needed even though
+  // `columns` itself is a plain (non-$derived) array built once.
+  function filterableHeader(
+    label: string,
+    getOptions: () => { value: string; label: string }[],
+    getSelected: () => string[],
+    onFilterChange: (values: string[]) => void
+  ) {
+    return ({ column }: any) =>
+      renderComponent(FilterableSortHeader as any, {
+        label,
+        sorted: column.getIsSorted(),
+        onSortClick: column.getToggleSortingHandler(),
+        options: getOptions(),
+        selected: getSelected(),
+        onFilterChange,
+      });
+  }
+
+  // Same as filterableHeader but for non-sortable relation columns
+  // (Preparer/Reviewer) - a plain label instead of a sort button.
+  function filterOnlyHeader(
+    label: string,
+    getOptions: () => { value: string; label: string }[],
+    getSelected: () => string[],
+    onFilterChange: (values: string[]) => void
+  ) {
+    return () =>
+      renderComponent(FilterableSortHeader as any, {
+        label,
+        options: getOptions(),
+        selected: getSelected(),
+        onFilterChange,
       });
   }
 
@@ -72,6 +114,7 @@
   let categories = $state<string[]>([]);
   const CATEGORY_OPTIONS = $derived(categories.map((v) => ({ value: v, label: v })));
   const CATEGORY_EDIT_OPTIONS = $derived([{ value: '', label: '— Uncategorized —' }, ...CATEGORY_OPTIONS]);
+  const CATEGORY_FILTER_OPTIONS = $derived([{ value: BLANK_FILTER_VALUE, label: 'Uncategorized' }, ...CATEGORY_OPTIONS]);
 
   async function fetchCategories() {
     try {
@@ -81,6 +124,34 @@
       categories = (data.docs || []).map((d: { name: string }) => d.name);
     } catch {
       // Best-effort - the combobox just falls back to whatever it already had.
+    }
+  }
+
+  // Preparer/Reviewer filter options - anyone who could plausibly appear in
+  // either field (archivists + admins), not the whole user base. Shared
+  // between both filters since either can be prepared/reviewed by any of
+  // them; picking someone who's never actually prepared/reviewed anything
+  // just yields zero results, which is harmless.
+  let userFilterOptions = $state<{ value: string; label: string }[]>([]);
+  const USER_FILTER_OPTIONS = $derived([{ value: BLANK_FILTER_VALUE, label: '(Blank)' }, ...userFilterOptions]);
+
+  async function fetchUserFilterOptions() {
+    try {
+      const params = new URLSearchParams();
+      params.set('limit', '200');
+      params.set('where[or][0][isArchivist][equals]', 'true');
+      params.set('where[or][1][role][in]', 'admin,king-of-mobius');
+      const response = await fetch(`/api/proxy/users?${params.toString()}`);
+      if (!response.ok) return;
+      const data = await response.json();
+      userFilterOptions = (data.docs || [])
+        .map((u: { id: number | string; displayName?: string; username?: string }) => ({
+          value: String(u.id),
+          label: u.displayName || u.username || `User #${u.id}`,
+        }))
+        .sort((a: { label: string }, b: { label: string }) => a.label.localeCompare(b.label));
+    } catch {
+      // Best-effort - the filter just falls back to only the (Blank) option.
     }
   }
 
@@ -233,7 +304,70 @@
   // actual triage starting point - default to it instead of "All Statuses"
   // so the page opens on what there's actually work to do on.
   let statusFilter = $state('unsorted');
+  // Excel-style multi-select column filters. Empty array means "no filter"
+  // for that column. Sprite Comic?/Game Related? selected values are the
+  // strings 'true'/'false' (matching YES_NO_OPTIONS below).
+  let categoryFilterValues = $state<string[]>([]);
+  let spriteComicFilterValues = $state<string[]>([]);
+  let gameRelatedFilterValues = $state<string[]>([]);
+  function setCategoryFilter(values: string[]) {
+    categoryFilterValues = values;
+    pagination = { ...pagination, pageIndex: 0 };
+  }
+  function setSpriteComicFilter(values: string[]) {
+    spriteComicFilterValues = values;
+    pagination = { ...pagination, pageIndex: 0 };
+  }
+  function setGameRelatedFilter(values: string[]) {
+    gameRelatedFilterValues = values;
+    pagination = { ...pagination, pageIndex: 0 };
+  }
+  let preparerFilterValues = $state<string[]>([]);
+  let reviewerFilterValues = $state<string[]>([]);
+  function setPreparerFilter(values: string[]) {
+    preparerFilterValues = values;
+    pagination = { ...pagination, pageIndex: 0 };
+  }
+  function setReviewerFilter(values: string[]) {
+    reviewerFilterValues = values;
+    pagination = { ...pagination, pageIndex: 0 };
+  }
+  // Deliberately excludes statusFilter - that dropdown is the primary
+  // "which stage am I working on" navigation, not an Excel-style filter,
+  // so clearing everything else leaves it where the archivist put it.
+  const hasActiveFilters = $derived(
+    !!searchInput.trim() ||
+      categoryFilterValues.length > 0 ||
+      spriteComicFilterValues.length > 0 ||
+      gameRelatedFilterValues.length > 0 ||
+      preparerFilterValues.length > 0 ||
+      reviewerFilterValues.length > 0
+  );
+  function clearFilters() {
+    clearTimeout(searchDebounceTimer);
+    searchInput = '';
+    categoryFilterValues = [];
+    spriteComicFilterValues = [];
+    gameRelatedFilterValues = [];
+    preparerFilterValues = [];
+    reviewerFilterValues = [];
+    pagination = { ...pagination, pageIndex: 0 };
+    // Explicit call, not just relying on the $effect dependency list below -
+    // if every one of these was already cleared except the search text (not
+    // itself a tracked dependency, see handleSearchInput), no dependency
+    // would actually change and the effect wouldn't re-fire on its own.
+    fetchEntries();
+  }
   let quickSortOpen = $state(false);
+  // Set when Quick Sort is launched at a specific row (the "view in Quick
+  // Sort" button) instead of the normal filtered/sorted browsing queue -
+  // undefined means "browse normally".
+  let quickSortTargetComicId = $state<number | undefined>(undefined);
+
+  function openQuickSort(comicId?: number) {
+    quickSortTargetComicId = comicId;
+    quickSortOpen = true;
+  }
   let searchDebounceTimer: ReturnType<typeof setTimeout>;
 
   // Table state
@@ -252,16 +386,15 @@
     const sortDir = sorting[0]?.desc ? '-' : '';
     params.set('sort', `${sortDir}${sortField}`);
 
-    let clauseIndex = 0;
-    if (statusFilter) {
-      params.set(`where[and][${clauseIndex}][status][equals]`, statusFilter);
-      clauseIndex++;
-    }
-    if (searchInput.trim()) {
-      params.set(`where[and][${clauseIndex}][or][0][title][contains]`, searchInput.trim());
-      params.set(`where[and][${clauseIndex}][or][1][author][contains]`, searchInput.trim());
-      clauseIndex++;
-    }
+    applyArchiveFilters(params, {
+      statusFilter,
+      searchTerm: searchInput,
+      categoryFilterValues,
+      spriteComicFilterValues,
+      gameRelatedFilterValues,
+      preparerFilterValues,
+      reviewerFilterValues,
+    });
 
     return params.toString();
   }
@@ -301,6 +434,10 @@
   });
 
   $effect(() => {
+    fetchUserFilterOptions();
+  });
+
+  $effect(() => {
     fetchStats();
   });
 
@@ -321,7 +458,17 @@
   }
 
   $effect(() => {
-    const _ = [pagination.pageIndex, pagination.pageSize, sorting, statusFilter];
+    const _ = [
+      pagination.pageIndex,
+      pagination.pageSize,
+      sorting,
+      statusFilter,
+      categoryFilterValues,
+      spriteComicFilterValues,
+      gameRelatedFilterValues,
+      preparerFilterValues,
+      reviewerFilterValues,
+    ];
     fetchEntries();
   });
 
@@ -615,7 +762,12 @@
     },
     {
       accessorKey: 'isSpriteComic',
-      header: sortableHeader('Sprite Comic?'),
+      header: filterableHeader(
+        'Sprite Comic?',
+        () => YES_NO_OPTIONS,
+        () => spriteComicFilterValues,
+        setSpriteComicFilter
+      ),
       cell: ({ row }) =>
         renderComponent(EditableToggleButtonsCell as any, {
           value: String(row.original.isSpriteComic ?? false),
@@ -626,7 +778,12 @@
     },
     {
       accessorKey: 'isGameRelated',
-      header: sortableHeader('Game Related?'),
+      header: filterableHeader(
+        'Game Related?',
+        () => YES_NO_OPTIONS,
+        () => gameRelatedFilterValues,
+        setGameRelatedFilter
+      ),
       cell: ({ row }) =>
         row.original.isSpriteComic
           ? renderComponent(PlainTextCell as any, { fallback: '—', class: 'entry-na' })
@@ -638,7 +795,12 @@
     },
     {
       accessorKey: 'category',
-      header: sortableHeader('Category'),
+      header: filterableHeader(
+        'Category',
+        () => CATEGORY_FILTER_OPTIONS,
+        () => categoryFilterValues,
+        setCategoryFilter
+      ),
       cell: ({ row }) =>
         renderComponent(EditableComboboxCell as any, {
           value: row.original.category ?? '',
@@ -669,7 +831,12 @@
     },
     {
       id: 'preparedBy',
-      header: 'Preparer',
+      header: filterOnlyHeader(
+        'Preparer',
+        () => USER_FILTER_OPTIONS,
+        () => preparerFilterValues,
+        setPreparerFilter
+      ),
       cell: ({ row }) =>
         renderComponent(PlainTextCell as any, {
           value: nameOf(row.original.preparedBy),
@@ -679,7 +846,12 @@
     },
     {
       id: 'reviewedBy',
-      header: 'Reviewer',
+      header: filterOnlyHeader(
+        'Reviewer',
+        () => USER_FILTER_OPTIONS,
+        () => reviewerFilterValues,
+        setReviewerFilter
+      ),
       cell: ({ row }) =>
         renderComponent(PlainTextCell as any, {
           value: nameOf(row.original.reviewedBy),
@@ -718,6 +890,15 @@
           // for most of the archive. Only shown once the comic is actually
           // live on the site.
           href: row.original.status === 'uploaded' ? `/jeevespage?comic_id=${row.original.comicId}` : undefined,
+        }),
+      enableSorting: false,
+    },
+    {
+      id: 'quickSort',
+      header: 'Preview',
+      cell: ({ row }) =>
+        renderComponent(QuickSortButtonCell as any, {
+          onClick: () => openQuickSort(row.original.comicId),
         }),
       enableSorting: false,
     },
@@ -877,8 +1058,11 @@
         themed
         class="status-filter-select"
       />
+      <Button themed variant="ghost" size="sm" class="clear-filters-btn" disabled={!hasActiveFilters} onclick={clearFilters}>
+        <X size={14} /> Clear Filters
+      </Button>
       {#if canEdit}
-        <Button themed size="sm" class="quick-sort-btn" onclick={() => (quickSortOpen = true)}>Quick Sort</Button>
+        <Button themed size="sm" class="quick-sort-btn" onclick={() => openQuickSort()}>Quick Sort</Button>
       {/if}
     </div>
 
@@ -923,10 +1107,11 @@
     <!-- Mobile Cards -->
     <div class="mobile-cards">
       {#each entries as entry (entry.id)}
-        <div class="entry-card" out:fade={{ duration: 150 }}>
+        <div class="entry-card" in:fade={{ duration: 200 }} out:fade={{ duration: 150 }}>
           <div class="entry-card-header">
             <span class="entry-card-id">#{entry.comicId}</span>
             <span class="entry-card-title">{entry.title || '(untitled)'}</span>
+            <QuickSortButtonCell onClick={() => openQuickSort(entry.comicId)} />
             {#if entry.status === 'uploaded'}
               <a
                 href="https://sgxp.me/jeevespage?comic_id={entry.comicId}"
@@ -1084,9 +1269,23 @@
   {currentUserId}
   statusFilter={statusFilter || undefined}
   searchTerm={searchInput}
+  {categoryFilterValues}
+  {spriteComicFilterValues}
+  {gameRelatedFilterValues}
+  {preparerFilterValues}
+  {reviewerFilterValues}
   sortField={sorting[0]?.id || 'comicId'}
   sortDesc={!!sorting[0]?.desc}
-  onClose={() => (quickSortOpen = false)}
+  {categories}
+  onCategoryCreated={(name) => {
+    addCategoryLocally(name);
+    ensureCategoryExists(name);
+  }}
+  targetComicId={quickSortTargetComicId}
+  onClose={() => {
+    quickSortOpen = false;
+    quickSortTargetComicId = undefined;
+  }}
 />
 
 <style>
@@ -1334,7 +1533,8 @@
   /* Matches the search input/status Select's 42px height (they mismatch
      by default - see the search input's own override above) rather than
      the button's default shadcn `size="sm"` height. */
-  :global(.quick-sort-btn) {
+  :global(.quick-sort-btn),
+  :global(.clear-filters-btn) {
     height: 42px !important;
     min-height: 42px !important;
   }

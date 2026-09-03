@@ -3,7 +3,9 @@
   import { fade } from 'svelte/transition';
   import { X, ChevronLeft, ChevronRight, LoaderCircle } from 'lucide-svelte';
   import { Button, ToggleGroup } from '$lib/components';
+  import { applyArchiveFilters } from '$lib/archiveFilterQuery';
   import ArchiveStatusBadge from './cells/ArchiveStatusBadge.svelte';
+  import EditableComboboxCell from './cells/EditableComboboxCell.svelte';
   import QuickSortImage from './QuickSortImage.svelte';
 
   const YES_NO_OPTIONS = [
@@ -35,6 +37,7 @@
     author?: string;
     isSpriteComic?: boolean;
     isGameRelated?: boolean;
+    category?: string | null;
     status: string;
     preparedBy?: UserRef | number | string | null;
   }
@@ -58,8 +61,30 @@
     // unsorted-by-comicId.
     statusFilter?: string;
     searchTerm?: string;
+    // The parent table's other Excel-style column filters (Category, Sprite
+    // Comic?, Game Related?, Preparer, Reviewer) - same deal, so a heavily
+    // filtered-down table (e.g. "3 comics left") turns Quick Sort into a
+    // queue over exactly those 3, not the whole unsorted backlog.
+    categoryFilterValues?: string[];
+    spriteComicFilterValues?: string[];
+    gameRelatedFilterValues?: string[];
+    preparerFilterValues?: string[];
+    reviewerFilterValues?: string[];
     sortField: string;
     sortDesc: boolean;
+    // Shared category list (backed by the archive-categories collection) -
+    // mirrors what the parent table's Category column uses, kept in sync
+    // there over SSE. onCategoryCreated lets Quick Sort feed a brand-new
+    // category name back up so it shows up for everyone else too, same as
+    // the table's saveCategoryField.
+    categories: string[];
+    onCategoryCreated: (name: string) => void;
+    // When set, Quick Sort still walks the exact same filtered/sorted queue
+    // as normal browsing (e.g. a "view in Quick Sort" button on a specific
+    // table row) - it just jumps straight to wherever this comic sits in
+    // that queue instead of starting at the front, so Previous/Next carry
+    // on browsing its neighbors from there. See loadTargetQueue below.
+    targetComicId?: number;
     onClose: () => void;
   }
 
@@ -70,10 +95,36 @@
     currentUserId,
     statusFilter,
     searchTerm,
+    categoryFilterValues = [],
+    spriteComicFilterValues = [],
+    gameRelatedFilterValues = [],
+    preparerFilterValues = [],
+    reviewerFilterValues = [],
     sortField,
     sortDesc,
+    categories,
+    onCategoryCreated,
+    targetComicId,
     onClose,
   }: Props = $props();
+
+  const isTargetMode = $derived(targetComicId != null);
+  const hasExtraFilters = $derived(
+    categoryFilterValues.length > 0 ||
+      spriteComicFilterValues.length > 0 ||
+      gameRelatedFilterValues.length > 0 ||
+      preparerFilterValues.length > 0 ||
+      reviewerFilterValues.length > 0
+  );
+
+  const CATEGORY_EDIT_OPTIONS = $derived([{ value: '', label: '— Uncategorized —' }, ...categories.map((v) => ({ value: v, label: v }))]);
+
+  // The native <select> (mobile) can't offer a free-text entry inline like
+  // the desktop Combobox's "Add <value>" affordance - a trailing sentinel
+  // option triggers a native prompt() instead, which mobile browsers render
+  // fine, then routes through setCategory the same as any other pick.
+  const NEW_CATEGORY_VALUE = '__qs_add_new_category__';
+  const CATEGORY_NATIVE_OPTIONS = $derived([...CATEGORY_EDIT_OPTIONS, { value: NEW_CATEGORY_VALUE, label: '+ Add new category...' }]);
 
   const PAGE_SIZE = 25;
 
@@ -85,6 +136,12 @@
 
   function isPreparer(entry: ArchiveEntry): boolean {
     return idOf(entry.preparedBy) === String(currentUserId);
+  }
+
+  // Mirrors the parent table's isRelevant() - Category only matters once an
+  // entry is actually in scope for the archive.
+  function isRelevant(entry: ArchiveEntry): boolean {
+    return !!entry.isSpriteComic || !!entry.isGameRelated;
   }
 
   // Mirrors the parent table's locked() - once an entry reaches "ready for
@@ -157,32 +214,93 @@
     params.set('depth', '1');
     params.set('sort', `${sortDesc ? '-' : ''}${sortField}`);
 
-    let clauseIndex = 0;
-    if (statusFilter) {
-      params.set(`where[and][${clauseIndex}][status][equals]`, statusFilter);
-      clauseIndex++;
-    }
-    if (searchTerm?.trim()) {
-      params.set(`where[and][${clauseIndex}][or][0][title][contains]`, searchTerm.trim());
-      params.set(`where[and][${clauseIndex}][or][1][author][contains]`, searchTerm.trim());
-      clauseIndex++;
-    }
+    applyArchiveFilters(params, {
+      statusFilter,
+      searchTerm,
+      categoryFilterValues,
+      spriteComicFilterValues,
+      gameRelatedFilterValues,
+      preparerFilterValues,
+      reviewerFilterValues,
+    });
 
     const response = await fetch(`/api/archive-entries?${params.toString()}`);
     if (!response.ok) throw new Error(`Failed to load entries (${response.status})`);
     return response.json();
   }
 
+  async function fetchTargetEntry(comicId: number) {
+    const params = new URLSearchParams({ 'where[comicId][equals]': String(comicId), limit: '1', depth: '1' });
+    const response = await fetch(`/api/archive-entries?${params.toString()}`);
+    if (!response.ok) throw new Error(`Failed to load comic #${comicId} (${response.status})`);
+    return response.json();
+  }
+
+  // Target mode isn't a single-entry view - it's the same filtered/sorted
+  // queue the table is showing, just jumped to wherever the chosen comic
+  // sits in it, so Previous/Next carry on browsing the surrounding entries
+  // exactly like normal browsing does. Pages are fetched (and accumulated,
+  // same shape loadMoreIfNeeded already expects) until the target comic
+  // turns up. Capped so a comic that's hundreds of pages deep into an
+  // unfiltered/lightly-filtered queue doesn't trigger an unbounded fetch
+  // loop - past that cap it falls back to the old single-entry view.
+  const TARGET_SCAN_MAX_PAGES = 20;
+
+  async function loadTargetQueue(comicId: number) {
+    let scannedEntries: ArchiveEntry[] = [];
+    let pageNum = 1;
+    let totalDocsResult = 0;
+    let hasNextPageResult = false;
+    while (pageNum <= TARGET_SCAN_MAX_PAGES) {
+      const data = await fetchPage(pageNum);
+      const docs: ArchiveEntry[] = data.docs || [];
+      scannedEntries = scannedEntries.concat(docs);
+      totalDocsResult = data.totalDocs ?? totalDocsResult;
+      hasNextPageResult = !!data.hasNextPage;
+      const foundIndex = scannedEntries.findIndex((e) => e.comicId === comicId);
+      if (foundIndex !== -1) {
+        return { entries: scannedEntries, index: foundIndex, totalDocs: totalDocsResult, hasNextPage: hasNextPageResult, page: pageNum };
+      }
+      if (!hasNextPageResult) break;
+      pageNum++;
+    }
+    return null;
+  }
+
   async function loadInitial() {
     loadingInitial = true;
     error = null;
     try {
-      const data = await fetchPage(1);
-      entries = data.docs || [];
-      totalDocs = data.totalDocs ?? null;
-      hasNextPage = !!data.hasNextPage;
-      page = 1;
-      index = 0;
+      if (isTargetMode) {
+        const queue = await loadTargetQueue(targetComicId!);
+        if (queue) {
+          entries = queue.entries;
+          index = queue.index;
+          totalDocs = queue.totalDocs;
+          hasNextPage = queue.hasNextPage;
+          page = queue.page;
+        } else {
+          // Not found within the scan cap (or it doesn't match the current
+          // filters at all) - fall back to showing just this one comic on
+          // its own, same as the original single-entry behavior.
+          const data = await fetchTargetEntry(targetComicId!);
+          entries = data.docs || [];
+          totalDocs = data.totalDocs ?? null;
+          hasNextPage = false;
+          page = 1;
+          index = 0;
+          if (entries.length === 0) {
+            error = `Comic #${targetComicId} not found.`;
+          }
+        }
+      } else {
+        const data = await fetchPage(1);
+        entries = data.docs || [];
+        totalDocs = data.totalDocs ?? null;
+        hasNextPage = !!data.hasNextPage;
+        page = 1;
+        index = 0;
+      }
     } catch (err) {
       error = err instanceof Error ? err.message : String(err);
     } finally {
@@ -258,16 +376,66 @@
     }
   }
 
+  async function setCategory(value: string) {
+    if (!canEdit || !current || savingField) return;
+    const entry = current;
+    const trimmed = value.trim();
+    if (trimmed && !categories.some((c) => c.toLowerCase() === trimmed.toLowerCase())) {
+      onCategoryCreated(trimmed);
+    }
+    const newValue = trimmed === '' ? null : trimmed;
+    if (newValue === (entry.category ?? null)) return;
+    const previousValue = entry.category;
+    savingField = 'category';
+    entries = entries.map((e) => (e.id === entry.id ? { ...e, category: newValue } : e));
+    try {
+      await patchEntry(entry, { category: newValue });
+    } catch (err) {
+      entries = entries.map((e) => (e.id === entry.id ? { ...e, category: previousValue } : e));
+      toast.error('Failed to save change', {
+        description: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      savingField = null;
+    }
+  }
+
+  function handleNativeCategorySelect(e: Event) {
+    const select = e.currentTarget as HTMLSelectElement;
+    const selected = select.value;
+    if (selected !== NEW_CATEGORY_VALUE) {
+      setCategory(selected);
+      return;
+    }
+    const name = window.prompt('New category name:')?.trim();
+    if (name) {
+      setCategory(name);
+    } else {
+      // Cancelled/blank - snap the <select> back to whatever the entry's
+      // category actually is, since selecting the sentinel already moved
+      // the native control's displayed value away from it.
+      select.value = current?.category ?? '';
+    }
+  }
+
   async function changeStatus(newStatus: string, savingKey: string, successMessage: (entry: ArchiveEntry) => string, failureMessage: string) {
     if (!canEdit || !current || savingField) return;
     const entry = current;
     savingField = savingKey;
     try {
-      await patchEntry(entry, { status: newStatus });
+      // The server derives preparedBy/reviewedBy/preparedAt/reviewedAt as a
+      // side effect of this same status change (see ArchiveEntries.ts's
+      // beforeChange) - merge its returned doc back in rather than just the
+      // status we sent, otherwise the modal keeps showing this entry as
+      // un-prepared/un-reviewed until the next SSE refresh catches up.
+      const result = await patchEntry(entry, { status: newStatus });
+      const updatedEntry = { ...entry, ...(result?.doc ?? {}), status: newStatus };
       // Mirrors the parent table's movesOutOfView logic - only drop the
       // entry from the local list if there's an active status filter and
       // the new status no longer matches it. Under "All Statuses" the
-      // entry stays put, same as the main table.
+      // entry stays put, same as the main table. Applies in target mode
+      // too now - it's a real queue (just jumped to a starting position),
+      // not a single-entry view.
       if (statusFilter && newStatus !== statusFilter) {
         entries = entries.filter((e) => e.id !== entry.id);
         totalDocs = totalDocs !== null ? Math.max(0, totalDocs - 1) : totalDocs;
@@ -277,7 +445,7 @@
         if (index >= entries.length) index = Math.max(0, entries.length - 1);
         loadMoreIfNeeded();
       } else {
-        entries = entries.map((e) => (e.id === entry.id ? { ...e, status: newStatus } : e));
+        entries = entries.map((e) => (e.id === entry.id ? updatedEntry : e));
       }
       toast.success(successMessage(entry));
     } catch (err) {
@@ -290,6 +458,10 @@
   }
 
   function markReady() {
+    if (current && isRelevant(current) && !current.category) {
+      toast.error('Pick a category before submitting this for review');
+      return;
+    }
     changeStatus(
       'ready-for-review',
       'ready',
@@ -468,7 +640,7 @@
           {/if}
           <div class="qs-progress">
             {#if totalDocs !== null}
-              {index + 1} / {totalDocs.toLocaleString()} {statusFilter ? STATUS_LABELS[statusFilter] || statusFilter : 'entries'}
+              {index + 1} / {totalDocs.toLocaleString()} {statusFilter ? STATUS_LABELS[statusFilter] || statusFilter : hasExtraFilters ? 'filtered entries' : 'entries'}
             {/if}
           </div>
         </div>
@@ -478,7 +650,7 @@
     {#if loadingInitial}
       <div class="qs-state-message">
         <LoaderCircle size={28} class="qs-spinner" />
-        <p>Loading {statusFilter ? STATUS_LABELS[statusFilter] || statusFilter : ''} comics...</p>
+        <p>{isTargetMode ? `Locating comic #${targetComicId}...` : `Loading ${statusFilter ? STATUS_LABELS[statusFilter] || statusFilter : ''} comics...`}</p>
       </div>
     {:else if error}
       <div class="qs-state-message">
@@ -580,35 +752,79 @@
           {@const entryLocked = locked(current)}
           {@const preparerOfThis = isPreparer(current)}
           {@const willExclude = !current.isSpriteComic && !current.isGameRelated}
+          {@const relevant = isRelevant(current)}
+          {@const missingCategory = relevant && !current.category}
 
-          <div class="qs-flag-group">
-            <span class="qs-flag-label">Sprite Comic?</span>
-            <ToggleGroup
-              value={String(current.isSpriteComic ?? false)}
-              options={YES_NO_OPTIONS}
-              disabled={!!savingField || entryLocked}
-              themed
-              onValueChange={(v) => setFlag('isSpriteComic', v === 'true')}
-              class="qs-flag-buttons"
-            />
-          </div>
-
-          {#if !current.isSpriteComic}
+          <div class="qs-flags-row">
             <div class="qs-flag-group">
-              <span class="qs-flag-label">Game Related?</span>
+              <span class="qs-flag-label">Sprite Comic?</span>
               <ToggleGroup
-                value={String(current.isGameRelated ?? false)}
+                value={String(current.isSpriteComic ?? false)}
                 options={YES_NO_OPTIONS}
                 disabled={!!savingField || entryLocked}
                 themed
-                onValueChange={(v) => setFlag('isGameRelated', v === 'true')}
+                onValueChange={(v) => setFlag('isSpriteComic', v === 'true')}
                 class="qs-flag-buttons"
               />
             </div>
-          {/if}
+
+            {#if !current.isSpriteComic}
+              <div class="qs-flag-group">
+                <span class="qs-flag-label">Game Related?</span>
+                <ToggleGroup
+                  value={String(current.isGameRelated ?? false)}
+                  options={YES_NO_OPTIONS}
+                  disabled={!!savingField || entryLocked}
+                  themed
+                  onValueChange={(v) => setFlag('isGameRelated', v === 'true')}
+                  class="qs-flag-buttons"
+                />
+              </div>
+            {/if}
+          </div>
+
+          <div class="qs-flag-group qs-category-group">
+            <span class="qs-flag-label">Category{missingCategory ? ' (required)' : ''}</span>
+            <div class="qs-category-desktop">
+              <EditableComboboxCell
+                value={current.category ?? ''}
+                options={CATEGORY_EDIT_OPTIONS}
+                placeholder={relevant ? 'Uncategorized' : 'N/A'}
+                searchPlaceholder="Search or add a category..."
+                disabled={!!savingField || entryLocked || !relevant}
+                faded
+                creatable
+                onSave={setCategory}
+              />
+            </div>
+            <!-- Mobile-only: a real <select> instead of the popover-based
+                 Combobox above, so tapping it opens the phone's own native
+                 picker overlay (which the Combobox's custom popover isn't
+                 doing reliably inside this fixed full-screen modal) rather
+                 than trying to fix that popover's stacking/portal behavior
+                 here. A trailing "+ Add new category..." option stands in
+                 for the Combobox's inline creatable text field, since a
+                 native <select> has no room for free text of its own. -->
+            <select
+              class="qs-category-native"
+              value={current.category ?? ''}
+              disabled={!!savingField || entryLocked || !relevant}
+              onchange={handleNativeCategorySelect}
+            >
+              {#each CATEGORY_NATIVE_OPTIONS as opt (opt.value)}
+                <option value={opt.value}>{opt.label}</option>
+              {/each}
+            </select>
+          </div>
 
           {#if current.status === 'unsorted'}
-            <Button themed class="qs-ready-btn" disabled={!!savingField} onclick={markReady}>
+            <Button
+              themed
+              class="qs-ready-btn"
+              disabled={!!savingField || missingCategory}
+              title={missingCategory ? 'Pick a category before submitting this for review' : undefined}
+              onclick={markReady}
+            >
               {#if savingField === 'ready'}
                 <LoaderCircle size={16} class="qs-spinner" /> Submitting...
               {:else}
@@ -843,6 +1059,12 @@
     font-size: 14px;
   }
 
+  .qs-flags-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
   .qs-flag-group {
     display: flex;
     align-items: center;
@@ -853,6 +1075,10 @@
     font-size: 13px;
     color: color-mix(in srgb, var(--font-color) 70%, transparent);
     white-space: nowrap;
+  }
+
+  .qs-category-native {
+    display: none;
   }
 
   :global(.qs-ready-btn) {
@@ -1028,12 +1254,73 @@
       background: var(--page-color);
     }
 
-    .qs-flag-group {
-      justify-content: space-between;
+    /* Sprite Comic? and Game Related? share one row, each taking half the
+       width - label stacked above its toggle (rather than side by side)
+       since there isn't enough width in a half-row for both. */
+    .qs-flags-row {
+      gap: 0.6rem;
     }
 
-    :global(.qs-flag-buttons) {
+    .qs-flags-row .qs-flag-group {
       flex: 1;
+      min-width: 0;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.3rem;
+    }
+
+    /* ToggleGroup's root is inline-flex and its Yes/No items size to their
+       own content by default - stretching the root to the full column
+       width alone just leaves dead space after two narrow buttons. Making
+       the root a real flex container and each item flex:1 splits that
+       column width evenly between them, so Yes/No each end up a quarter of
+       the full screen width (half the row, halved again by the two
+       buttons) instead of small buttons floating in a too-wide box. */
+    :global(.qs-flags-row .qs-flag-buttons) {
+      width: 100%;
+      display: flex !important;
+    }
+
+    :global(.qs-flags-row .qs-flag-buttons .theme-toggle-group-item) {
+      flex: 1;
+    }
+
+    /* The category combobox (with its search input/dropdown) needs more
+       room than a two-option toggle group - stack its label above it and
+       let it take the full row width instead of squeezing it into the same
+       space-between row the Yes/No toggles use. Always shown (even before
+       the entry is flagged relevant, just disabled) so the layout doesn't
+       jump around as soon as one of the toggles above is answered. */
+    .qs-category-group {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.3rem;
+    }
+
+    :global(.qs-category-group .cell-combobox) {
+      width: 100%;
+    }
+
+    /* Swap the popover-based Combobox for a real <select> on mobile - see
+       the template comment above it. */
+    .qs-category-desktop {
+      display: none;
+    }
+
+    .qs-category-native {
+      display: block;
+      width: 100%;
+      background: color-mix(in srgb, var(--page-color) 60%, black);
+      border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
+      color: var(--font-color);
+      font-family: 'saira', monospace;
+      font-size: 14px;
+      padding: 8px 12px;
+      min-height: 42px;
+    }
+
+    .qs-category-native:disabled {
+      opacity: 0.5;
     }
 
     :global(.qs-ready-btn) {

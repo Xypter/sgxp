@@ -173,6 +173,11 @@
     font-size: 14px !important;
     padding: 8px !important;
     box-shadow: var(--box-shadow, 20px 20px 20px rgba(0, 0, 0, 0.7)) !important;
+    /* Payload's popover-content.svelte bakes in Tailwind's z-50 - matches
+       Select.svelte's .theme-select-content override for the same reason:
+       without this, the popover opens behind anything with a higher
+       z-index than 50 (e.g. Quick Sort's fixed z-index:10000 overlay). */
+    z-index: 99999 !important;
   }
 
   :global(.theme-combobox-search) {

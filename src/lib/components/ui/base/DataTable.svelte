@@ -1,6 +1,7 @@
 <script lang="ts" generics="TData">
   import type { Snippet } from 'svelte';
   import type { Table as TableType } from '@tanstack/table-core';
+  import { fade } from 'svelte/transition';
   import * as Table from '$components/ui/table';
   import { FlexRender } from '$components/ui/data-table';
   import { Button } from '$lib/components';
@@ -50,9 +51,18 @@
       </Table.Header>
       <Table.Body>
         {#each table.getRowModel().rows as row (row.id)}
-          <Table.Row
+          <!-- A plain <tr> instead of Table.Row - transition:/in:/out: directives
+               can't be placed on a component tag (Svelte compile error), only a
+               real DOM element, so this replicates Table.Row's own classes/
+               data-slot attribute (see $components/ui/table/table-row.svelte)
+               by hand rather than touching that CLI-generated primitive. -->
+          <tr
+            class="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors"
+            data-slot="table-row"
             data-state={row.getIsSelected() && "selected"}
             onclick={() => onRowClick?.(row.original)}
+            in:fade={{ duration: 200 }}
+            out:fade={{ duration: 150 }}
           >
             {#each row.getVisibleCells() as cell (cell.id)}
               <Table.Cell>
@@ -62,7 +72,7 @@
                 />
               </Table.Cell>
             {/each}
-          </Table.Row>
+          </tr>
         {:else}
           <Table.Row>
             <Table.Cell
