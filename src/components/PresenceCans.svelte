@@ -110,7 +110,22 @@
   }
 
   onMount(() => {
-    const source = new EventSource('/api/presence/stream');
+    // Astro does full page reloads on navigation (no client-side router), so
+    // every link tap tears down this connection and opens a fresh one - each
+    // one has to pass the server's join-delay bot filter from scratch. That
+    // makes a real visitor who navigates quickly (common on mobile) unlikely
+    // to ever stay on one page past the delay, so their can never appears.
+    // Once we've proven human once by actually receiving presence-self, skip
+    // the delay on subsequent connections in this browsing session.
+    let trusted = false;
+    try {
+      trusted = localStorage.getItem('sgxp-presence-trusted') === '1';
+    } catch {
+      // Storage inaccessible (private mode, blocked) - fall back to always
+      // paying the join delay, same as a first-time visitor.
+    }
+
+    const source = new EventSource(trusted ? '/api/presence/stream?fast=1' : '/api/presence/stream');
 
     source.addEventListener('presence-update', (event: MessageEvent) => {
       presences = JSON.parse(event.data);
@@ -118,6 +133,12 @@
 
     source.addEventListener('presence-self', (event: MessageEvent) => {
       selfId = JSON.parse(event.data).id;
+      try {
+        localStorage.setItem('sgxp-presence-trusted', '1');
+      } catch {
+        // Nothing to fall back to here - just means next page load pays the
+        // join delay again, same as this one did.
+      }
     });
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
