@@ -7,6 +7,7 @@
   import * as DropdownMenu from '../components/ui/dropdown-menu/index.js';
   import * as Sheet from '../components/ui/sheet/index.js';
   import { Button } from '../components/ui/button/index.js';
+  import PresenceCans from './PresenceCans.svelte';
 
   // Define types in module context
   type ThemeValue = 'ark' | 'snow' | 'cozy' | 'sbn' | 'style_v7' | 'hpz' | 'mfz' | 'ssz';
@@ -258,7 +259,7 @@ async function checkAuthStatus(): Promise<void> {
     color: var(--font-color);
   "
 >
-  <div class="hidden md:flex items-center justify-between w-full">
+  <div class="hidden md:flex items-center w-full">
     <div class="flex items-center ml-4 space-x-4">
       <div
         class="cursor-pointer transition-opacity duration-200 no-theme-styles"
@@ -693,6 +694,10 @@ async function checkAuthStatus(): Promise<void> {
           </NavigationMenu.Item>
         </NavigationMenu.List>
       </NavigationMenu.Root>
+    </div>
+
+    <div class="flex-1 flex items-center overflow-x-hidden mx-2">
+      <PresenceCans />
     </div>
 
     <div class="flex items-center">
