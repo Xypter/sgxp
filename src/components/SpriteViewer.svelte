@@ -10,6 +10,7 @@
     import SpriteImageViewer from './sprite/SpriteImageViewer.svelte';
     import SpriteInfo from './sprite/SpriteInfo.svelte';
     import SpriteActions from './sprite/SpriteActions.svelte';
+    import MoreByArtist from './sprite/MoreByArtist.svelte';
 
     // Import utility functions
     import { formatDate } from '$lib/spriteUtils';
@@ -53,6 +54,8 @@
     // Viewer state
     let viewerOpen = $state(false);
     let imageLoaded = $state(false);
+    // Where on the sheet the user clicked, so the fullscreen viewer opens centered there
+    let viewerFocusPoint = $state({ x: 0.5, y: 0.5 });
 
     const API_BASE_URL = `${import.meta.env.PUBLIC_PAYLOAD_URL}/api`;
 
@@ -431,7 +434,22 @@
         }
     }
 
-    function openViewer() {
+    function openViewer(event) {
+        // Only a direct click on the sheet image itself gives a meaningful position
+        // (the "Click to view fullscreen" overlay button isn't part of the image) -
+        // otherwise fall back to centering the sheet as before.
+        if (event?.currentTarget?.tagName === 'IMG') {
+            const rect = event.currentTarget.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) {
+                viewerFocusPoint = {
+                    x: (event.clientX - rect.left) / rect.width,
+                    y: (event.clientY - rect.top) / rect.height
+                };
+            }
+        } else {
+            viewerFocusPoint = { x: 0.5, y: 0.5 };
+        }
+
         viewerOpen = true;
     }
 
@@ -560,6 +578,9 @@
                     </div>
                 {/if}
 
+                <!-- More By This Artist Section -->
+                <MoreByArtist authorId={sprite.author?.id ?? sprite.author} currentSpriteId={sprite.id} />
+
                 <!-- Information Section -->
                 <SpriteInfo {sprite} />
 
@@ -649,6 +670,9 @@
                 </div>
             {/if}
 
+            <!-- More By This Artist Section -->
+            <MoreByArtist authorId={sprite.author?.id ?? sprite.author} currentSpriteId={sprite.id} />
+
             <!-- Information Section -->
             <SpriteInfo {sprite} />
 
@@ -671,6 +695,7 @@
     isOpen={viewerOpen}
     onClose={closeViewer}
     {isModal}
+    focusPoint={viewerFocusPoint}
 />
 
 <!-- Back button for non-modal mode - fixed at bottom left -->

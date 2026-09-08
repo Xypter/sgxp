@@ -110,6 +110,13 @@ body {
   width: calc(117px * var(--multiplication-factor));
   height: calc(192px * var(--multiplication-factor));
   background-image: url("https://cdn.sgxp.me/media/general/35/sprite_icon_image-1766650692338.png");
+  /* Card frame + bitmap-font glyphs (.sprite-number/.sprite-text spans below) are all
+     background-images scaled via --multiplication-factor; without pixelated rendering
+     they smooth-scale, which is invisible at 1x desktop DPR but blurs at mobile's
+     fractional device-pixel-ratios. Inherited by all descendants. */
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
   user-select: none;
   transition: transform ease-in-out .2s;
   text-decoration: none;
@@ -180,6 +187,9 @@ body {
   font-weight: 700;
   font-style: normal;
   font-size: calc(9px * var(--multiplication-factor));
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
   user-select: none;
   display: flex;
   justify-content: right;
@@ -193,6 +203,9 @@ body {
   font-family: sprite;
   font-weight: 500;
   font-style: normal;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
   user-select: none;
   font-size: calc(var(--font-size) * var(--multiplication-factor));
   line-height: calc(8px * var(--multiplication-factor));

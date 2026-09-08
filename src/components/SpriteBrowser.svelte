@@ -114,6 +114,9 @@
 	let viewingSprite = $state<Sprite | null>(null);
 	let showBrowser = $state(true);
 	let transitioningCardId = $state<number | null>(null);
+	// Scroll position in the browser grid at the moment a sprite was opened, so pressing
+	// back/close restores exactly where the user was instead of re-centering the grid.
+	let savedScrollY = 0;
 
 	// Derived values for select triggers (updated to match Payload CMS search API)
 	const sortOptions = [
@@ -141,7 +144,8 @@
 
 	const API_BASE_URL = `${import.meta.env.PUBLIC_PAYLOAD_URL}/api/sprites`;
 	const MOCK_DATA_MULTIPLIER = 1;
-	const SPRITES_PER_PAGE = 40;
+	// 10 rows worth of cards before pagination kicks in (10 cards/row at typical desktop width)
+	const SPRITES_PER_PAGE = 100;
 	// Derived values
 	const pageCount = $derived(Math.ceil(totalResults / SPRITES_PER_PAGE));
 
@@ -637,6 +641,9 @@
 
 		transitioningCardId = sprite.id;
 
+		// Remember where the user was browsing so we can restore it on back/close
+		savedScrollY = window.scrollY;
+
 		// Slide out browser
 		showBrowser = false;
 
@@ -646,8 +653,9 @@
 		// Set viewing sprite and show viewer
 		viewingSprite = sprite;
 
-		// Scroll to top of page instantly
-		window.scrollTo(0, 0);
+		// Scroll to top with no visible scroll animation - the global CSS `scroll-behavior:
+		// smooth` on <html> would otherwise animate a plain scrollTo(0, 0), so force it instant.
+		window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
 
 		// Push state to history
 		history.pushState(
@@ -660,20 +668,24 @@
 	}
 
 	function closeSpriteViewer() {
-		// Fade out viewer
+		// Fade out viewer. viewer-container has out:fly with a 200ms duration, and Svelte
+		// keeps its (potentially very tall, for a big sprite page) content mounted in the
+		// document for that full duration while it animates out. Restoring scroll before
+		// that finishes targets a pixel offset that's still measured against a document
+		// with the old tall viewer content still in flow, which lands in the wrong place
+		// (usually the top) once that content is actually removed and the grid re-shown.
 		viewingSprite = null;
 
-		// Wait for fade out, then show browser and scroll to sprite cards
+		// Wait for the out-transition to fully finish before bringing the grid back,
+		// so the restore below is measured against the grid-only document layout.
 		setTimeout(() => {
 			showBrowser = true;
-			// Scroll to sprite container to center it in viewport
-			setTimeout(() => {
-				const spriteContainer = document.getElementById('hello');
-				if (spriteContainer) {
-					spriteContainer.scrollIntoView({ behavior: 'auto', block: 'center' });
-				}
-			}, 50);
-		}, 50);
+			// One more frame for the grid's own layout to settle before restoring scroll.
+			requestAnimationFrame(() => {
+				// Instant, not the global smooth scroll-behavior - see openSpriteViewer.
+				window.scrollTo({ top: savedScrollY, left: 0, behavior: 'instant' });
+			});
+		}, 200);
 
 		// Navigate back in history
 		if (history.state?.spriteViewer) {
@@ -683,18 +695,15 @@
 
 	function handlePopState(event: PopStateEvent) {
 		if (viewingSprite && !event.state?.spriteViewer) {
-			// User pressed back button, close viewer and scroll to sprite cards
+			// User pressed back button - same reasoning as closeSpriteViewer above.
 			viewingSprite = null;
 			setTimeout(() => {
 				showBrowser = true;
-				// Scroll to sprite container to center it in viewport
-				setTimeout(() => {
-					const spriteContainer = document.getElementById('hello');
-					if (spriteContainer) {
-						spriteContainer.scrollIntoView({ behavior: 'auto', block: 'center' });
-					}
-				}, 50);
-			}, 50);
+				requestAnimationFrame(() => {
+					// Instant, not the global smooth scroll-behavior - see openSpriteViewer.
+					window.scrollTo({ top: savedScrollY, left: 0, behavior: 'instant' });
+				});
+			}, 200);
 		}
 	}
 

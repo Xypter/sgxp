@@ -1,6 +1,5 @@
 <script lang="ts">
   import { Heart, Loader2, Image } from 'lucide-svelte';
-  import { Pagination } from '$lib/components';
   import { charMap, altNumberMap } from '../../lib/charMap.js';
 
   // Props
@@ -38,9 +37,24 @@
   let loading = $state(true);
   let error = $state<string | null>(null);
   let totalFavorites = $state(0);
-  let currentPage = $state(1);
 
-  const FAVORITES_PER_PAGE = 8;
+  // Cards are shown two full rows deep, however many columns actually fit the
+  // measured container width - no pagination, cards just disappear as the
+  // viewport narrows and fewer columns fit. Matches the .favorites-container
+  // grid's own `repeat(auto-fill, 117px)` + `grid-gap: 20px` sizing so the
+  // column count we fetch for is the column count that actually renders.
+  // Measured on .profile-favorites-box (always mounted, unlike
+  // .favorites-container which only exists once favorites have loaded) -
+  // BOX_PADDING is its left+right padding (15px each) that isn't available
+  // to the grid itself.
+  const CARD_WIDTH = 117;
+  const CARD_GAP = 20;
+  const BOX_PADDING = 30;
+  const ROWS_SHOWN = 2;
+  let boxWidth = $state(0);
+  const columns = $derived(Math.max(1, Math.floor((boxWidth - BOX_PADDING + CARD_GAP) / (CARD_WIDTH + CARD_GAP))));
+  const visibleCount = $derived(columns * ROWS_SHOWN);
+
   const API_BASE_URL = "https://cms.sgxp.me/api";
 
   // Helper function to create individual character sprite
@@ -196,9 +210,10 @@
     error = null;
 
     try {
-      // Fetch sprite favorites for this user with populated sprite data
+      // Fetch only as many favorites as will actually be shown (two rows at
+      // the current column count) - see visibleCount above.
       const response = await fetch(
-        `${API_BASE_URL}/favorites?where[user][equals]=${userId}&where[favoritedItem.relationTo][equals]=sprites&depth=3&limit=${FAVORITES_PER_PAGE}&page=${currentPage}&sort=-createdAt`
+        `${API_BASE_URL}/favorites?where[user][equals]=${userId}&where[favoritedItem.relationTo][equals]=sprites&depth=3&limit=${visibleCount}&sort=-createdAt`
       );
 
       if (response.ok) {
@@ -228,13 +243,11 @@
     }
   }
 
-  // Derived values
-  const pageCount = $derived(Math.ceil(totalFavorites / FAVORITES_PER_PAGE));
-
-  // Load favorites when component mounts or page changes
+  // Load favorites on mount, and whenever the column count (visibleCount)
+  // changes - not on every resize pixel, since visibleCount only changes at
+  // column-count thresholds.
   $effect(() => {
-    // Re-run when currentPage changes
-    currentPage;
+    visibleCount;
     loadFavorites();
   });
 </script>
@@ -250,7 +263,7 @@
     </div>
   </div>
 
-  <div class="profile-favorites-box">
+  <div class="profile-favorites-box" bind:clientWidth={boxWidth}>
     {#if loading}
       <div class="favorites-loading">
         <Loader2 class="w-6 h-6 animate-spin" />
@@ -360,34 +373,6 @@
           </a>
         {/each}
       </div>
-
-      {#if pageCount > 1}
-        <div class="favorites-pagination">
-          <Pagination.Root bind:page={currentPage} count={totalFavorites} perPage={FAVORITES_PER_PAGE} siblingCount={1}>
-            {#snippet children({ pages })}
-              <Pagination.Content>
-                <Pagination.Item>
-                  <Pagination.PrevButton disabled={loading || currentPage === 1} />
-                </Pagination.Item>
-                {#each pages as page (page.key)}
-                  {#if page.type === 'ellipsis'}
-                    <Pagination.Item>
-                      <Pagination.Ellipsis />
-                    </Pagination.Item>
-                  {:else}
-                    <Pagination.Item>
-                      <Pagination.Link {page} isActive={page.value === currentPage} disabled={loading} />
-                    </Pagination.Item>
-                  {/if}
-                {/each}
-                <Pagination.Item>
-                  <Pagination.NextButton disabled={loading || currentPage === pageCount} />
-                </Pagination.Item>
-              </Pagination.Content>
-            {/snippet}
-          </Pagination.Root>
-        </div>
-      {/if}
     {/if}
   </div>
 </div>
@@ -499,21 +484,8 @@
     opacity: 0.4;
   }
 
-  /* Pagination */
-  .favorites-pagination {
-    display: flex;
-    justify-content: center;
-    padding-top: 15px;
-    margin-top: 15px;
-    border-top: 1px solid color-mix(in srgb, var(--page-color) 70%, white);
-  }
-
   /* Responsive */
   @media (max-width: 768px) {
-    .favorites-container {
-      grid-template-columns: repeat(2, 117px);
-    }
-
     .profile-favorites-header {
       border-left: none !important;
       border-right: none !important;

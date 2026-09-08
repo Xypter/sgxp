@@ -1,14 +1,18 @@
 <script>
     import { Button } from '$lib/components';
-    import { ZoomIn, ZoomOut, X, FlipHorizontal, FlipVertical, Grid3x3, RotateCw, Download } from 'lucide-svelte';
+    import { ZoomIn, ZoomOut, X, FlipHorizontal, FlipVertical, Grid3x3, RotateCw, Download, Palette } from 'lucide-svelte';
     import { fade } from 'svelte/transition';
+    import { getPlainSpriteBackground, setPlainSpriteBackground } from '$lib/spritePreferences';
 
     // Props
     let {
         image = null,
         isOpen = false,
         onClose = () => {},
-        isModal = false
+        isModal = false,
+        // Fractional (0-1) point on the sheet to center on when the viewer opens - where
+        // the user clicked on the sheet's preview thumbnail. Defaults to dead center.
+        focusPoint = { x: 0.5, y: 0.5 }
     } = $props();
 
     // Viewer state
@@ -20,6 +24,7 @@
     let flipVertical = $state(false);
     let showGrid = $state(false);
     let rotation = $state(0);
+    let plainBackground = $state(false);
 
     // Pinch-to-zoom state
     let isPinching = $state(false);
@@ -30,14 +35,13 @@
     // Reset viewer state when opened
     function resetViewer() {
         zoom = 1;
-        imagePosition = { x: 0, y: 0 };
         flipHorizontal = false;
         flipVertical = false;
         showGrid = false;
         rotation = 0;
         isDragging = false;
         isPinching = false;
-        centerImage();
+        centerOnFocusPoint();
         // Prevent scrolling on both body and the sprite viewer container
         document.body.style.overflow = 'hidden';
         if (isModal) {
@@ -63,6 +67,31 @@
     function centerImage() {
         if (!image) return;
         imagePosition = { x: 0, y: 0 };
+    }
+
+    // Pan so the clicked point on the sheet (focusPoint, fractional 0-1) lands in the
+    // center of the viewport, instead of always centering the sheet's own middle.
+    // The image is centered in .viewer-image-container by default (imagePosition {0,0}
+    // puts the sheet's own center at the viewport's center), and translate() is applied
+    // in real screen pixels after scale(). This is only ever called right after zoom is
+    // reset to 1 (see resetViewer), so the offset needed is just the raw pixel distance -
+    // it deliberately does NOT read the reactive `zoom` state here: doing so would make
+    // the $effect that calls resetViewer() on open also re-fire on every subsequent zoom
+    // change (since $effect tracks reads inside called functions too), snapping zoom back
+    // to 1 the instant the user tried to zoom in or out.
+    function centerOnFocusPoint() {
+        if (!image || !image.width || !image.height) {
+            imagePosition = { x: 0, y: 0 };
+            return;
+        }
+
+        const clickX = focusPoint.x * image.width;
+        const clickY = focusPoint.y * image.height;
+
+        imagePosition = {
+            x: -(clickX - image.width / 2),
+            y: -(clickY - image.height / 2)
+        };
     }
 
     function zoomIn() {
@@ -120,6 +149,11 @@
 
     function toggleGrid() {
         showGrid = !showGrid;
+    }
+
+    function togglePlainBackground() {
+        plainBackground = !plainBackground;
+        setPlainSpriteBackground(plainBackground);
     }
 
 
@@ -406,9 +440,9 @@
     function handleKeydown(event) {
         if (!isOpen) return;
 
-        if (event.key === 'Escape') {
-            handleClose();
-        } else if (event.key === '+' || event.key === '=') {
+        // Escape intentionally does not close the viewer - the red X button is the
+        // only way out, per design.
+        if (event.key === '+' || event.key === '=') {
             event.preventDefault();
             zoomIn();
         } else if (event.key === '-') {
@@ -421,6 +455,7 @@
     $effect(() => {
         if (isOpen) {
             resetViewer();
+            plainBackground = getPlainSpriteBackground();
         }
     });
 
@@ -448,38 +483,65 @@
     <div
         class="viewer-modal"
         transition:fade={{ duration: 200 }}
-        onclick={(e) => e.target === e.currentTarget && handleClose()}
-        onkeydown={(e) => e.key === 'Escape' && handleClose()}
         role="dialog"
         aria-modal="true"
         tabindex="-1"
     >
-        <div class="viewer-container">
+        <div class="viewer-container" class:plain-background={plainBackground}>
             <div class="viewer-image-container" onwheel={handleWheel}>
                 <div class="image-wrapper">
                     <div class="image-with-grid">
-                        <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-                        <img
-                            src={image.url}
-                            alt={image.alt || 'Sprite image'}
-                            class="viewer-image"
+                        <!--
+                            Pan (translate) lives on its own outer wrapper, separate from
+                            rotate/zoom (middle wrapper) and flip (scaleX/scaleY, on the img
+                            itself). Combining a continuously-changing translate with a
+                            transform that inverts local axes - a scaleX(-1)/scaleY(-1) flip,
+                            or a rotate(180deg) (which inverts both axes just like a double
+                            flip) - in the same `transform` triggers a Chromium compositor bug:
+                            dragging updates use a fast "shift the existing tiles" path that
+                            doesn't account for the inverted axes, so stale/unpainted tile
+                            content creeps in from one edge as you drag (looks like the image
+                            getting covered by something invisible), only fixing itself on a
+                            full repaint. Keeping translate on an element that never rotates or
+                            flips avoids the bug for both cases.
+                        -->
+                        <div
+                            class="pan-wrapper"
                             style="
-                                transform: translate3d({Math.round(imagePosition.x)}px, {Math.round(imagePosition.y)}px, 0)
-                                          rotate({rotation}deg)
-                                          scale({zoom})
-                                          scaleX({flipHorizontal ? -1 : 1})
-                                          scaleY({flipVertical ? -1 : 1});
+                                transform: translate({Math.round(imagePosition.x)}px, {Math.round(imagePosition.y)}px);
                                 width: {image.width}px;
                                 height: {image.height}px;
-                                image-rendering: pixelated;
-                                cursor: grab;
                             "
-                            onmousedown={handleMouseDown}
-                            ontouchstart={handleTouchStart}
-                            draggable="false"
-                            loading="eager"
-                            aria-label="Sprite viewer - click and drag to pan"
-                        />
+                        >
+                            <div
+                                class="rotate-zoom-wrapper"
+                                style="
+                                    transform: rotate({rotation}deg) scale({zoom});
+                                    width: {image.width}px;
+                                    height: {image.height}px;
+                                "
+                            >
+                                <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+                                <img
+                                    src={image.url}
+                                    alt={image.alt || 'Sprite image'}
+                                    class="viewer-image"
+                                    style="
+                                        transform: scaleX({flipHorizontal ? -1 : 1})
+                                                  scaleY({flipVertical ? -1 : 1});
+                                        width: {image.width}px;
+                                        height: {image.height}px;
+                                        image-rendering: pixelated;
+                                        cursor: grab;
+                                    "
+                                    onmousedown={handleMouseDown}
+                                    ontouchstart={handleTouchStart}
+                                    draggable="false"
+                                    loading="eager"
+                                    aria-label="Sprite viewer - click and drag to pan"
+                                />
+                            </div>
+                        </div>
 
                             {#if showGrid && zoom >= 2}
                                 {@const gridWidth = image.width * zoom}
@@ -492,19 +554,33 @@
                                     Grid is rendered at screen resolution (width * zoom) with fixed 1px lines.
                                     Position adjusted because image's transform-origin is based on base size,
                                     but grid is already at zoomed size.
+
+                                    Same translate/rotate/flip split as the image above, for the same reason.
                                 -->
                                 <div
-                                    class="pixel-grid"
+                                    class="pixel-grid-pan-wrapper"
                                     style="
                                         width: {gridWidth}px;
                                         height: {gridHeight}px;
-                                        transform: translate({gridX}px, {gridY}px)
-                                                  rotate({rotation}deg)
-                                                  scaleX({flipHorizontal ? -1 : 1})
-                                                  scaleY({flipVertical ? -1 : 1});
-                                        background-size: {zoom}px {zoom}px;
+                                        transform: translate({gridX}px, {gridY}px);
                                     "
-                                ></div>
+                                >
+                                <div
+                                    class="pixel-grid-wrapper"
+                                    style="
+                                        transform: rotate({rotation}deg);
+                                    "
+                                >
+                                    <div
+                                        class="pixel-grid"
+                                        style="
+                                            transform: scaleX({flipHorizontal ? -1 : 1})
+                                                      scaleY({flipVertical ? -1 : 1});
+                                            background-size: {zoom}px {zoom}px;
+                                        "
+                                    ></div>
+                                </div>
+                                </div>
                             {/if}
                     </div>
                 </div>
@@ -563,6 +639,16 @@
             <Button
                 variant="outline"
                 size="sm"
+                onclick={togglePlainBackground}
+                class={plainBackground ? 'active' : ''}
+                title="Toggle plain background"
+            >
+                <Palette class="h-4 w-4" />
+            </Button>
+
+            <Button
+                variant="outline"
+                size="sm"
                 onclick={downloadImage}
             >
                 <Download class="h-4 w-4" />
@@ -603,8 +689,8 @@
     }
 
     .viewer-container {
-        width: 90%;
-        height: 90vh;
+        width: 100vw;
+        height: 100vh;
         position: relative;
         background:
             linear-gradient(to right, white 5px, transparent 5px),
@@ -621,6 +707,13 @@
     @keyframes gridPan {
         0% { background-position: 0 0, 0 0, 0 0; }
         100% { background-position: 50px 0, 0 0, 0 0; }
+    }
+
+    /* "Plain sprite viewer background" preference (Settings page) - swap the animated
+       green grid for the current theme's own page color, with no animation. */
+    .viewer-container.plain-background {
+        background: var(--page-color);
+        animation: none;
     }
 
     .viewer-image-container {
@@ -645,6 +738,30 @@
         align-items: center;
     }
 
+    /* Carries only pan (translate, changes continuously while dragging). Rotate
+       and zoom live on the nested .rotate-zoom-wrapper, and the flip lives on
+       the img inside that - see the markup comment for why.
+       `will-change: transform` promotes this to its own GPU layer so the
+       constantly-changing translate during drag never has to be composited
+       together with a transform that inverts local axes (the flip, or a
+       rotate(180deg)) - keeping those on separate layers is what actually
+       avoids the Chromium glitch, more so than the markup split alone. The
+       drop-shadow filter also lives here (not on the rotated/flipped
+       elements) for the same reason: a filter combined with such a transform
+       on the same layer is the other half of the bug trigger. */
+    .pan-wrapper {
+        position: relative;
+        transform-origin: center center;
+        will-change: transform;
+        filter: drop-shadow(10px 10px 2px rgba(0, 0, 0, .7));
+    }
+
+    .rotate-zoom-wrapper {
+        position: relative;
+        transform-origin: center center;
+        will-change: transform;
+    }
+
     .viewer-image {
         image-rendering: pixelated;
         image-rendering: -webkit-optimize-contrast;
@@ -657,7 +774,7 @@
         pointer-events: auto;
         cursor: grab;
         max-width: none;
-        filter: drop-shadow(10px 10px 2px rgba(0, 0, 0, .7));
+        will-change: transform;
     }
 
     .viewer-image:active {
@@ -668,10 +785,32 @@
      * CSS gradient-based pixel grid overlay
      * Renders at screen resolution with fixed 1px lines
      */
+    .pixel-grid-pan-wrapper {
+        position: absolute;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        transform-origin: center center;
+        will-change: transform;
+    }
+
+    .pixel-grid-wrapper {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        transform-origin: center center;
+        will-change: transform;
+    }
+
     .pixel-grid {
         position: absolute;
         top: 0;
         left: 0;
+        width: 100%;
+        height: 100%;
         pointer-events: none;
         transform-origin: center center;
         /* 1px dark grey lines, repeating at background-size interval */
@@ -691,7 +830,7 @@
 
     .viewer-controls {
         position: absolute;
-        bottom: 70px;
+        bottom: 90px;
         left: 50%;
         transform: translateX(-50%);
         display: flex;
@@ -700,9 +839,13 @@
         background-color: color-mix(in srgb, var(--page-color) 95%, transparent);
         backdrop-filter: blur(8px);
         padding: 10px;
-        border-radius: 8px;
+        border-radius: 0;
         border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
         box-shadow: var(--box-shadow);
+    }
+
+    .viewer-controls :global(button) {
+        border-radius: 0;
     }
 
     .control-separator {

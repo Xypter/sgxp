@@ -20,6 +20,8 @@
   let animationId: number;
   let mouse = { x: 0, y: 0 };
   let targetRotation = { x: 0, y: 0 };
+  let isVisible = true;
+  let intersectionObserver: IntersectionObserver | undefined;
 
   // Shader for the Moving Rainbow Outline
   const rainbowVertexShader = `
@@ -70,27 +72,54 @@
     initThree();
     loadFont();
     window.addEventListener('resize', onWindowResize);
+
+    // The canvas is only ever visible inside a 200px-tall header strip, so pause the
+    // render loop entirely while it's scrolled off-screen (still cheap to keep the
+    // rAF loop alive so it resumes instantly - just skip the actual GPU work).
+    intersectionObserver = new IntersectionObserver(
+      ([entry]) => { isVisible = entry.isIntersecting; },
+      { threshold: 0 }
+    );
+    intersectionObserver.observe(container);
   });
 
   onDestroy(() => {
     if (typeof window !== 'undefined') {
       window.removeEventListener('resize', onWindowResize);
       cancelAnimationFrame(animationId);
+      intersectionObserver?.disconnect();
       // Clean up Three.js resources
       renderer?.dispose();
     }
   });
 
+  function getRenderSize() {
+    // Render at the actual visible canvas size (a 200px-tall strip), not the full
+    // browser window - the old code rendered a full window-sized scene every frame
+    // even though only a small clipped strip of it was ever shown, which was the
+    // single biggest GPU cost here.
+    const rect = container.getBoundingClientRect();
+    return { width: rect.width || window.innerWidth, height: rect.height || 200 };
+  }
+
   function initThree() {
     scene = new THREE.Scene();
-    
+
+    const { width, height } = getRenderSize();
+
     // Set up Camera
-    camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    // NOTE: fov was 45 back when the renderer was (accidentally) sized to the whole
+    // browser window and only the middle 200px sliver was ever shown through
+    // .three-container's overflow:hidden - that crop was acting as a huge, viewport-height-
+    // dependent zoom. Now that the renderer is correctly sized to the visible 200px strip,
+    // the full 45deg vertical FOV maps 1:1 onto it, so the text renders far smaller than
+    // before. A narrow FOV here reproduces that same "zoomed in" look, deterministically.
+    camera = new THREE.PerspectiveCamera(10, width / height, 0.1, 1000);
     camera.position.z = 100; // Pull back to see the big text
 
     // Set up Renderer with transparent background
     renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio for performance
 
     // Lighting (Simple ambient + directional)
@@ -193,6 +222,10 @@
   function animate() {
     animationId = requestAnimationFrame(animate);
 
+    // Skip all the actual GPU/shader work while scrolled off-screen - keeping the
+    // rAF loop itself alive is essentially free and lets it resume instantly.
+    if (!isVisible) return;
+
     // Update Shader Time for Rainbow Animation
     shaderUniforms.uTime.value += 0.01;
 
@@ -206,9 +239,10 @@
   }
 
   function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
+    const { width, height } = getRenderSize();
+    camera.aspect = width / height;
     camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(width, height);
   }
 </script>
 
