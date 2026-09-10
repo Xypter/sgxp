@@ -1,6 +1,8 @@
 <script lang="ts">
   import { Heart, Loader2, Image } from 'lucide-svelte';
   import { charMap, altNumberMap } from '../../lib/charMap.js';
+  import { getCardColorUrls } from '../../lib/cardColors';
+  import { ensureGradientOverridesLoaded, getGradientOverrides } from '../../lib/cardColorGradients.svelte';
 
   // Props
   let {
@@ -10,6 +12,22 @@
     userId: number;
     username: string;
   } = $props();
+
+  ensureGradientOverridesLoaded();
+
+  // Mirrors SpriteCard.svelte's cardStyle computation - this file renders its own card markup
+  // instead of reusing that component, so the frame/strip/gradient CSS vars need to be set here too.
+  function cardStyleFor(sprite: any): string {
+    const cardColors = getCardColorUrls(sprite.cardColor, sprite.stripColor, getGradientOverrides());
+    return (
+      `--sprite-frame-url: url("${cardColors.frameUrl}");` +
+      (cardColors.stripUrl ? `--sprite-strip-url: url("${cardColors.stripUrl}");` : '') +
+      `--sprite-frame-height-percent: ${cardColors.frameHeightPercent}%;` +
+      `--sprite-strip-height-percent: ${cardColors.stripHeightPercent}%;` +
+      `--sprite-gradient-top: ${cardColors.gradientTop};` +
+      `--sprite-gradient-bottom: ${cardColors.gradientBottom};`
+    );
+  }
 
   // Extended interface with memoized sprite text conversions
   interface SpriteWithMemoized {
@@ -285,6 +303,7 @@
           <a
             href={`/sprites/${sprite.id}`}
             class="sprite-box sprite-glow"
+            style={cardStyleFor(sprite)}
           >
             <!-- Star rating -->
             <div class="sprite-star-container">

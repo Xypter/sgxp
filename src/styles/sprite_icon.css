@@ -109,7 +109,17 @@ body {
 .sprite-box {
   width: calc(117px * var(--multiplication-factor));
   height: calc(192px * var(--multiplication-factor));
-  background-image: url("https://cdn.sgxp.me/media/general/35/sprite_icon_image-1766650692338.png");
+  /* Frame + strip are two independently-selectable layered images (see src/lib/cardColors.ts);
+     the strip layer is listed first so it draws on top of the frame, anchored to the bottom
+     while the frame anchors to the top - each one's own height percentage (of this box) comes
+     from --sprite-*-height-percent, since the 'classic' preset is one full-height image while
+     newer presets are a shorter frame image plus a separate strip image stacked underneath it.
+     --sprite-strip-url is omitted entirely by callers with no strip layer (e.g. 'classic'),
+     which lets it fall back to the `none` default below. */
+  background-image: var(--sprite-strip-url, none), var(--sprite-frame-url, url("https://cdn.sgxp.me/media/general/35/sprite_icon_image-1766650692338.png"));
+  background-position: bottom, top;
+  background-size: 100% var(--sprite-strip-height-percent, 100%), 100% var(--sprite-frame-height-percent, 100%);
+  background-repeat: no-repeat, no-repeat;
   /* Card frame + bitmap-font glyphs (.sprite-number/.sprite-text spans below) are all
      background-images scaled via --multiplication-factor; without pixelated rendering
      they smooth-scale, which is invisible at 1x desktop DPR but blurs at mobile's
@@ -136,15 +146,21 @@ body {
   right: -1px;
   bottom: -1px;
   border-radius: 4px;
-  box-shadow: 
-    1px 0px 0 #22ff80,
-    1px 1px 0 #22ff80,
-    0px 1px 0 #22ff80,
-    -1px 0px 0 #22ff80,
-    -1px -1px 0 #22ff80,
-    0px -1px 0 #22ff80,
-    1px -1px 0 #22ff80,
-    -1px 1px 0 #22ff80;
+  /* color-mix() toward white desaturates as it lightens (muddy/creamy instead of brighter).
+     filter: brightness() instead scales the rendered color's own RGB values up directly, which
+     reads as a punchier version of the same hue rather than one washed toward white. Applied to
+     this pseudo-element specifically since box-shadow is the only thing it renders. */
+  --sprite-hover-glow-color: var(--sprite-gradient-bottom, #22ff80);
+  filter: brightness(2);
+  box-shadow:
+    1px 0px 0 var(--sprite-hover-glow-color),
+    1px 1px 0 var(--sprite-hover-glow-color),
+    0px 1px 0 var(--sprite-hover-glow-color),
+    -1px 0px 0 var(--sprite-hover-glow-color),
+    -1px -1px 0 var(--sprite-hover-glow-color),
+    0px -1px 0 var(--sprite-hover-glow-color),
+    1px -1px 0 var(--sprite-hover-glow-color),
+    -1px 1px 0 var(--sprite-hover-glow-color);
   opacity: 0;
   transition: opacity .1s ease-in-out;
   pointer-events: none;
@@ -236,7 +252,7 @@ body {
   overflow: hidden;
 
   background: url("/img/spriteicon/white-bg.png"),
-              linear-gradient(0deg,#002705 0%, #12a740 100%);
+              linear-gradient(0deg, var(--sprite-gradient-top, #002705) 0%, var(--sprite-gradient-bottom, #12a740) 100%);
   background-blend-mode: overlay;
   background-position: left 0px bottom 0px;
 }

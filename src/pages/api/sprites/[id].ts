@@ -284,8 +284,8 @@ export const PATCH: APIRoute = async ({ params, request, cookies }) => {
       description: formData.get('description') || '',
       styleSourceType: formData.get('styleSourceType'),
       section: parseId(formData.get('section')),
-      // Reset status to pending when user submits edits
-      status: 'pending',
+      cardColor: formData.get('cardColor') || 'classic',
+      stripColor: formData.get('stripColor') || 'classic',
     };
 
     // Handle conditional style source (team, official game, fan game, or series)
@@ -542,6 +542,41 @@ export const PATCH: APIRoute = async ({ params, request, cookies }) => {
       spriteData.iconImage = uploadedIcon.doc.id;
     }
 
+    // If cardColor/stripColor are the ONLY thing that changed, skip resetting status to
+    // 'pending' - a pure card-color restyle shouldn't need to go through review again, unlike
+    // an actual content edit (image, title, description, credits, style source, etc.).
+    const extractId = (val: any): string | null => {
+      if (val === null || val === undefined) return null;
+      return String(typeof val === 'object' ? val.id : val);
+    };
+    const extractIds = (arr: any[] | undefined | null): string[] =>
+      (arr || []).map(extractId).filter((v): v is string => v !== null);
+    const idsEqual = (a: any[] | undefined | null, b: any[] | undefined | null): boolean => {
+      const na = extractIds(a).sort();
+      const nb = extractIds(b).sort();
+      return na.length === nb.length && na.every((v, i) => v === nb[i]);
+    };
+
+    const hasNonColorChanges =
+      (spriteData.title ?? '') !== (existingSprite.title ?? '') ||
+      (spriteData.description ?? '') !== (existingSprite.description ?? '') ||
+      spriteData.styleSourceType !== existingSprite.styleSourceType ||
+      extractId(spriteData.section) !== extractId(existingSprite.section) ||
+      extractId(spriteData.styleTeam) !== extractId(existingSprite.styleTeam) ||
+      extractId(spriteData.styleOfficialGame) !== extractId(existingSprite.styleOfficialGame) ||
+      extractId(spriteData.styleFanGame) !== extractId(existingSprite.styleFanGame) ||
+      extractId(spriteData.styleSeries) !== extractId(existingSprite.styleSeries) ||
+      JSON.stringify(spriteData.termsOfUse ?? {}) !== JSON.stringify(existingSprite.termsOfUse ?? {}) ||
+      !idsEqual(spriteData.contributors, existingSprite.contributors) ||
+      !idsEqual(spriteData.additionalCredits, existingSprite.additionalCredits) ||
+      !idsEqual(spriteData.characters, existingSprite.characters) ||
+      JSON.stringify(spriteData.customTags ?? []) !== JSON.stringify(existingSprite.customTags ?? []) ||
+      spriteData.image !== undefined || // a new sprite sheet image was uploaded above
+      spriteData.iconImage !== undefined; // a new icon image was uploaded above
+
+    spriteData.status = hasNonColorChanges ? 'pending' : existingSprite.status;
+    console.log(`[Sprite Update] hasNonColorChanges=${hasNonColorChanges}, status will be '${spriteData.status}'`);
+
     // Update the sprite with all the data
     console.log('[Sprite Update] Sending PATCH request to update sprite...');
     console.log('[Sprite Update] Sprite data being sent:', JSON.stringify(spriteData, null, 2));
@@ -595,6 +630,9 @@ export const PATCH: APIRoute = async ({ params, request, cookies }) => {
     }
 
     const updatedSprite = await updateResponse.json();
+    const updateMessage = hasNonColorChanges
+      ? 'Sprite updated successfully and resubmitted for review'
+      : 'Sprite updated successfully';
 
     // Invalidate sprite cache
     await invalidateSpriteCache(parseInt(spriteId));
@@ -618,7 +656,7 @@ export const PATCH: APIRoute = async ({ params, request, cookies }) => {
       return new Response(
         JSON.stringify({
           success: true,
-          message: 'Sprite updated successfully and resubmitted for review',
+          message: updateMessage,
           doc: updatedSprite.doc || updatedSprite
         }),
         { status: 200, headers: { 'Content-Type': 'application/json' } }
@@ -630,7 +668,7 @@ export const PATCH: APIRoute = async ({ params, request, cookies }) => {
       return new Response(
         JSON.stringify({
           success: true,
-          message: 'Sprite updated successfully and resubmitted for review',
+          message: updateMessage,
           doc: updatedSprite.doc || updatedSprite
         }),
         { status: 200, headers: { 'Content-Type': 'application/json' } }
@@ -643,7 +681,7 @@ export const PATCH: APIRoute = async ({ params, request, cookies }) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Sprite updated successfully and resubmitted for review',
+        message: updateMessage,
         doc: refreshedSprite
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }

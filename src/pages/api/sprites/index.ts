@@ -60,6 +60,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       author: currentUser.id,
       styleSourceType: formData.get('styleSourceType'),
       section: parseId(formData.get('section')),
+      cardColor: formData.get('cardColor') || 'classic',
+      stripColor: formData.get('stripColor') || 'classic',
       status: 'pending', // All new submissions start as pending
     };
 

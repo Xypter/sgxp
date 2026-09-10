@@ -2,6 +2,8 @@
 	import { onMount, tick, untrack } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { charMap, altNumberMap } from '../lib/charMap.js';
+	import { getCardColorUrls } from '../lib/cardColors';
+	import { ensureGradientOverridesLoaded, getGradientOverrides } from '../lib/cardColorGradients.svelte';
 
 	// Import from component library
 	import { Button, Input, Select, Combobox, Pagination } from '$lib/components';
@@ -88,6 +90,23 @@
 
 	// OPTIMIZATION: Track if we have server-provided data to prevent double-fetching
 	const hasServerData = initialSprites.length > 0;
+
+	ensureGradientOverridesLoaded();
+
+	// Mirrors SpriteCard.svelte's cardStyle computation - this file renders its own card
+	// markup instead of reusing that component (see the OPTIMIZATION comments below), so the
+	// frame/strip/gradient CSS vars need to be set here too.
+	function cardStyleFor(sprite: any): string {
+		const cardColors = getCardColorUrls(sprite.cardColor, sprite.stripColor, getGradientOverrides());
+		return (
+			`--sprite-frame-url: url("${cardColors.frameUrl}");` +
+			(cardColors.stripUrl ? `--sprite-strip-url: url("${cardColors.stripUrl}");` : '') +
+			`--sprite-frame-height-percent: ${cardColors.frameHeightPercent}%;` +
+			`--sprite-strip-height-percent: ${cardColors.stripHeightPercent}%;` +
+			`--sprite-gradient-top: ${cardColors.gradientTop};` +
+			`--sprite-gradient-bottom: ${cardColors.gradientBottom};`
+		);
+	}
 
 	// State using Svelte 5 runes
 	// OPTIMIZATION: Don't memoize synchronously - start with raw data
@@ -1072,7 +1091,7 @@
 								<a
 									href={`/sprites/${sprite.id}`}
 									class="sprite-box sprite-glow"
-									style="view-transition-name: {transitioningCardId === sprite.id ? 'sprite-card' : 'none'};"
+									style="view-transition-name: {transitioningCardId === sprite.id ? 'sprite-card' : 'none'}; {cardStyleFor(sprite)}"
 									onclick={(e) => handleSpriteClick(sprite, e)}
 								>
 									<!-- OPTIMIZATION: Reduced from 10 stars to 4 for fewer DOM nodes -->

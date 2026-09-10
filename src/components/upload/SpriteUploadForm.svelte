@@ -3,6 +3,7 @@
   import { FormInput, FormTextarea, FormCheckbox, Button, Select, SelectWithSuggest, MultiSelect, Sheet } from '$lib/components';
   import { Loader2 } from 'lucide-svelte';
   import FileUploadField from './FileUploadField.svelte';
+  import CardColorPicker from './CardColorPicker.svelte';
 
   interface Option {
     value: string;
@@ -41,6 +42,8 @@
   let description = $state('');
   let spriteImage = $state<File | null>(null);
   let iconImage = $state<File | null>(null);
+  let cardColor = $state('classic');
+  let stripColor = $state('classic');
   let updateNote = $state('');
   let styleSourceType = $state('');
   let styleTeam = $state('');
@@ -632,6 +635,9 @@
         section = typeof sprite.section === 'object' ? sprite.section.id.toString() : sprite.section.toString();
       }
 
+      cardColor = sprite.cardColor || 'classic';
+      stripColor = sprite.stripColor || 'classic';
+
       // Handle array fields
       if (sprite.characters && Array.isArray(sprite.characters)) {
         selectedCharacters = sprite.characters.map((c: any) =>
@@ -791,6 +797,10 @@
         formData.append('iconImage', iconImage);
       }
 
+      // Card color customization
+      formData.append('cardColor', cardColor);
+      formData.append('stripColor', stripColor);
+
       // Style source type and related fields
       formData.append('styleSourceType', styleSourceType);
       if (styleSourceType === 'team' && styleTeam) {
@@ -865,7 +875,12 @@
         throw new Error(errorMessage);
       }
 
-      toast.success(isEditMode ? 'Sprite updated successfully! Redirecting to your uploads...' : 'Sprite submitted successfully! Redirecting to your uploads...');
+      // Use the server's own message when editing, since it distinguishes a color-only edit
+      // (no re-review needed) from a content edit (resubmitted for review).
+      const successMessage = isEditMode
+        ? `${result.message || 'Sprite updated successfully'}! Redirecting to your uploads...`
+        : 'Sprite submitted successfully! Redirecting to your uploads...';
+      toast.success(successMessage);
 
       // Redirect to the uploads page where user can track their submission status
       setTimeout(() => {
@@ -994,7 +1009,21 @@
     </div>
   </div>
 
-  <!-- Section 3: Style Source -->
+  <!-- Section 3: Customize Card -->
+  <div class="form-section">
+    <div class="main-content-title">Customize Card</div>
+    <div class="main-content-box">
+      <CardColorPicker
+        themed
+        iconFile={iconImage}
+        existingIconUrl={isEditMode && sprite?.iconImage?.url ? sprite.iconImage.url : null}
+        bind:cardColor
+        bind:stripColor
+      />
+    </div>
+  </div>
+
+  <!-- Section 4: Style Source -->
   <div class="form-section">
     <div class="main-content-title">Style Source</div>
     <div class="main-content-box">
@@ -1077,7 +1106,7 @@
     </div>
   </div>
 
-  <!-- Section 4: Categorization -->
+  <!-- Section 5: Categorization -->
   <div class="form-section">
     <div class="main-content-title">Categorization</div>
     <div class="main-content-box">
@@ -1111,7 +1140,7 @@
     </div>
   </div>
 
-  <!-- Section 5: Contributors -->
+  <!-- Section 6: Contributors -->
   <div class="form-section">
     <div class="main-content-title">Contributors</div>
     <div class="main-content-box">
@@ -1130,7 +1159,7 @@
     </div>
   </div>
 
-  <!-- Section 6: Additional Credits -->
+  <!-- Section 7: Additional Credits -->
   <div class="form-section">
     <div class="main-content-title">Additional Credits</div>
     <div class="main-content-box">
@@ -1149,7 +1178,7 @@
     </div>
   </div>
 
-  <!-- Section 7: Terms of Use -->
+  <!-- Section 8: Terms of Use -->
   <div class="form-section">
     <div class="main-content-title">Terms of Use</div>
     <div class="main-content-box">

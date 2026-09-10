@@ -1,11 +1,25 @@
 <script lang="ts">
 	import { charMap, textToSprite, textToSpriteWithWrapping, formattedNumberToAltSprite, count, formatBytes } from '../lib/spriteCardText';
+	import { getCardColorUrls } from '../lib/cardColors';
+	import { ensureGradientOverridesLoaded, getGradientOverrides } from '../lib/cardColorGradients.svelte';
 
 	interface Props {
 		sprite: any;
 	}
 
 	let { sprite }: Props = $props();
+
+	ensureGradientOverridesLoaded();
+
+	const cardColors = $derived(getCardColorUrls(sprite.cardColor, sprite.stripColor, getGradientOverrides()));
+	const cardStyle = $derived(
+		`--sprite-frame-url: url("${cardColors.frameUrl}");` +
+		(cardColors.stripUrl ? `--sprite-strip-url: url("${cardColors.stripUrl}");` : '') +
+		`--sprite-frame-height-percent: ${cardColors.frameHeightPercent}%;` +
+		`--sprite-strip-height-percent: ${cardColors.stripHeightPercent}%;` +
+		`--sprite-gradient-top: ${cardColors.gradientTop};` +
+		`--sprite-gradient-bottom: ${cardColors.gradientBottom};`
+	);
 
 	const spriteNumber = $derived(formattedNumberToAltSprite(count(sprite.id)));
 	const title = $derived(textToSpriteWithWrapping(sprite.title || '', charMap, 100, 2));
@@ -16,7 +30,7 @@
 	const fileSize = $derived(textToSprite(sprite.image?.filesize ? formatBytes(sprite.image.filesize) : '0 Bytes'));
 </script>
 
-<a href={`/sprites/${sprite.id}`} class="sprite-box sprite-glow">
+<a href={`/sprites/${sprite.id}`} class="sprite-box sprite-glow" style={cardStyle}>
 	<div class="sprite-star-container">
 		{#each Array.from({ length: 4 }) as _, index (index)}
 			<div class="sprite-star"></div>
