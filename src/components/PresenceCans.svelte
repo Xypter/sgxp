@@ -33,6 +33,8 @@
   const ARC_HEIGHT = 10; // px peak height of the leap above resting position
   const MIN_REST_MS = 1000; // shortest wait between a can's hops
   const MAX_REST_MS = 5000; // longest wait between a can's hops
+  const SPAWN_MIN_SPACING = FRAME_BOX.w * 1.5; // desired px gap from other cans when spawning
+  const SPAWN_ATTEMPTS = 20; // random candidates tried before settling for the least-bad one
 
   type Phase = 'crouch' | 'leap' | 'rest';
 
@@ -58,8 +60,31 @@
     return MIN_REST_MS + Math.random() * (MAX_REST_MS - MIN_REST_MS);
   }
 
-  function createCanState(): CanState {
-    const x = Math.random() * travelRange;
+  // Pure independent Math.random() per can (the old approach) has a real
+  // chance of dropping two or more cans within a few px of each other,
+  // especially with several cans crammed into a narrow navbar - on a page
+  // refresh every can spawns in the same synchronous pass, so that
+  // collision is common, not rare. Instead of one random draw, try several
+  // candidates and keep whichever lands furthest from every already-placed
+  // can - still a different layout every refresh, but spread out.
+  function pickSpawnX(occupiedX: number[]): number {
+    if (occupiedX.length === 0) return Math.random() * travelRange;
+    let best = Math.random() * travelRange;
+    let bestMinDist = -Infinity;
+    for (let i = 0; i < SPAWN_ATTEMPTS; i++) {
+      const candidate = Math.random() * travelRange;
+      const minDist = Math.min(...occupiedX.map((x) => Math.abs(x - candidate)));
+      if (minDist > bestMinDist) {
+        bestMinDist = minDist;
+        best = candidate;
+      }
+      if (bestMinDist >= SPAWN_MIN_SPACING) break;
+    }
+    return best;
+  }
+
+  function createCanState(occupiedX: number[]): CanState {
+    const x = pickSpawnX(occupiedX);
     return {
       phase: 'rest',
       x,
@@ -73,7 +98,10 @@
   function syncCanStates(ids: string[]) {
     const idSet = new Set(ids);
     for (const id of idSet) {
-      if (!canStates.has(id)) canStates.set(id, createCanState());
+      if (!canStates.has(id)) {
+        const occupiedX = [...canStates.values()].map((s) => s.x);
+        canStates.set(id, createCanState(occupiedX));
+      }
     }
     for (const id of [...canStates.keys()]) {
       if (!idSet.has(id)) canStates.delete(id);
