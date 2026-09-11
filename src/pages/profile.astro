@@ -142,7 +142,7 @@ const pageTitle = profileUser?.displayName
 <FrontPageLayout title={pageTitle}>
   <div class="profile-page-container">
     <ProfileViewer
-      client:only="svelte"
+      client:load
       initialUser={profileUser}
       initialError={initialError}
       userId={userId ? parseInt(userId) : null}

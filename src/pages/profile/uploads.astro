@@ -60,7 +60,7 @@ const pageTitle = 'My Uploads';
       </div>
     ) : (
       <UserUploadsViewer
-        client:only="svelte"
+        client:load
         user={currentUser}
         initialSprites={initialSprites}
         initialTotal={initialTotal}

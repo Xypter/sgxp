@@ -162,7 +162,7 @@ try {
     </div>
 
     <SpriteUploadForm
-      client:only="svelte"
+      client:load
       teams={teams}
       officialGames={officialGames}
       fanGames={fanGames}
@@ -175,7 +175,7 @@ try {
       isEditMode={isEditMode}
     />
 
-    <Toaster client:only="svelte" />
+    <Toaster client:load />
   </div>
 </FrontPageLayout>
 

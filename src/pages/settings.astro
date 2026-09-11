@@ -29,7 +29,7 @@ if (!currentUser) {
 <FrontPageLayout title="Account Settings">
   <div class="settings-page-container">
     <SettingsForm
-      client:only="svelte"
+      client:load
       initialUser={currentUser}
       initialError={initialError}
       authToken={token}

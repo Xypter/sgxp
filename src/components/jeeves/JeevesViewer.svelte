@@ -14,12 +14,14 @@
 
   // Get comic ID from URL
   function getComicId(): string | null {
+    if (typeof window === 'undefined') return null;
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get('comic_id');
   }
 
   // Get current page from hash
   function getCurrentPageNum(): number {
+    if (typeof window === 'undefined') return 0;
     const page = window.location.hash.substr(1);
     if (page === "" || typeof page === 'undefined') {
       return 0;
@@ -186,9 +188,10 @@
   }
 
   // Get comic ID for image URLs
-  let comicId = $derived(getComicId());
+  let comicId = $state<string | null>(null);
 
   onMount(() => {
+    comicId = getComicId();
     loadMetadata();
 
     window.addEventListener('keyup', handleKeyup);

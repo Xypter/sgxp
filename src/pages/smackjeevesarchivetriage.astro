@@ -16,7 +16,7 @@ const { user } = await resolveUser(Astro.cookies, { forceFresh: true });
 
 <FrontPageLayout title="Smack Jeeves Archive Triage">
   <div class="triage-page">
-    <ArchiveTriageTable user={user} client:only="svelte" />
+    <ArchiveTriageTable user={user} client:load />
   </div>
 </FrontPageLayout>
 

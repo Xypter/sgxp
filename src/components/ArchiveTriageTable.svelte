@@ -238,11 +238,12 @@
   let requestingAccess = $state(false);
 
   // Intro/instructions area starts collapsed - archivists can expand it
-  // when they need it, and that choice is remembered per-browser (this
-  // component is client:only, so localStorage is always available, no SSR
-  // guard needed) so it stays open across page loads once they've opened it.
+  // when they need it, and that choice is remembered per-browser, so it
+  // stays open across page loads once they've opened it. Guarded for SSR
+  // (client:load renders this component server-side first, where
+  // localStorage doesn't exist).
   const INTRO_STORAGE_KEY = 'archive-triage-intro-open';
-  let introValue = $state(localStorage.getItem(INTRO_STORAGE_KEY) === 'open' ? 'intro' : '');
+  let introValue = $state(typeof localStorage !== 'undefined' && localStorage.getItem(INTRO_STORAGE_KEY) === 'open' ? 'intro' : '');
 
   $effect(() => {
     localStorage.setItem(INTRO_STORAGE_KEY, introValue ? 'open' : 'closed');
@@ -252,7 +253,7 @@
   // status pipeline - same collapsed-by-default/remembered-once-opened
   // behavior as the intro above, just tracked independently.
   const STATUS_GUIDE_STORAGE_KEY = 'archive-triage-status-guide-open';
-  let statusGuideValue = $state(localStorage.getItem(STATUS_GUIDE_STORAGE_KEY) === 'open' ? 'statusGuide' : '');
+  let statusGuideValue = $state(typeof localStorage !== 'undefined' && localStorage.getItem(STATUS_GUIDE_STORAGE_KEY) === 'open' ? 'statusGuide' : '');
 
   $effect(() => {
     localStorage.setItem(STATUS_GUIDE_STORAGE_KEY, statusGuideValue ? 'open' : 'closed');

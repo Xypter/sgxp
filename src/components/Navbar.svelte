@@ -317,7 +317,7 @@ async function checkAuthStatus(): Promise<void> {
         THE SGXP
       </div>
 
-      <NavigationMenu.Root>
+      <NavigationMenu.Root viewport={false}>
         <NavigationMenu.List class="flex space-x-1">
           <NavigationMenu.Item>
             <NavigationMenu.Link
@@ -390,16 +390,58 @@ async function checkAuthStatus(): Promise<void> {
           </NavigationMenu.Item>
 
           <NavigationMenu.Item>
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger
-                class={cn(
-                  "group inline-flex h-12 w-max items-center justify-center rounded-md px-4 font-medium transition-colors focus:outline-none disabled:pointer-events-none disabled:opacity-50 no-theme-styles"
-                )}
+            <NavigationMenu.Trigger
+              class={cn(
+                "group inline-flex h-12 w-max items-center justify-center rounded-md px-4 font-medium transition-colors focus:outline-none disabled:pointer-events-none disabled:opacity-50 no-theme-styles bg-transparent hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent data-[state=open]:hover:bg-transparent data-[state=open]:focus:bg-transparent"
+              )}
+              style="
+                color: var(--font-color);
+                font-family: nav;
+                font-size: 16px;
+                text-shadow:
+                  -1px -1px 0 var(--bg-color),
+                  0px -1px 0 var(--bg-color),
+                  1px -1px 0 var(--bg-color),
+                  1px 0px 0 var(--bg-color),
+                  1px 1px 0 var(--bg-color),
+                  0px 1px 0 var(--bg-color),
+                  -1px 1px 0 var(--bg-color),
+                  -1px 0px 0 var(--bg-color);
+              "
+              onmouseenter={(e: MouseEvent) => {
+                if (e.currentTarget instanceof HTMLElement) {
+                  e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+                }
+              }}
+              onmouseleave={(e: MouseEvent) => {
+                if (e.currentTarget instanceof HTMLElement) {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }
+              }}
+            >
+              Community
+            </NavigationMenu.Trigger>
+            <NavigationMenu.Content
+              class="no-theme-styles !p-0"
+              style="
+                width: 240px;
+                background-color: var(--page-color);
+                border: 1px solid color-mix(in srgb, var(--page-color) 80%, white);
+                border-radius: 0;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                z-index: 50;
+              "
+            >
+              <NavigationMenu.Link
+                class="cursor-pointer focus:outline-none no-theme-styles"
                 style="
-                  padding-bottom: 1px;
+                  background-color: color-mix(in srgb, var(--page-color) 99%, black);
+                  border-radius: 0;
+                  padding: 12px 18px;
                   color: var(--font-color);
                   font-family: nav;
                   font-size: 16px;
+                  line-height: 14px;
                   text-shadow:
                     -1px -1px 0 var(--bg-color),
                     0px -1px 0 var(--bg-color),
@@ -420,103 +462,100 @@ async function checkAuthStatus(): Promise<void> {
                     e.currentTarget.style.backgroundColor = 'transparent';
                   }
                 }}
+                href="/sprite-sheet-guidelines"
               >
-                Community
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Content
-                class="no-theme-styles w-[200px]"
-                align="start"
-                alignOffset={0}
-                sideOffset={8}
-                avoidCollisions={true}
+                Sprite Sheet Guidelines
+              </NavigationMenu.Link>
+              <NavigationMenu.Link
+                class="cursor-pointer focus:outline-none no-theme-styles"
                 style="
-                  background-color: var(--page-color);
-                  border: 1px solid color-mix(in srgb, var(--page-color) 80%, white);
-                  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-                  z-index: 50;
+                  background-color: color-mix(in srgb, var(--page-color) 99%, black);
+                  border-radius: 0;
+                  padding: 12px 18px;
+                  color: var(--font-color);
+                  font-family: nav;
+                  font-size: 16px;
+                  line-height: 14px;
+                  text-shadow:
+                    -1px -1px 0 var(--bg-color),
+                    0px -1px 0 var(--bg-color),
+                    1px -1px 0 var(--bg-color),
+                    1px 0px 0 var(--bg-color),
+                    1px 1px 0 var(--bg-color),
+                    0px 1px 0 var(--bg-color),
+                    -1px 1px 0 var(--bg-color),
+                    -1px 0px 0 var(--bg-color);
                 "
+                onmouseenter={(e: MouseEvent) => {
+                  if (e.currentTarget instanceof HTMLElement) {
+                    e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+                  }
+                }}
+                onmouseleave={(e: MouseEvent) => {
+                  if (e.currentTarget instanceof HTMLElement) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
+                href="/upload-guide"
               >
-                <DropdownMenu.Item
-                  class="cursor-pointer focus:outline-none no-theme-styles"
-                  style="
-                    background-color: color-mix(in srgb, var(--page-color) 99%, black);
-                    padding-bottom: 10px;
-                    color: var(--font-color);
-                    font-family: nav;
-                    font-size: 16px;
-                    line-height: 12px;
-                    text-shadow:
-                      -1px -1px 0 var(--bg-color),
-                      0px -1px 0 var(--bg-color),
-                      1px -1px 0 var(--bg-color),
-                      1px 0px 0 var(--bg-color),
-                      1px 1px 0 var(--bg-color),
-                      0px 1px 0 var(--bg-color),
-                      -1px 1px 0 var(--bg-color),
-                      -1px 0px 0 var(--bg-color);
-                  "
-                  onmouseenter={(e: MouseEvent) => {
-                    if (e.currentTarget instanceof HTMLElement) {
-                      e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
-                    }
-                  }}
-                  onmouseleave={(e: MouseEvent) => {
-                    if (e.currentTarget instanceof HTMLElement) {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }
-                  }}
-                  onclick={() => (window.location.href = '/sprite-sheet-guidelines')}
-                >
-                  Sprite Sheet Guidelines
-                </DropdownMenu.Item>
-                <DropdownMenu.Item
-                  class="cursor-pointer focus:outline-none no-theme-styles"
-                  style="
-                    background-color: color-mix(in srgb, var(--page-color) 99%, black);
-                    padding-bottom: 10px;
-                    color: var(--font-color);
-                    font-family: nav;
-                    font-size: 16px;
-                    line-height: 12px;
-                    text-shadow:
-                      -1px -1px 0 var(--bg-color),
-                      0px -1px 0 var(--bg-color),
-                      1px -1px 0 var(--bg-color),
-                      1px 0px 0 var(--bg-color),
-                      1px 1px 0 var(--bg-color),
-                      0px 1px 0 var(--bg-color),
-                      -1px 1px 0 var(--bg-color),
-                      -1px 0px 0 var(--bg-color);
-                  "
-                  onmouseenter={(e: MouseEvent) => {
-                    if (e.currentTarget instanceof HTMLElement) {
-                      e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
-                    }
-                  }}
-                  onmouseleave={(e: MouseEvent) => {
-                    if (e.currentTarget instanceof HTMLElement) {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }
-                  }}
-                  onclick={() => (window.location.href = '/upload-guide')}
-                >
-                  Upload Guide
-                </DropdownMenu.Item>
-              </DropdownMenu.Content>
-            </DropdownMenu.Root>
+                Upload Guide
+              </NavigationMenu.Link>
+            </NavigationMenu.Content>
           </NavigationMenu.Item>
 
           <NavigationMenu.Item>
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger
-                class={cn(
-                  "group inline-flex h-12 w-max items-center justify-center rounded-md px-4 font-medium transition-colors focus:outline-none disabled:pointer-events-none disabled:opacity-50 no-theme-styles"
-                )}
+            <NavigationMenu.Trigger
+              class={cn(
+                "group inline-flex h-12 w-max items-center justify-center rounded-md px-4 font-medium transition-colors focus:outline-none disabled:pointer-events-none disabled:opacity-50 no-theme-styles bg-transparent hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent data-[state=open]:hover:bg-transparent data-[state=open]:focus:bg-transparent"
+              )}
+              style="
+                color: var(--font-color);
+                font-family: nav;
+                font-size: 16px;
+                text-shadow:
+                  -1px -1px 0 var(--bg-color),
+                  0px -1px 0 var(--bg-color),
+                  1px -1px 0 var(--bg-color),
+                  1px 0px 0 var(--bg-color),
+                  1px 1px 0 var(--bg-color),
+                  0px 1px 0 var(--bg-color),
+                  -1px 1px 0 var(--bg-color),
+                  -1px 0px 0 var(--bg-color);
+              "
+              onmouseenter={(e: MouseEvent) => {
+                if (e.currentTarget instanceof HTMLElement) {
+                  e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+                }
+              }}
+              onmouseleave={(e: MouseEvent) => {
+                if (e.currentTarget instanceof HTMLElement) {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }
+              }}
+            >
+              Archive
+            </NavigationMenu.Trigger>
+            <NavigationMenu.Content
+              class="no-theme-styles !p-0"
+              style="
+                width: 220px;
+                background-color: var(--page-color);
+                border: 1px solid color-mix(in srgb, var(--page-color) 80%, white);
+                border-radius: 0;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                z-index: 50;
+              "
+            >
+              <NavigationMenu.Link
+                class="cursor-pointer focus:outline-none no-theme-styles"
                 style="
-                  padding-bottom: 1px;
+                  background-color: color-mix(in srgb, var(--page-color) 99%, black);
+                  border-radius: 0;
+                  padding: 12px 18px;
                   color: var(--font-color);
                   font-family: nav;
                   font-size: 16px;
+                  line-height: 14px;
                   text-shadow:
                     -1px -1px 0 var(--bg-color),
                     0px -1px 0 var(--bg-color),
@@ -537,123 +576,79 @@ async function checkAuthStatus(): Promise<void> {
                     e.currentTarget.style.backgroundColor = 'transparent';
                   }
                 }}
+                href="/smackjeeves"
               >
-                Archive
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Content
-                class="no-theme-styles w-[190px]"
-                align="start"
-                alignOffset={0}
-                sideOffset={8}
-                avoidCollisions={true}
+                Smack Jeeves
+              </NavigationMenu.Link>
+              <NavigationMenu.Link
+                class="cursor-pointer focus:outline-none no-theme-styles"
                 style="
-                  background-color: var(--page-color);
-                  border: 1px solid color-mix(in srgb, var(--page-color) 80%, white);
-                  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-                  z-index: 50;
+                  background-color: color-mix(in srgb, var(--page-color) 99%, black);
+                  border-radius: 0;
+                  padding: 12px 18px;
+                  color: var(--font-color);
+                  font-family: nav;
+                  font-size: 16px;
+                  line-height: 14px;
+                  text-shadow:
+                    -1px -1px 0 var(--bg-color),
+                    0px -1px 0 var(--bg-color),
+                    1px -1px 0 var(--bg-color),
+                    1px 0px 0 var(--bg-color),
+                    1px 1px 0 var(--bg-color),
+                    0px 1px 0 var(--bg-color),
+                    -1px 1px 0 var(--bg-color),
+                    -1px 0px 0 var(--bg-color);
                 "
+                onmouseenter={(e: MouseEvent) => {
+                  if (e.currentTarget instanceof HTMLElement) {
+                    e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+                  }
+                }}
+                onmouseleave={(e: MouseEvent) => {
+                  if (e.currentTarget instanceof HTMLElement) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
+                href="/smackjeevesarchivetriage"
               >
-                <DropdownMenu.Item
-                  class="cursor-pointer focus:outline-none no-theme-styles"
-                  style="
-                    background-color: color-mix(in srgb, var(--page-color) 99%, black);
-                    padding-bottom: 10px;
-                    color: var(--font-color);
-                    font-family: nav;
-                    font-size: 16px;
-                    line-height: 12px;
-                    text-shadow:
-                      -1px -1px 0 var(--bg-color),
-                      0px -1px 0 var(--bg-color),
-                      1px -1px 0 var(--bg-color),
-                      1px 0px 0 var(--bg-color),
-                      1px 1px 0 var(--bg-color),
-                      0px 1px 0 var(--bg-color),
-                      -1px 1px 0 var(--bg-color),
-                      -1px 0px 0 var(--bg-color);
-                  "
-                  onmouseenter={(e: MouseEvent) => {
-                    if (e.currentTarget instanceof HTMLElement) {
-                      e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
-                    }
-                  }}
-                  onmouseleave={(e: MouseEvent) => {
-                    if (e.currentTarget instanceof HTMLElement) {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }
-                  }}
-                  onclick={() => (window.location.href = '/smackjeeves')}
-                >
-                  Smack Jeeves
-                </DropdownMenu.Item>
-                <DropdownMenu.Item
-                  class="cursor-pointer focus:outline-none no-theme-styles"
-                  style="
-                    background-color: color-mix(in srgb, var(--page-color) 99%, black);
-                    padding-bottom: 10px;
-                    color: var(--font-color);
-                    font-family: nav;
-                    font-size: 16px;
-                    line-height: 12px;
-                    text-shadow:
-                      -1px -1px 0 var(--bg-color),
-                      0px -1px 0 var(--bg-color),
-                      1px -1px 0 var(--bg-color),
-                      1px 0px 0 var(--bg-color),
-                      1px 1px 0 var(--bg-color),
-                      0px 1px 0 var(--bg-color),
-                      -1px 1px 0 var(--bg-color),
-                      -1px 0px 0 var(--bg-color);
-                  "
-                  onmouseenter={(e: MouseEvent) => {
-                    if (e.currentTarget instanceof HTMLElement) {
-                      e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
-                    }
-                  }}
-                  onmouseleave={(e: MouseEvent) => {
-                    if (e.currentTarget instanceof HTMLElement) {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }
-                  }}
-                  onclick={() => (window.location.href = '/smackjeevesarchivetriage')}
-                >
-                  Archive Triage
-                </DropdownMenu.Item>
-                <DropdownMenu.Item
-                  class="cursor-pointer focus:outline-none no-theme-styles"
-                  style="
-                    background-color: color-mix(in srgb, var(--page-color) 99%, black);
-                    padding-bottom: 10px;
-                    color: var(--font-color);
-                    font-family: nav;
-                    font-size: 16px;
-                    line-height: 12px;
-                    text-shadow:
-                      -1px -1px 0 var(--bg-color),
-                      0px -1px 0 var(--bg-color),
-                      1px -1px 0 var(--bg-color),
-                      1px 0px 0 var(--bg-color),
-                      1px 1px 0 var(--bg-color),
-                      0px 1px 0 var(--bg-color),
-                      -1px 1px 0 var(--bg-color),
-                      -1px 0px 0 var(--bg-color);
-                  "
-                  onmouseenter={(e: MouseEvent) => {
-                    if (e.currentTarget instanceof HTMLElement) {
-                      e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
-                    }
-                  }}
-                  onmouseleave={(e: MouseEvent) => {
-                    if (e.currentTarget instanceof HTMLElement) {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }
-                  }}
-                  onclick={() => (window.location.href = '/smackjeevesarchivetriage/leaderboard')}
-                >
-                  Archive Leaderboard
-                </DropdownMenu.Item>
-              </DropdownMenu.Content>
-            </DropdownMenu.Root>
+                Archive Triage
+              </NavigationMenu.Link>
+              <NavigationMenu.Link
+                class="cursor-pointer focus:outline-none no-theme-styles"
+                style="
+                  background-color: color-mix(in srgb, var(--page-color) 99%, black);
+                  border-radius: 0;
+                  padding: 12px 18px;
+                  color: var(--font-color);
+                  font-family: nav;
+                  font-size: 16px;
+                  line-height: 14px;
+                  text-shadow:
+                    -1px -1px 0 var(--bg-color),
+                    0px -1px 0 var(--bg-color),
+                    1px -1px 0 var(--bg-color),
+                    1px 0px 0 var(--bg-color),
+                    1px 1px 0 var(--bg-color),
+                    0px 1px 0 var(--bg-color),
+                    -1px 1px 0 var(--bg-color),
+                    -1px 0px 0 var(--bg-color);
+                "
+                onmouseenter={(e: MouseEvent) => {
+                  if (e.currentTarget instanceof HTMLElement) {
+                    e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+                  }
+                }}
+                onmouseleave={(e: MouseEvent) => {
+                  if (e.currentTarget instanceof HTMLElement) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
+                href="/smackjeevesarchivetriage/leaderboard"
+              >
+                Archive Leaderboard
+              </NavigationMenu.Link>
+            </NavigationMenu.Content>
           </NavigationMenu.Item>
 
           <NavigationMenu.Item>
@@ -700,15 +695,296 @@ async function checkAuthStatus(): Promise<void> {
       <PresenceCans />
     </div>
 
-    <div class="flex items-center">
-      {#if isLoggedIn && user}
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger
+    <NavigationMenu.Root viewport={false}>
+      <NavigationMenu.List class="flex items-center gap-0">
+        {#if isLoggedIn && user}
+          <NavigationMenu.Item>
+            <NavigationMenu.Trigger
+              class={cn(
+                "group inline-flex h-12 w-max items-center justify-center px-4 font-medium transition-colors focus:outline-none disabled:pointer-events-none disabled:opacity-50 no-theme-styles bg-transparent hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent data-[state=open]:hover:bg-transparent data-[state=open]:focus:bg-transparent"
+              )}
+              style="
+                color: var(--font-color);
+                font-family: nav;
+                font-size: 16px;
+                text-shadow:
+                  -1px -1px 0 var(--bg-color),
+                  0px -1px 0 var(--bg-color),
+                  1px -1px 0 var(--bg-color),
+                  1px 0px 0 var(--bg-color),
+                  1px 1px 0 var(--bg-color),
+                  0px 1px 0 var(--bg-color),
+                  -1px 1px 0 var(--bg-color),
+                  -1px 0px 0 var(--bg-color);
+              "
+              onmouseenter={(e: MouseEvent) => {
+                if (e.currentTarget instanceof HTMLElement) {
+                  e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+                }
+              }}
+              onmouseleave={(e: MouseEvent) => {
+                if (e.currentTarget instanceof HTMLElement) {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }
+              }}
+            >
+              <img
+                src="https://cdn.sgxp.me/img/sonic_login_icon.svg"
+                alt="User"
+                class=""
+                style="
+                  background-color: transparent;
+                  padding-top: 4px;
+                  margin-right: 8px;
+                "
+              />
+              {getUserDisplayName(user)}
+            </NavigationMenu.Trigger>
+            <NavigationMenu.Content
+              class="no-theme-styles !p-0"
+              style="
+                width: 190px;
+                left: auto;
+                right: 0;
+                background-color: var(--page-color);
+                border: 1px solid color-mix(in srgb, var(--page-color) 80%, white);
+                border-radius: 0;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                z-index: 50;
+              "
+            >
+              <NavigationMenu.Link
+                class="cursor-pointer focus:outline-none no-theme-styles"
+                style="
+                  background-color: color-mix(in srgb, var(--page-color) 99%, black);
+                  border-radius: 0;
+                  padding: 12px 18px;
+                  color: var(--font-color);
+                  font-family: nav;
+                  font-size: 16px;
+                  line-height: 14px;
+                  text-shadow:
+                    -1px -1px 0 var(--bg-color),
+                    0px -1px 0 var(--bg-color),
+                    1px -1px 0 var(--bg-color),
+                    1px 0px 0 var(--bg-color),
+                    1px 1px 0 var(--bg-color),
+                    0px 1px 0 var(--bg-color),
+                    -1px 1px 0 var(--bg-color),
+                    -1px 0px 0 var(--bg-color);
+                "
+                onmouseenter={(e: MouseEvent) => {
+                  if (e.currentTarget instanceof HTMLElement) {
+                    e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+                  }
+                }}
+                onmouseleave={(e: MouseEvent) => {
+                  if (e.currentTarget instanceof HTMLElement) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
+                href="/profile"
+              >
+                Profile
+              </NavigationMenu.Link>
+              <NavigationMenu.Link
+                class="cursor-pointer focus:outline-none no-theme-styles"
+                style="
+                  background-color: color-mix(in srgb, var(--page-color) 99%, black);
+                  border-radius: 0;
+                  padding: 12px 18px;
+                  color: var(--font-color);
+                  font-family: nav;
+                  font-size: 16px;
+                  line-height: 14px;
+                  text-shadow:
+                    -1px -1px 0 var(--bg-color),
+                    0px -1px 0 var(--bg-color),
+                    1px -1px 0 var(--bg-color),
+                    1px 0px 0 var(--bg-color),
+                    1px 1px 0 var(--bg-color),
+                    0px 1px 0 var(--bg-color),
+                    -1px 1px 0 var(--bg-color),
+                    -1px 0px 0 var(--bg-color);
+                "
+                onmouseenter={(e: MouseEvent) => {
+                  if (e.currentTarget instanceof HTMLElement) {
+                    e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+                  }
+                }}
+                onmouseleave={(e: MouseEvent) => {
+                  if (e.currentTarget instanceof HTMLElement) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
+                href="/profile/uploads"
+              >
+                Uploads ({uploadCount})
+              </NavigationMenu.Link>
+              <NavigationMenu.Link
+                class="cursor-pointer focus:outline-none no-theme-styles"
+                style="
+                  background-color: color-mix(in srgb, var(--page-color) 99%, black);
+                  border-radius: 0;
+                  padding: 12px 18px;
+                  color: var(--font-color);
+                  font-family: nav;
+                  font-size: 16px;
+                  line-height: 14px;
+                  text-shadow:
+                    -1px -1px 0 var(--bg-color),
+                    0px -1px 0 var(--bg-color),
+                    1px -1px 0 var(--bg-color),
+                    1px 0px 0 var(--bg-color),
+                    1px 1px 0 var(--bg-color),
+                    0px 1px 0 var(--bg-color),
+                    -1px 1px 0 var(--bg-color),
+                    -1px 0px 0 var(--bg-color);
+                "
+                onmouseenter={(e: MouseEvent) => {
+                  if (e.currentTarget instanceof HTMLElement) {
+                    e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+                  }
+                }}
+                onmouseleave={(e: MouseEvent) => {
+                  if (e.currentTarget instanceof HTMLElement) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
+                href="/settings"
+              >
+                Settings
+              </NavigationMenu.Link>
+              <div style="border-top: 1px solid color-mix(in srgb, var(--page-color) 80%, white);"></div>
+              <NavigationMenu.Link
+                class="cursor-pointer focus:outline-none no-theme-styles"
+                style="
+                  background-color: color-mix(in srgb, var(--page-color) 99%, black);
+                  border-radius: 0;
+                  padding: 12px 18px;
+                  color: var(--font-color);
+                  font-family: nav;
+                  font-size: 16px;
+                  line-height: 14px;
+                  text-shadow:
+                    -1px -1px 0 var(--bg-color),
+                    0px -1px 0 var(--bg-color),
+                    1px -1px 0 var(--bg-color),
+                    1px 0px 0 var(--bg-color),
+                    1px 1px 0 var(--bg-color),
+                    0px 1px 0 var(--bg-color),
+                    -1px 1px 0 var(--bg-color),
+                    -1px 0px 0 var(--bg-color);
+                "
+                onmouseenter={(e: MouseEvent) => {
+                  if (e.currentTarget instanceof HTMLElement) {
+                    e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+                  }
+                }}
+                onmouseleave={(e: MouseEvent) => {
+                  if (e.currentTarget instanceof HTMLElement) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
+                onclick={handleLogout}
+              >
+                Logout
+              </NavigationMenu.Link>
+            </NavigationMenu.Content>
+          </NavigationMenu.Item>
+          <NavigationMenu.Item>
+            <Button
+              variant="ghost"
+              class={cn(
+                "h-12 px-4 font-medium no-theme-styles ml-2"
+              )}
+              style="
+                color: var(--font-color);
+                background-color: transparent;
+                font-family: nav;
+                font-size: 16px;
+                text-shadow:
+                  -1px -1px 0 var(--bg-color),
+                  0px -1px 0 var(--bg-color),
+                  1px -1px 0 var(--bg-color),
+                  1px 0px 0 var(--bg-color),
+                  1px 1px 0 var(--bg-color),
+                  0px 1px 0 var(--bg-color),
+                  -1px 1px 0 var(--bg-color),
+                  -1px 0px 0 var(--bg-color);
+              "
+              onmouseenter={(e: MouseEvent) => {
+                if (e.currentTarget instanceof HTMLElement) {
+                  e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+                }
+              }}
+              onmouseleave={(e: MouseEvent) => {
+                if (e.currentTarget instanceof HTMLElement) {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }
+              }}
+              onclick={() => {
+                window.location.href = '/upload';
+              }}
+            >
+              Upload
+            </Button>
+          </NavigationMenu.Item>
+        {:else}
+          <NavigationMenu.Item>
+            <Button
+              variant="ghost"
+              class={cn(
+                "h-12 px-4 font-medium no-theme-styles"
+              )}
+              style="
+                color: var(--font-color);
+                background-color: transparent;
+                font-family: nav;
+                font-size: 16px;
+                text-shadow:
+                  -1px -1px 0 var(--bg-color),
+                  0px -1px 0 var(--bg-color),
+                  1px -1px 0 var(--bg-color),
+                  1px 0px 0 var(--bg-color),
+                  1px 1px 0 var(--bg-color),
+                  0px 1px 0 var(--bg-color),
+                  -1px 1px 0 var(--bg-color),
+                  -1px 0px 0 var(--bg-color);
+              "
+              onmouseenter={(e: MouseEvent) => {
+                if (e.currentTarget instanceof HTMLElement) {
+                  e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+                }
+              }}
+              onmouseleave={(e: MouseEvent) => {
+                if (e.currentTarget instanceof HTMLElement) {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }
+              }}
+              onclick={() => {
+                window.location.href = '/login';
+              }}
+            >
+              <img
+                src="https://cdn.sgxp.me/img/sonic_login_icon.svg"
+                alt="Login"
+                class=""
+                style="
+                  padding-top: 2px;
+                "
+              />
+              Login
+            </Button>
+          </NavigationMenu.Item>
+        {/if}
+
+        <NavigationMenu.Item>
+          <NavigationMenu.Trigger
             class={cn(
-              "group inline-flex h-12 w-max items-center justify-center px-4 font-medium transition-colors focus:outline-none disabled:pointer-events-none disabled:opacity-50 no-theme-styles"
+              "group inline-flex h-12 w-max items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none disabled:pointer-events-none disabled:opacity-50 no-theme-styles bg-transparent hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent data-[state=open]:hover:bg-transparent data-[state=open]:focus:bg-transparent"
             )}
             style="
-              padding-bottom: 2px;
               color: var(--font-color);
               background-color: transparent;
               border: none;
@@ -735,372 +1011,71 @@ async function checkAuthStatus(): Promise<void> {
               }
             }}
           >
-            <img
-              src="https://cdn.sgxp.me/img/sonic_login_icon.svg"
-              alt="User"
-              class=""
-              style="
-                background-color: transparent;
-                padding-top: 4px;
-                margin-right: 8px;
-              "
-            />
-            {getUserDisplayName(user)}
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Content
-            class="no-theme-styles w-[150px]"
-            align="end"
-            sideOffset={8}
-            avoidCollisions={true}
+            {themes.find(theme => theme.value === selectedTheme)?.label || 'DOOMSDAY ZONE'}
+          </NavigationMenu.Trigger>
+          <NavigationMenu.Content
+            class="no-theme-styles !p-0"
             style="
+              width: 220px;
+              left: auto;
+              right: 0;
               background-color: var(--page-color);
               border: 1px solid color-mix(in srgb, var(--page-color) 80%, white);
+              border-radius: 0;
               box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
               z-index: 50;
             "
           >
-            <DropdownMenu.Item
-              class="cursor-pointer focus:outline-none no-theme-styles"
-              style="
-                padding-bottom: 10px;
-                color: var(--font-color);
-                font-family: nav;
-                font-size: 16px;
-                line-height: 12px;
-                text-shadow:
-                  -1px -1px 0 var(--bg-color),
-                  0px -1px 0 var(--bg-color),
-                  1px -1px 0 var(--bg-color),
-                  1px 0px 0 var(--bg-color),
-                  1px 1px 0 var(--bg-color),
-                  0px 1px 0 var(--bg-color),
-                  -1px 1px 0 var(--bg-color),
-                  -1px 0px 0 var(--bg-color);
-              "
-              onmouseenter={(e: MouseEvent) => {
-                if (e.currentTarget instanceof HTMLElement) {
-                  e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
-                }
-              }}
-              onmouseleave={(e: MouseEvent) => {
-                if (e.currentTarget instanceof HTMLElement) {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }
-              }}
-              onclick={() => (window.location.href = '/profile')}
-            >
-              Profile
-            </DropdownMenu.Item>
-            <DropdownMenu.Item
-              class="cursor-pointer focus:outline-none no-theme-styles"
-              style="
-                padding-bottom: 10px;
-                color: var(--font-color);
-                font-family: nav;
-                font-size: 16px;
-                line-height: 12px;
-                text-shadow:
-                  -1px -1px 0 var(--bg-color),
-                  0px -1px 0 var(--bg-color),
-                  1px -1px 0 var(--bg-color),
-                  1px 0px 0 var(--bg-color),
-                  1px 1px 0 var(--bg-color),
-                  0px 1px 0 var(--bg-color),
-                  -1px 1px 0 var(--bg-color),
-                  -1px 0px 0 var(--bg-color);
-              "
-              onmouseenter={(e: MouseEvent) => {
-                if (e.currentTarget instanceof HTMLElement) {
-                  e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
-                }
-              }}
-              onmouseleave={(e: MouseEvent) => {
-                if (e.currentTarget instanceof HTMLElement) {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }
-              }}
-              onclick={() => (window.location.href = '/profile/uploads')}
-            >
-              Uploads ({uploadCount})
-            </DropdownMenu.Item>
-            <!-- Temporarily commented out for debugging -->
-            <!-- <DropdownMenu.Item
-              class="cursor-pointer focus:outline-none no-theme-styles"
-              style="
-                padding-bottom: 10px;
-                color: var(--font-color);
-                font-family: nav;
-                font-size: 16px;
-                line-height: 12px;
-                text-shadow:
-                  -1px -1px 0 var(--bg-color),
-                  0px -1px 0 var(--bg-color),
-                  1px -1px 0 var(--bg-color),
-                  1px 0px 0 var(--bg-color),
-                  1px 1px 0 var(--bg-color),
-                  0px 1px 0 var(--bg-color),
-                  -1px 1px 0 var(--bg-color),
-                  -1px 0px 0 var(--bg-color);
-              "
-              onmouseenter={(e: MouseEvent) => {
-                if (e.currentTarget instanceof HTMLElement) {
-                  e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
-                }
-              }}
-              onmouseleave={(e: MouseEvent) => {
-                if (e.currentTarget instanceof HTMLElement) {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }
-              }}
-              onclick={() => (window.location.href = '/messages')}
-            >
-              Messages {#if unreadMessageCount > 0}({unreadMessageCount}){/if}
-            </DropdownMenu.Item> -->
-            <DropdownMenu.Item
-              class="cursor-pointer focus:outline-none no-theme-styles"
-              style="
-                padding-bottom: 10px;
-                color: var(--font-color);
-                font-family: nav;
-                font-size: 16px;
-                line-height: 12px;
-                text-shadow:
-                  -1px -1px 0 var(--bg-color),
-                  0px -1px 0 var(--bg-color),
-                  1px -1px 0 var(--bg-color),
-                  1px 0px 0 var(--bg-color),
-                  1px 1px 0 var(--bg-color),
-                  0px 1px 0 var(--bg-color),
-                  -1px 1px 0 var(--bg-color),
-                  -1px 0px 0 var(--bg-color);
-              "
-              onmouseenter={(e: MouseEvent) => {
-                if (e.currentTarget instanceof HTMLElement) {
-                  e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
-                }
-              }}
-              onmouseleave={(e: MouseEvent) => {
-                if (e.currentTarget instanceof HTMLElement) {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }
-              }}
-              onclick={() => (window.location.href = '/settings')}
-            >
-              Settings
-            </DropdownMenu.Item>
-            <DropdownMenu.Separator style="border-color: color-mix(in srgb, var(--page-color) 80%, white);" />
-            <DropdownMenu.Item
-              class="cursor-pointer focus:outline-none no-theme-styles"
-              style="
-                padding-bottom: 10px;
-                color: var(--font-color);
-                font-family: nav;
-                font-size: 16px;
-                line-height: 12px;
-                text-shadow:
-                  -1px -1px 0 var(--bg-color),
-                  0px -1px 0 var(--bg-color),
-                  1px -1px 0 var(--bg-color),
-                  1px 0px 0 var(--bg-color),
-                  1px 1px 0 var(--bg-color),
-                  0px 1px 0 var(--bg-color),
-                  -1px 1px 0 var(--bg-color),
-                  -1px 0px 0 var(--bg-color);
-              "
-              onmouseenter={(e: MouseEvent) => {
-                if (e.currentTarget instanceof HTMLElement) {
-                  e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
-                }
-              }}
-              onmouseleave={(e: MouseEvent) => {
-                if (e.currentTarget instanceof HTMLElement) {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }
-              }}
-              onclick={handleLogout}
-            >
-              Logout
-            </DropdownMenu.Item>
-          </DropdownMenu.Content>
-        </DropdownMenu.Root>
-        <Button
-          variant="ghost"
-          class={cn(
-            "h-12 px-4 font-medium no-theme-styles ml-2"
-          )}
-          style="
-            color: var(--font-color);
-            background-color: transparent;
-            font-family: nav;
-            font-size: 16px;
-            text-shadow:
-              -1px -1px 0 var(--bg-color),
-              0px -1px 0 var(--bg-color),
-              1px -1px 0 var(--bg-color),
-              1px 0px 0 var(--bg-color),
-              1px 1px 0 var(--bg-color),
-              0px 1px 0 var(--bg-color),
-              -1px 1px 0 var(--bg-color),
-              -1px 0px 0 var(--bg-color);
-          "
-          onmouseenter={(e: MouseEvent) => {
-            if (e.currentTarget instanceof HTMLElement) {
-              e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
-            }
-          }}
-          onmouseleave={(e: MouseEvent) => {
-            if (e.currentTarget instanceof HTMLElement) {
-              e.currentTarget.style.backgroundColor = 'transparent';
-            }
-          }}
-          onclick={() => {
-            window.location.href = '/upload';
-          }}
-        >
-          Upload
-        </Button>
-      {:else}
-        <Button
-          variant="ghost"
-          class={cn(
-            "h-12 px-4 font-medium no-theme-styles"
-          )}
-          style="
-            color: var(--font-color);
-            background-color: transparent;
-            font-family: nav;
-            font-size: 16px;
-            text-shadow:
-              -1px -1px 0 var(--bg-color),
-              0px -1px 0 var(--bg-color),
-              1px -1px 0 var(--bg-color),
-              1px 0px 0 var(--bg-color),
-              1px 1px 0 var(--bg-color),
-              0px 1px 0 var(--bg-color),
-              -1px 1px 0 var(--bg-color),
-              -1px 0px 0 var(--bg-color);
-          "
-          onmouseenter={(e: MouseEvent) => {
-            if (e.currentTarget instanceof HTMLElement) {
-              e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
-            }
-          }}
-          onmouseleave={(e: MouseEvent) => {
-            if (e.currentTarget instanceof HTMLElement) {
-              e.currentTarget.style.backgroundColor = 'transparent';
-            }
-          }}
-          onclick={() => {
-            window.location.href = '/login';
-          }}
-        >
-          <img
-            src="https://cdn.sgxp.me/img/sonic_login_icon.svg"
-            alt="Login"
-            class=""
-            style="
-              padding-top: 2px;
-            "
-          />
-          Login
-        </Button>
-      {/if}
-
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger
-          class={cn(
-            "group inline-flex h-12 w-max items-center justify-center px-4 py-2 text-sm font-medium transition-colors focus:outline-none disabled:pointer-events-none disabled:opacity-50 no-theme-styles"
-          )}
-          style="
-            color: var(--font-color);
-            background-color: transparent;
-            border: none;
-            font-family: nav;
-            font-size: 16px;
-            text-shadow:
-              -1px -1px 0 var(--bg-color),
-              0px -1px 0 var(--bg-color),
-              1px -1px 0 var(--bg-color),
-              1px 0px 0 var(--bg-color),
-              1px 1px 0 var(--bg-color),
-              0px 1px 0 var(--bg-color),
-              -1px 1px 0 var(--bg-color),
-              -1px 0px 0 var(--bg-color);
-          "
-          onmouseenter={(e: MouseEvent) => {
-            if (e.currentTarget instanceof HTMLElement) {
-              e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
-            }
-          }}
-          onmouseleave={(e: MouseEvent) => {
-            if (e.currentTarget instanceof HTMLElement) {
-              e.currentTarget.style.backgroundColor = 'transparent';
-            }
-          }}
-        >
-          {themes.find(theme => theme.value === selectedTheme)?.label || 'DOOMSDAY ZONE'}
-        </DropdownMenu.Trigger>
-        <DropdownMenu.Content
-          class="no-theme-styles w-[150px]"
-          align="end"
-          alignOffset={8}
-          sideOffset={8}
-          avoidCollisions={true}
-          style="
-            background-color: var(--page-color);
-            border: 1px solid color-mix(in srgb, var(--page-color) 80%, white);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            z-index: 50;
-          "
-        >
-          {#each themes as theme (theme.value)}
-            <DropdownMenu.Item
-              onclick={() => handleThemeChange(theme.value)}
-              class={cn(
-                "cursor-pointer focus:outline-none no-theme-styles",
-                selectedTheme === theme.value && "bg-black/30"
-              )}
-              style="
-                padding-bottom: 10px;
-                color: var(--font-color);
-                font-family: nav;
-                font-size: 16px;
-                line-height: 12px;
-                text-shadow:
-                  -1px -1px 0 var(--bg-color),
-                  0px -1px 0 var(--bg-color),
-                  1px -1px 0 var(--bg-color),
-                  1px 0px 0 var(--bg-color),
-                  1px 1px 0 var(--bg-color),
-                  0px 1px 0 var(--bg-color),
-                  -1px 1px 0 var(--bg-color),
-                  -1px 0px 0 var(--bg-color);
-              "
-              onmouseenter={(e: MouseEvent) => {
-                if (selectedTheme !== theme.value) {
-                  if (e.currentTarget instanceof HTMLElement) {
-                    e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+            {#each themes as theme (theme.value)}
+              <NavigationMenu.Link
+                onclick={() => handleThemeChange(theme.value)}
+                class={cn(
+                  "cursor-pointer focus:outline-none no-theme-styles",
+                  selectedTheme === theme.value && "bg-black/30"
+                )}
+                style="
+                  border-radius: 0;
+                  padding: 12px 18px;
+                  color: var(--font-color);
+                  font-family: nav;
+                  font-size: 16px;
+                  line-height: 14px;
+                  text-shadow:
+                    -1px -1px 0 var(--bg-color),
+                    0px -1px 0 var(--bg-color),
+                    1px -1px 0 var(--bg-color),
+                    1px 0px 0 var(--bg-color),
+                    1px 1px 0 var(--bg-color),
+                    0px 1px 0 var(--bg-color),
+                    -1px 1px 0 var(--bg-color),
+                    -1px 0px 0 var(--bg-color);
+                "
+                onmouseenter={(e: MouseEvent) => {
+                  if (selectedTheme !== theme.value) {
+                    if (e.currentTarget instanceof HTMLElement) {
+                      e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+                    }
                   }
-                }
-              }}
-              onmouseleave={(e: MouseEvent) => {
-                if (selectedTheme !== theme.value) {
-                  if (e.currentTarget instanceof HTMLElement) {
-                    e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+                onmouseleave={(e: MouseEvent) => {
+                  if (selectedTheme !== theme.value) {
+                    if (e.currentTarget instanceof HTMLElement) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  } else {
+                    if (e.currentTarget instanceof HTMLElement) {
+                      e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.3)';
+                    }
                   }
-                } else {
-                  if (e.currentTarget instanceof HTMLElement) {
-                    e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.3)';
-                  }
-                }
-              }}
-            >
-              {theme.label}
-            </DropdownMenu.Item>
-          {/each}
-        </DropdownMenu.Content>
-      </DropdownMenu.Root>
-    </div>
+                }}
+              >
+                {theme.label}
+              </NavigationMenu.Link>
+            {/each}
+          </NavigationMenu.Content>
+        </NavigationMenu.Item>
+      </NavigationMenu.List>
+    </NavigationMenu.Root>
   </div>
 
 </nav>

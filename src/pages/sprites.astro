@@ -86,10 +86,8 @@ console.log(`[Sprites SSR] ⏱️  Total SSR processing time: ${totalDuration.to
 <FrontPageLayout title="Sprites">
   <div class="sprite-page-container">
     <div class="flex flex-col items-center justify-start w-full">
-      <!-- OPTIMIZATION: Use client:only to skip SSR entirely and test performance -->
-      <!-- This will help identify if SpriteBrowser SSR is the bottleneck -->
       <SpriteBrowser
-        client:only="svelte"
+        client:load
         initialSprites={initialSprites}
         initialTotalResults={initialTotalResults}
       />
