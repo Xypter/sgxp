@@ -1107,6 +1107,7 @@ async function checkAuthStatus(): Promise<void> {
     </Sheet.Trigger>
     <Sheet.Content
       side="right"
+      portalProps={{ disabled: true }}
       class="no-theme-styles w-[280px] max-w-[80vw] p-0 overflow-hidden mobile-sheet-content"
       style="
         background-color: var(--page-color);
