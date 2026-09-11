@@ -3,13 +3,10 @@ import { invalidateSpriteCache } from '../../../lib/redis';
 import { notifyDiscordBot } from '../../../lib/discordBot';
 
 /**
- * Webhook endpoint for Payload CMS to call when a sprite is created or updated
- * This invalidates the Redis cache so approved sprites show up immediately
- *
- * Configure this webhook in Payload CMS:
- * Collection: sprites
- * Events: afterChange
- * URL: https://your-domain.com/api/webhooks/sprite-updated
+ * Webhook endpoint called by sgxp-cms's Sprites collection afterChange hook
+ * (see src/collections/Sprites.ts) on both create and update. Invalidates
+ * the Redis cache so approved sprites show up immediately, and forwards
+ * create/patch notifications to the Discord bot.
  */
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -44,6 +41,14 @@ export const POST: APIRoute = async ({ request }) => {
       await notifyDiscordBot('sprite.created', {
         title: payload?.doc?.title,
         author: payload?.doc?.author?.username ?? payload?.doc?.author,
+      });
+    } else if (operation === 'update' && Array.isArray(payload?.diff) && payload.diff.length > 0) {
+      await notifyDiscordBot('sprite.patched', {
+        spriteId,
+        title: payload?.doc?.title,
+        author: payload?.doc?.author?.username ?? payload?.doc?.author,
+        diff: payload.diff,
+        imageChange: payload?.imageChange ?? null,
       });
     }
 

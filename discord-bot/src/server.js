@@ -1,4 +1,5 @@
 import express from 'express';
+import { EmbedBuilder } from 'discord.js';
 import { buildArchivistRequestComponents } from './archivistActions.js';
 
 /**
@@ -8,7 +9,7 @@ import { buildArchivistRequestComponents } from './archivistActions.js';
  *
  * POST /events
  * Headers: Authorization: Bearer <BOT_WEBHOOK_SECRET>
- * Body: { type: 'sprite.created' | 'sprite.approved' | ..., data: {...} }
+ * Body: { type: 'sprite.created' | 'sprite.patched' | 'archivist.requested' | ..., data: {...} }
  */
 export function startEventServer(notifier) {
   const app = express();
@@ -46,6 +47,24 @@ async function handleEvent(notifier, type, data) {
         `New sprite uploaded: **${data?.title ?? 'Untitled'}** by ${data?.author ?? 'unknown'}`
       );
       break;
+    case 'sprite.patched': {
+      const diff = Array.isArray(data?.diff) ? data.diff : [];
+      const lines = diff.map((d) => `**${d.label}:** ${d.from} → ${d.to}`);
+
+      const content =
+        `🔧 Sprite sheet patched: **${data?.title ?? 'Untitled'}**` +
+        (data?.author ? ` by ${data.author}` : '') +
+        (lines.length ? `\n${lines.join('\n')}` : '');
+
+      const embeds = [];
+      const oldUrl = data?.imageChange?.oldUrl;
+      const newUrl = data?.imageChange?.newUrl;
+      if (oldUrl) embeds.push(new EmbedBuilder().setTitle('Previous Image').setImage(oldUrl));
+      if (newUrl) embeds.push(new EmbedBuilder().setTitle('New Image').setImage(newUrl));
+
+      await notifier.sendToOwner(content.slice(0, 1900), embeds.length ? { embeds } : {});
+      break;
+    }
     case 'archivist.requested':
       await notifier.sendToOwner(
         `🗂️ Archivist access requested by **${data?.displayName ?? data?.username ?? 'unknown user'}**` +
