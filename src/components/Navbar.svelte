@@ -441,7 +441,7 @@ async function checkAuthStatus(): Promise<void> {
                   color: var(--font-color);
                   font-family: nav;
                   font-size: 16px;
-                  line-height: 14px;
+                  line-height: normal;
                   text-shadow:
                     -1px -1px 0 var(--bg-color),
                     0px -1px 0 var(--bg-color),
@@ -475,7 +475,7 @@ async function checkAuthStatus(): Promise<void> {
                   color: var(--font-color);
                   font-family: nav;
                   font-size: 16px;
-                  line-height: 14px;
+                  line-height: normal;
                   text-shadow:
                     -1px -1px 0 var(--bg-color),
                     0px -1px 0 var(--bg-color),
@@ -555,7 +555,7 @@ async function checkAuthStatus(): Promise<void> {
                   color: var(--font-color);
                   font-family: nav;
                   font-size: 16px;
-                  line-height: 14px;
+                  line-height: normal;
                   text-shadow:
                     -1px -1px 0 var(--bg-color),
                     0px -1px 0 var(--bg-color),
@@ -589,7 +589,7 @@ async function checkAuthStatus(): Promise<void> {
                   color: var(--font-color);
                   font-family: nav;
                   font-size: 16px;
-                  line-height: 14px;
+                  line-height: normal;
                   text-shadow:
                     -1px -1px 0 var(--bg-color),
                     0px -1px 0 var(--bg-color),
@@ -623,7 +623,7 @@ async function checkAuthStatus(): Promise<void> {
                   color: var(--font-color);
                   font-family: nav;
                   font-size: 16px;
-                  line-height: 14px;
+                  line-height: normal;
                   text-shadow:
                     -1px -1px 0 var(--bg-color),
                     0px -1px 0 var(--bg-color),
@@ -762,7 +762,7 @@ async function checkAuthStatus(): Promise<void> {
                   color: var(--font-color);
                   font-family: nav;
                   font-size: 16px;
-                  line-height: 14px;
+                  line-height: normal;
                   text-shadow:
                     -1px -1px 0 var(--bg-color),
                     0px -1px 0 var(--bg-color),
@@ -796,7 +796,7 @@ async function checkAuthStatus(): Promise<void> {
                   color: var(--font-color);
                   font-family: nav;
                   font-size: 16px;
-                  line-height: 14px;
+                  line-height: normal;
                   text-shadow:
                     -1px -1px 0 var(--bg-color),
                     0px -1px 0 var(--bg-color),
@@ -830,7 +830,7 @@ async function checkAuthStatus(): Promise<void> {
                   color: var(--font-color);
                   font-family: nav;
                   font-size: 16px;
-                  line-height: 14px;
+                  line-height: normal;
                   text-shadow:
                     -1px -1px 0 var(--bg-color),
                     0px -1px 0 var(--bg-color),
@@ -865,7 +865,7 @@ async function checkAuthStatus(): Promise<void> {
                   color: var(--font-color);
                   font-family: nav;
                   font-size: 16px;
-                  line-height: 14px;
+                  line-height: normal;
                   text-shadow:
                     -1px -1px 0 var(--bg-color),
                     0px -1px 0 var(--bg-color),
@@ -1039,7 +1039,7 @@ async function checkAuthStatus(): Promise<void> {
                   color: var(--font-color);
                   font-family: nav;
                   font-size: 16px;
-                  line-height: 14px;
+                  line-height: normal;
                   text-shadow:
                     -1px -1px 0 var(--bg-color),
                     0px -1px 0 var(--bg-color),
