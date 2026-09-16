@@ -20,6 +20,10 @@ pnpm-debug.log*
 # macOS-specific files
 .DS_Store
 
+# Local MCP tool config (machine-specific, e.g. localhost dev server URLs)
+.mcp.json
+.vscode/mcp.json
+
 docs/
 
 # Messaging feature (work in progress - not ready for production)
