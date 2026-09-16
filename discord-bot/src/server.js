@@ -9,7 +9,7 @@ import { buildArchivistRequestComponents } from './archivistActions.js';
  *
  * POST /events
  * Headers: Authorization: Bearer <BOT_WEBHOOK_SECRET>
- * Body: { type: 'sprite.created' | 'sprite.patched' | 'comment.created' | 'archivist.requested' | ..., data: {...} }
+ * Body: { type: 'sprite.created' | 'sprite.patched' | 'comment.created' | 'user.created' | 'archivist.requested' | ..., data: {...} }
  */
 export function startEventServer(notifier) {
   const app = express();
@@ -77,6 +77,15 @@ async function handleEvent(notifier, type, data) {
         (link ? `\n${link}` : '');
 
       await notifier.sendToOwner(content.slice(0, 1900));
+      break;
+    }
+    case 'user.created': {
+      const name = data?.displayName || data?.username || 'unknown';
+      const handle = data?.username && data?.username !== name ? ` (@${data.username})` : '';
+
+      await notifier.sendToOwner(
+        `🆕 New user signed up: **${name}**${handle}` + (data?.email ? `\n${data.email}` : '')
+      );
       break;
     }
     case 'archivist.requested':
