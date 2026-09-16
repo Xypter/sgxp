@@ -9,7 +9,7 @@ import { buildArchivistRequestComponents } from './archivistActions.js';
  *
  * POST /events
  * Headers: Authorization: Bearer <BOT_WEBHOOK_SECRET>
- * Body: { type: 'sprite.created' | 'sprite.patched' | 'archivist.requested' | ..., data: {...} }
+ * Body: { type: 'sprite.created' | 'sprite.patched' | 'comment.created' | 'archivist.requested' | ..., data: {...} }
  */
 export function startEventServer(notifier) {
   const app = express();
@@ -63,6 +63,20 @@ async function handleEvent(notifier, type, data) {
       if (newUrl) embeds.push(new EmbedBuilder().setTitle('New Image').setImage(newUrl));
 
       await notifier.sendToOwner(content.slice(0, 1900), embeds.length ? { embeds } : {});
+      break;
+    }
+    case 'comment.created': {
+      const siteUrl = process.env.SITE_URL;
+      const link = siteUrl && data?.spriteId ? `${siteUrl}/sprites/${data.spriteId}` : null;
+      const text = (data?.text ?? '').slice(0, 500);
+
+      const content =
+        `💬 ${data?.isReply ? 'New reply' : 'New comment'} on **${data?.spriteTitle ?? 'Untitled'}**` +
+        (data?.author ? ` by ${data.author}` : '') +
+        (text ? `:\n> ${text}` : '') +
+        (link ? `\n${link}` : '');
+
+      await notifier.sendToOwner(content.slice(0, 1900));
       break;
     }
     case 'archivist.requested':
