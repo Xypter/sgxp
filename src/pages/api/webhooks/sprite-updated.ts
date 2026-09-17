@@ -26,9 +26,9 @@ export const POST: APIRoute = async ({ request }) => {
     const payload = await request.json();
 
     // Extract sprite data from payload
-    // Payload CMS sends: { doc: { id, status, ... }, operation: 'create' | 'update' }
+    // Payload CMS sends: { doc: { id, title, author }, status, operation: 'create' | 'update', ... }
     const spriteId = payload?.doc?.id;
-    const status = payload?.doc?.status;
+    const status = payload?.status;
     const operation = payload?.operation;
 
     console.log(`[Webhook] Sprite ${operation}: ID=${spriteId}, Status=${status}`);
