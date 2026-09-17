@@ -38,7 +38,11 @@ export const POST: APIRoute = async ({ request }) => {
     await invalidateSpriteCache(spriteId);
 
     if (operation === 'create') {
+      // Owner DM only - fires as soon as something is submitted, regardless
+      // of approval status. The public announcement is handled separately
+      // below, only once the sprite is actually approved.
       await notifyDiscordBot('sprite.created', {
+        spriteId,
         title: payload?.doc?.title,
         author: payload?.doc?.author?.username ?? payload?.doc?.author,
       });
@@ -49,6 +53,18 @@ export const POST: APIRoute = async ({ request }) => {
         author: payload?.doc?.author?.username ?? payload?.doc?.author,
         diff: payload.diff,
         imageChange: payload?.imageChange ?? null,
+      });
+    }
+
+    // Public "new sprite" announcement - fires exactly once, on the
+    // transition into 'approved' (never on the initial pending upload, and
+    // never again on a later edit of an already-approved sprite).
+    if (payload?.becameApproved) {
+      await notifyDiscordBot('sprite.approved', {
+        spriteId,
+        title: payload?.doc?.title,
+        author: payload?.doc?.author?.username ?? payload?.doc?.author,
+        imageUrl: payload?.iconImageUrl ?? payload?.imageUrl ?? null,
       });
     }
 

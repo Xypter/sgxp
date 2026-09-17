@@ -9,7 +9,7 @@ import { buildArchivistRequestComponents } from './archivistActions.js';
  *
  * POST /events
  * Headers: Authorization: Bearer <BOT_WEBHOOK_SECRET>
- * Body: { type: 'sprite.created' | 'sprite.patched' | 'comment.created' | 'user.created' | 'archivist.requested' | ..., data: {...} }
+ * Body: { type: 'sprite.created' | 'sprite.approved' | 'sprite.patched' | 'comment.created' | 'user.created' | 'archivist.requested' | ..., data: {...} }
  */
 export function startEventServer(notifier) {
   const app = express();
@@ -47,6 +47,31 @@ async function handleEvent(notifier, type, data) {
         `New sprite uploaded: **${data?.title ?? 'Untitled'}** by ${data?.author ?? 'unknown'}`
       );
       break;
+    case 'sprite.approved': {
+      // Public announcement, sent by the site's webhook exactly once, on the
+      // pending/revision -> approved transition. Never fires for the initial
+      // pending upload or for a later edit of an already-approved sprite.
+      const finishedArtChannelId = process.env.DISCORD_FINISHED_ART_CHANNEL_ID;
+      if (!finishedArtChannelId) break;
+
+      const siteUrl = process.env.SITE_URL;
+      const link = siteUrl && data?.spriteId ? `${siteUrl}/sprites/${data.spriteId}` : null;
+
+      const embed = new EmbedBuilder()
+        .setTitle(data?.title ?? 'Untitled')
+        .setColor(0x5865f2);
+      if (data?.author) embed.setAuthor({ name: data.author });
+      if (data?.imageUrl) embed.setImage(data.imageUrl);
+      if (link) embed.setURL(link);
+
+      const content =
+        `🎨 New sprite sheet posted: **${data?.title ?? 'Untitled'}**` +
+        (data?.author ? ` by ${data.author}` : '') +
+        (link ? `\n${link}` : '');
+
+      await notifier.sendToChannel(finishedArtChannelId, { content, embeds: [embed] });
+      break;
+    }
     case 'sprite.patched': {
       const diff = Array.isArray(data?.diff) ? data.diff : [];
       const lines = diff.map((d) => `**${d.label}:** ${d.from} → ${d.to}`);

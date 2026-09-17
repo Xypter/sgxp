@@ -16,7 +16,7 @@ export function createNotifier(client) {
   async function sendToChannel(channelId, content) {
     if (!channelId) return;
     const channel = await client.channels.fetch(channelId);
-    await channel.send(content);
+    return channel.send(content);
   }
 
   return { sendToOwner, sendToAnnounceChannel, sendToChannel };
