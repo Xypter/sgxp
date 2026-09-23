@@ -86,15 +86,6 @@ importers:
       compression:
         specifier: ^1.8.2
         version: 1.8.2
-      datatables.net-dt:
-        specifier: ^2.1.8
-        version: 2.3.8
-      datatables.net-responsive-dt:
-        specifier: ^3.0.3
-        version: 3.0.8
-      datatables.net-searchpanes-dt:
-        specifier: ^2.3.3
-        version: 2.3.5
       date-fns:
         specifier: ^3.0.6
         version: 3.6.0
@@ -3967,24 +3958,6 @@ packages:
   data-view-byte-offset@1.0.1:
     resolution: {integrity: sha512-BS8PfmtDGnrgYdOonGZQdLZslWIeCGFP9tpan0hi1Co2Zr2NKADsvGYA8XxuG/4UWgJ6Cjtv+YJnB6MM69QGlQ==}
     engines: {node: '>= 0.4'}
-
-  datatables.net-dt@2.3.8:
-    resolution: {integrity: sha512-GD4on0YvNlUS/l+mrXeA1OC2JDzF2/GGbehVv4AacwtiFaoTwqxZseiR0cED6w59u/lgpVrZRC2RwuubUX996Q==}
-
-  datatables.net-responsive-dt@3.0.8:
-    resolution: {integrity: sha512-Nq5q1UZZJwWjZJf1SedZKmfnOKRrx00TaAsCN7CLx9c6cmouFQ6AqLf7Lcs1eV30oRTt1e2rcQtu3BNjGwjnHw==}
-
-  datatables.net-responsive@3.0.8:
-    resolution: {integrity: sha512-htslaX9g/9HFrJeyFQKEe/XJWpawPxpvy+M6vc/NkKQIrKhbxSoPc3phPqmlnZth6b9hgawqWDT0e0lwf5p+KA==}
-
-  datatables.net-searchpanes-dt@2.3.5:
-    resolution: {integrity: sha512-8mEP0mXdqCltPSSKH9DEl1CCdCutsj/xICpH4e5rMvuQRK9VxoQpS32zjXuLVj5fvB7qm8knMOEX2NWqDN+PAA==}
-
-  datatables.net-searchpanes@2.3.5:
-    resolution: {integrity: sha512-e8c1IJULwqbPANfgFe3Nwlb+QGfeXPtIT348si95iQER94CcEbt0Eps9iA7Ql0IYm4sDlaHGt1Bdm6GjiqmzIA==}
-
-  datatables.net@2.3.8:
-    resolution: {integrity: sha512-uhViowhlDlheAuo5a8TrkQqADsjrtGeOyvrigvr4t0+K3MyAWqClORXWAYIcN9VLX6iIX0C8O9gwJNd01hITRg==}
 
   date-fns@3.6.0:
     resolution: {integrity: sha512-fRHTG8g/Gif+kSh50gaGEdToemgfj74aRX3swtiouboip5JDLAyDE9F11nHMIcvOaXeOC6D7SpNhi7uFyB7Uww==}
@@ -11596,37 +11569,6 @@ snapshots:
       call-bound: 1.0.4
       es-errors: 1.3.0
       is-data-view: 1.0.2
-
-  datatables.net-dt@2.3.8:
-    dependencies:
-      datatables.net: 2.3.8
-      jquery: 3.7.1
-
-  datatables.net-responsive-dt@3.0.8:
-    dependencies:
-      datatables.net-dt: 2.3.8
-      datatables.net-responsive: 3.0.8
-      jquery: 3.7.1
-
-  datatables.net-responsive@3.0.8:
-    dependencies:
-      datatables.net: 2.3.8
-      jquery: 3.7.1
-
-  datatables.net-searchpanes-dt@2.3.5:
-    dependencies:
-      datatables.net-dt: 2.3.8
-      datatables.net-searchpanes: 2.3.5
-      jquery: 3.7.1
-
-  datatables.net-searchpanes@2.3.5:
-    dependencies:
-      datatables.net: 2.3.8
-      jquery: 3.7.1
-
-  datatables.net@2.3.8:
-    dependencies:
-      jquery: 3.7.1
 
   date-fns@3.6.0: {}
 

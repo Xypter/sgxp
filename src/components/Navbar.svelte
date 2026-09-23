@@ -331,7 +331,9 @@ async function checkAuthStatus(): Promise<void> {
 });
 </script>
 
-<!-- Desktop navbar - completely hidden on mobile -->
+<!-- Desktop navbar - hidden below 1200px, where it gets too crowded and
+     overflows; the floating hamburger below takes over. Keep the 1200px in
+     sync with the hamburger wrapper and the `nav` media query in <style>. -->
 <nav
   class="sticky top-0 items-center justify-between border-b z-50"
   style="
@@ -340,7 +342,7 @@ async function checkAuthStatus(): Promise<void> {
     color: var(--font-color);
   "
 >
-  <div class="hidden md:flex items-center w-full">
+  <div class="hidden min-[1200px]:flex items-center w-full">
     <div class="flex items-center ml-4">
       <div
         class="cursor-pointer transition-opacity duration-200 no-theme-styles"
@@ -1196,7 +1198,7 @@ async function checkAuthStatus(): Promise<void> {
 </nav>
 
 <!-- Mobile: Floating hamburger button only - completely separate from navbar -->
-<div class="md:hidden fixed top-3 right-3 z-50">
+<div class="min-[1200px]:hidden fixed top-3 right-3 z-50">
   <Sheet.Root bind:open={isMobileMenuOpen}>
     <Sheet.Trigger
       class="no-theme-styles p-2.5 rounded-lg shadow-lg"
@@ -1470,7 +1472,7 @@ async function checkAuthStatus(): Promise<void> {
     display: none !important;
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: 1200px) {
     nav {
       display: flex !important;
     }
