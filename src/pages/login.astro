@@ -9,8 +9,10 @@ const user = await getUserFromRequest(Astro.request);
 if (user) {
   return Astro.redirect('/');
 }
+
+const initialTab = Astro.url.searchParams.get('tab') === 'register' ? 'register' : 'login';
 ---
 
 <FrontPageLayout title="Login - SGXP">
-    <LoginForm client:load />
+    <LoginForm client:load initialTab={initialTab} />
 </FrontPageLayout>

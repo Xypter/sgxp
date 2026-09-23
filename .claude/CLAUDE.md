@@ -23,7 +23,6 @@ The SGXP is an open-source sprite website where users can upload sprite sheets, 
 ## Project Structure
 - `/src/components` - Svelte UI components
 - `/src/pages` - Astro pages and routes
-- `/src/db` - Database setup and queries (legacy from Supabase migration)
 - `/public` - Static assets
 
 ## Discord Bot (`/discord-bot`)
@@ -42,13 +41,13 @@ A standalone Node service, separate from the Astro app, deployed as its own Cool
 - **Actionable DM buttons** (`src/archivistActions.js`): the `archivist.requested` event attaches a "Grant Archivist Access" button to the owner's DM (built in `server.js`, handled via `Events.InteractionCreate` in `index.js`). Clicking it calls `payload.js`'s `grantArchivistAccess()`, which PATCHes Payload authenticated as an admin user via API key (`PAYLOAD_API_KEY` env var, requires `useAPIKey: true` on the CMS's `Users` collection and generating a key from that admin's own profile page in the Payload admin panel — Payload has no way to generate this key programmatically, it's a manual one-time admin-panel step). This is the pattern to extend for any future "act on this from Discord" feature — build the button in the event handler, gate the click to `DISCORD_OWNER_USER_ID`, and always `deferUpdate()`/`editReply()` rather than a bare `reply()`/`update()` since the Payload round-trip can exceed Discord's 3-second interaction window.
 
 ## Development Scripts
-- `npm run dev` or `npm run start` - Start Astro dev server
+- `npm run dev` - Start Astro dev server
+- `npm run start` - Run the production build via `server.mjs` (wraps Astro's standalone handler with response compression, skipping SSE streams, and a 1-day cache on `public/` assets). This is also the Dockerfile's `CMD`. Coolify's own Gzip toggle must stay OFF for this app - it buffers SSE; `server.mjs` handles compression instead.
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
-- `npm run setup-db` - Database setup script (legacy)
 
 ## Important Notes
-- Previously used Supabase, now migrated to Payload CMS
+- Previously used Supabase, now migrated to Payload CMS. All Supabase code (old `/register` page, `/api/auth/*` callbacks, `src/db` setup script, `@supabase/supabase-js`) was removed 2026-09-22 - `/register` now 301s to `/login?tab=register`, the real Payload-backed sign-up form.
 - Previously used Sentry, now removed from stack
 - Component library is shadcn-svelte specifically, which has different APIs than React-based shadcn
 
@@ -123,3 +122,24 @@ Working on shadcn-svelte upgrade as indicated by the `shadcn-upgrade` branch.
 - **`ArchiveEntries.sourceGenres`/`sourceTags`/`sourceIsMature`/`sourceContentFlag`/`sourceMetadataFetchedAt`** (added 2026-09-03): backend-only classification fields, backfilled for all 34,736 reachable comics directly from local `metadata.json` files over SSH to the TrueNAS box (see below) — no archive.org calls needed once the network drive is reachable. Public read (matches the rest of the collection), admin-only write. **Not surfaced as triage-table columns on purpose** — meant for backend querying (`where[sourceContentFlag][equals]=true`), not the archivist-facing UI. `sourceContentFlag` is `true` when `sourceGenres` includes `BL`/`GL` OR `sourceTags` matches a curated keyword list covering sexual content of any orientation (deliberately broad — includes `heterosexual`/`asexual`/`bisexual`/etc., not just same-sex terms), LGBT+ identity, and underage/loli-shota concerns. As of 2026-09-03: 1,313 comics flagged, of which 1,264 (then-unsorted) plus 427 separately-identified blank/pageless comics (from `comicswithoutpages.txt` on the network drive) were bulk-marked `excluded` (preparedBy/reviewedBy both set to user 35/Xypter, with a distinguishing `notes` string per category) — dropping `unsorted` from 25,753 to 24,062.
 
 - **TrueNAS box hosting the network drive is SSH-reachable at `root@192.168.117.7`** (key: `~/.ssh/truenas_brazil` on this machine) — Linux (TrueNAS SCALE), `python3`/`jq` available, no `node`. The SMB share `Monolith` maps to `/mnt/MonolithPool/MonolithSambaDataset` on-box. Reading/processing files directly over SSH on the box is dramatically faster than mapping the drive from the US (VPN latency) or than re-fetching from archive.org — e.g. reading ~35,000 small `metadata.json` files finished in a few minutes at ~15-25% disk utilization (confirmed via `iostat -x`), vs. an estimated ~55-60 minutes fetching the same data from archive.org at a polite concurrency.
+
+## Known Bugs & Quirks (learned 2026-09-22, performance pass + navbar pixel-font work)
+
+- **Production compression lives in `server.mjs`, not Coolify.** Coolify's Gzip toggle must stay OFF for `sgxp` (it buffers SSE - see the 2026-08-27/28 note). `server.mjs` wraps `dist/server/entry.mjs`'s exported `handler` (started with `ASTRO_NODE_AUTOSTART=disabled`) in the `compression` package, skipping `text/event-stream`, and gives `public/` assets a 1-day `Cache-Control` (the adapter's own static server only sets `max-age=0` for them, and only when nothing set a header first). It's the Dockerfile `CMD` and `npm start`. `/sprites` went 550KB -> 27KB on the wire.
+
+- **Sprite list fetches are trimmed with Payload `select`/`populate`** via `src/lib/spriteListQuery.ts` (used by `sprites.astro` SSR and `SpriteBrowser`'s `fetchSprites`). The list data is handed straight to `SpriteViewer` as `initialSprite` without a refetch, so only drop fields nothing reads. **Media `prefix` must stay populated** - Payload's S3 adapter builds `url` from it; without it every image URL silently loses its `/media/` segment.
+
+- **Astro's ClientRouter and the in-page sprite viewer.** `SpriteBrowser` opens sprites with a raw `history.pushState`; on Back, Astro's own `popstate` listener always runs *before* any component listener (even capture-phase on `window`) and treats it as a real navigation (spinner, full `/sprites` refetch, page swap). Cancelling `astro:before-preparation` makes Astro do a full `location.href` reload instead, so the fix neutralizes the navigation: a custom `event.loader` that hands back `document`, a no-op `astro:before-swap` `event.swap`, and a skipped view transition (with its promises' AbortErrors swallowed). Direct page loads never showed the bug only because their history entry has `null` state, which Astro ignores - always test navigations by *arriving via the navbar*.
+
+- **Chrome on Windows blurs pixel fonts** whenever text sits on a composited layer that's animating/fading/scaled (LCD -> grayscale AA switch). No CSS switch fixes it (`-webkit-font-smoothing` is macOS-only). The desktop navbar now renders its `nav`-font labels as images: `src/components/PixelText.svelte` + atlas data `src/lib/pixelFonts/navFont.ts`, both generated by `scripts/generate-pixel-font-atlas.py` from the font file (pure pixel fonts only; it verifies). Letters are a CSS `mask-image` (so they take the theme's `--font-color`); the `#1D1D20` outline is a baked separate atlas. Atlases live on R2 at `img/fonts/nav-font-{fill,outline}-vN.png` (immutable). `PixelText` needs a `lineHeight` prop when its parent has an explicit `line-height` (dropdown items use `lineHeight={22}`). The dropdown carets `▾`/`▴` are generator-derived glyphs (the font's `>` rotated) and swap on the trigger's `data-state` instead of rotating.
+  - **Upload new atlas PNGs to R2 BEFORE pointing `navFont.ts` at them.** Cloudflare answers a not-yet-uploaded URL with a 404 that browsers cache for 4 hours (`Cache-Control: max-age=14400`), which looks like "letters missing in one browser" long after the upload lands. Always bump `--version`; never overwrite an uploaded atlas.
+
+- **`BN6FontTinyExt.ttf` (the `nav`/`title` font) had contradictory vertical metrics** (hhea 682/0 vs OS/2 typo 768/-256), and Chrome/Firefox read different tables, so text sat at different heights per browser. `BN6FontTinyExt-fixed.ttf` (same glyphs, all tables 768/256/0 + USE_TYPO_METRICS) is what `global.css` now loads; the original is kept unmodified alongside. Even with fixed metrics, Firefox computes `line-height: normal` for this font differently from Chrome - use explicit pixel line-heights with it.
+
+- **Sprite-card glyph text (`.sprite-text`) uses a metrics-override copy of saira** (`sprite-text-metrics` in `sprite_icon.css`: ascent 110% / descent 50% / gap 0). The characters are background-image spans on the text baseline, and saira's real metrics put that baseline on a half pixel that Firefox (unlike Chrome) doesn't round - a 1px drop on every card in Firefox only. Previously masked by the cards' old `translateY(-.1px)`, which was removed (it forced a GPU layer on every card and nudged hovered text). Verify card changes by comparing glyph positions in *both* browsers.
+
+- **Nav icons are served from R2** (`https://cdn.sgxp.me/img/nav_icons/`), and the Navbar preloads them all (`NAV_ICON_FILES`) because dropdown contents don't exist until opened - add any new icon to that list too.
+
+- **Vite dev dependency cache can desync mid-session** (serving pre-bundled chunks from two optimizer runs -> two copies of Svelte -> `effect_orphan` / hydration errors in a *fresh* browser while an already-open one looks fine). Fix: stop the dev server, `npx astro dev --force`, hard refresh.
+
+- **Headless-browser verification works well here** (puppeteer-core against the installed Chrome and Firefox): measuring glyph/pixel positions, comparing browsers, and checking CDP `LayerTree` compositing reasons. Headless Chrome doesn't finish the dropdown fade-in animation, so disable animations when screenshotting menus.

@@ -7,7 +7,24 @@
 
 @font-face {
   font-family: sprite;
-  src: url('/src/styles/fonts/saira.ttf');
+  src: url('/src/styles/fonts/saira.woff2') format('woff2'), url('/src/styles/fonts/saira.ttf') format('truetype');
+}
+
+/* Only used as .sprite-text's font. Its characters are all background-image <span>s (see
+   spriteCardText.ts) sitting on the text baseline, so the font's only job there is to
+   decide where that baseline falls - and saira's real metrics (ascent 1.135em, descent
+   0.439em) put it on a fractional pixel at 10px/line-height 8px. Chrome rounds font
+   metrics to whole pixels before placing it, Firefox doesn't, so every card glyph landed
+   half a pixel lower in Firefox (a visible 1px drop once rounded). Whole-pixel metrics
+   make both browsers compute the same baseline: 7px below the line top, where Chrome
+   already put it. (This used to be masked by the cards' old translateY(-.1px) "hardware
+   acceleration" transform, which nudged every x.5 position just under the rounding point.) */
+@font-face {
+  font-family: sprite-text-metrics;
+  src: url('/src/styles/fonts/saira.woff2') format('woff2'), url('/src/styles/fonts/saira.ttf') format('truetype');
+  ascent-override: 110%;
+  descent-override: 50%;
+  line-gap-override: 0%;
 }
 
 body {
@@ -133,10 +150,33 @@ body {
   border-radius: 4px;
   box-shadow: var(--box-shadow);
   animation: fadein-top .5s, fadeout 1s; /* Add fade-out animation */
-  transform: translateY(calc(-.1px * var(--multiplication-factor))); /*forced hardware acceleration*/
 
   position: relative;
+
+  /* Virtualization without touching the DOM: up to 100 cards can be on a single
+     page, all painted/composited (filters, forced layer, etc.) at once even though
+     only ~20-30 are ever actually in the viewport. content-visibility: auto tells
+     the browser to skip layout/paint/compositing entirely for any card that isn't
+     near the viewport - same effect as unmounting off-screen cards, but without the
+     complexity/risk of manually windowing a responsive (auto-fill) grid: cards stay
+     in the DOM the whole time, so links, find-in-page, and the existing scroll-restore
+     logic (savedScrollY) all keep working unmodified. contain-intrinsic-size gives
+     the browser a stand-in size to reserve for skipped cards so the page doesn't
+     jump/resize as they scroll in and out of range. */
+  content-visibility: auto;
+  contain-intrinsic-size: calc(117px * var(--multiplication-factor)) calc(192px * var(--multiplication-factor));
+  /* content-visibility: auto implies paint containment, which clips everything a card's
+     descendants draw outside its box - including the ::before hover glow ring below,
+     which sits 1-2px outside the card's edge. Extend the clip just enough to keep it. */
+  overflow-clip-margin: 2px;
 }
+
+/* Note: there used to be a sub-pixel `transform: translateY(-.1px)` here (originally on
+   every card as "forced hardware acceleration", later scoped to :hover). Promoting the
+   card to its own layer only on hover made the browser re-rasterize it at a fractional
+   offset, visibly nudging the bitmap text upward whenever a card was hovered. It's no
+   longer needed at all: the only per-frame hover work (the background pan) now runs on
+   its own compositor layer via .sprite-image::before. */
 
 .sprite-box::before {
   content: "";
@@ -147,11 +187,11 @@ body {
   bottom: -1px;
   border-radius: 4px;
   /* color-mix() toward white desaturates as it lightens (muddy/creamy instead of brighter).
-     filter: brightness() instead scales the rendered color's own RGB values up directly, which
-     reads as a punchier version of the same hue rather than one washed toward white. Applied to
-     this pseudo-element specifically since box-shadow is the only thing it renders. */
-  --sprite-hover-glow-color: var(--sprite-gradient-bottom, #22ff80);
-  filter: brightness(2);
+     Doubling the color's own RGB channels instead reads as a punchier version of the same hue
+     rather than one washed toward white. This used to be `filter: brightness(2)` on this
+     pseudo-element - relative color syntax does the exact same per-channel multiply (clamped
+     at 255) up front, without a filter effect on every card on the page. */
+  --sprite-hover-glow-color: rgb(from var(--sprite-gradient-bottom, #22ff80) calc(r * 2) calc(g * 2) calc(b * 2));
   box-shadow:
     1px 0px 0 var(--sprite-hover-glow-color),
     1px 1px 0 var(--sprite-hover-glow-color),
@@ -216,7 +256,7 @@ body {
 }
 
 .sprite-text {
-  font-family: sprite;
+  font-family: sprite-text-metrics; /* see the @font-face above */
   font-weight: 500;
   font-style: normal;
   image-rendering: pixelated;
@@ -250,20 +290,40 @@ body {
   margin-right: calc(7px * var(--multiplication-factor));
   object-fit: cover;
   overflow: hidden;
+  position: relative;
+  /* Keeps the ::before tile layer's overlay blend scoped to this box's own gradient. */
+  isolation: isolate;
 
-  background: url("/img/spriteicon/white-bg.png"),
-              linear-gradient(0deg, var(--sprite-gradient-top, #002705) 0%, var(--sprite-gradient-bottom, #12a740) 100%);
-  background-blend-mode: overlay;
-  background-position: left 0px bottom 0px;
+  background: linear-gradient(0deg, var(--sprite-gradient-top, #002705) 0%, var(--sprite-gradient-bottom, #12a740) 100%);
 }
 
-.sprite-box:hover .sprite-image {
+/* The tile pattern, overlay-blended onto the gradient. This used to be a second
+   background layer (background-blend-mode: overlay) panned on hover by animating
+   background-position - which forces a full repaint of the whole image area (blend,
+   tiles, and the drop-shadowed sprite on top) every single frame. As its own oversized
+   layer panned with transform, the hover animation runs entirely on the compositor
+   with no repaints. Visually identical: same tile, same bottom-left anchoring, same
+   blend, same 3000px-over-200s speed. */
+.sprite-image::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: calc(100% + 3000px);
+  background: url("/img/spriteicon/white-bg.png");
+  background-position: left 0px bottom 0px;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.sprite-box:hover .sprite-image::before {
   animation: 200s grid-para infinite linear;
 }
 
 @keyframes grid-para {
   100% {
-    background-position: left -3000px bottom 0px;
+    transform: translateX(-3000px);
   }
 }
 

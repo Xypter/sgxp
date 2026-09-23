@@ -32,7 +32,10 @@
 	// General state
 	let success = $state(false);
 	let isCheckingAuth = $state(true);
-	let activeTab = $state('login');
+	// Which tab to open on - /login?tab=register (e.g. the old /register URL redirects
+	// here) opens straight on the Register tab.
+	let { initialTab = 'login' }: { initialTab?: 'login' | 'register' } = $props();
+	let activeTab = $state(initialTab);
 
 	// Check for existing login and set up cross-tab event listeners on component mount
 	onMount(() => {

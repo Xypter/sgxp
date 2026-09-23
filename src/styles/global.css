@@ -6,17 +6,17 @@
 /* Font Face Declarations - Moved from main.css */
 @font-face {
   font-family: spritelogo;
-  src: url('./fonts/Starbirl.otf');
+  src: url('./fonts/Starbirl.woff2') format('woff2'), url('./fonts/Starbirl.otf') format('opentype');
 }
 
 @font-face {
   font-family: saira;
-  src: url('./fonts/saira.ttf');
+  src: url('./fonts/saira.woff2') format('woff2'), url('./fonts/saira.ttf') format('truetype');
 }
 
 @font-face {
   font-family: rubik;
-  src: url('./fonts/Rubik-VariableFont_wght.ttf');
+  src: url('./fonts/Rubik-VariableFont_wght.woff2') format('woff2'), url('./fonts/Rubik-VariableFont_wght.ttf') format('truetype');
 }
 
 @font-face {
@@ -31,23 +31,27 @@
 
 @font-face {
   font-family: comic;
-  src: url('./fonts/animeace2_reg.ttf')
+  src: url('./fonts/animeace2_reg.woff2') format('woff2'), url('./fonts/animeace2_reg.ttf') format('truetype')
 }
 
 @font-face {
   font-family: main-pixel;
-  src: url('./fonts/undefined-medium.ttf');
+  src: url('./fonts/undefined-medium.woff2') format('woff2'), url('./fonts/undefined-medium.ttf') format('truetype');
 }
 
 @font-face {
   font-family: nav;
-  src: url('./fonts/BN6FontTinyExt.ttf');
+  /* -fixed: same glyphs as BN6FontTinyExt.ttf (kept alongside, unmodified) but with
+     consistent vertical metrics - the original's hhea/OS2 tables disagreed (682/0 vs
+     768/-256), and Chrome and Firefox read different ones, so text using this font sat
+     at different heights in each browser. */
+  src: url('./fonts/BN6FontTinyExt-fixed.ttf');
 }
 
 @font-face {
   image-rendering: pixelated;
   font-family: 'title';
-  src: url('./fonts/BN6FontTinyExt.ttf');
+  src: url('./fonts/BN6FontTinyExt-fixed.ttf'); /* see the nav @font-face above */
 }
 
 @font-face {

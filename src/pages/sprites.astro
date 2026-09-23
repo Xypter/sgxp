@@ -4,6 +4,7 @@ import SpriteBrowser from "../components/SpriteBrowser.svelte";
 
 // OPTIMIZATION: Import Redis caching utilities
 import { getCached, setCached, cacheKey, CACHE_TTL } from '../lib/redis';
+import { applySpriteListFieldParams } from '../lib/spriteListQuery';
 
 // OPTIMIZATION: Fetch initial sprite data server-side for faster page loads
 const API_BASE_URL = "https://cms.sgxp.me/api/sprites";
@@ -40,7 +41,7 @@ try {
       // OPTIMIZATION: Reduced depth from 2 to 1 for 3x faster API response (210ms vs 667ms)
       // Only fetch approved sprites (security: enforced server-side)
       const response = await fetch(
-        `${API_BASE_URL}?depth=1&draft=false&locale=undefined&trash=false&limit=100&page=1&sort=-createdAt&where[status][equals]=approved`,
+        `${API_BASE_URL}?depth=1&draft=false&locale=undefined&trash=false&limit=100&page=1&sort=-createdAt&where[status][equals]=approved&${applySpriteListFieldParams(new URLSearchParams())}`,
         { signal: controller.signal }
       );
       const fetchDuration = performance.now() - fetchStart;

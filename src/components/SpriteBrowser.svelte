@@ -9,7 +9,8 @@
 	import { Button, Input, Select, Combobox, Pagination } from '$lib/components';
 
 	import SpriteViewer from './SpriteViewer.svelte';
-	import Logo3D from './Logo3D.svelte';
+	import type { Component } from 'svelte';
+	import { applySpriteListFieldParams } from '$lib/spriteListQuery';
 
 	// Updated interface to match your API structure
 	interface ImageData {
@@ -136,6 +137,88 @@
 	// Scroll position in the browser grid at the moment a sprite was opened, so pressing
 	// back/close restores exactly where the user was instead of re-centering the grid.
 	let savedScrollY = 0;
+
+	// URL (path + query) of the browser grid at the moment a sprite was opened in the
+	// in-page viewer, or null when no viewer history entry of ours is on the stack.
+	// openSpriteViewer pushes /sprites/<id> with a raw history.pushState that Astro's
+	// ClientRouter never sees - but when the user goes back, the entry being returned to
+	// is one Astro created itself, so the router treats it as a real navigation: shows the
+	// navbar spinner, re-fetches /sprites from the server, and swaps the whole page
+	// (remounting this component and re-rendering every card). handleAstroBeforePreparation
+	// uses this to recognize that exact back-navigation and turn Astro's handling of it into
+	// a no-op, so only handlePopState's own logic runs and just re-shows the existing grid.
+	let viewerReturnUrl: string | null = null;
+	// Set by handleAstroBeforePreparation for the navigation it neutralized, consumed by
+	// handleAstroBeforeSwap for that same navigation.
+	let neutralizeNextAstroSwap = false;
+
+	// Astro's ClientRouter reacts to the back-navigation first - its popstate listener is
+	// registered at startup, before this component exists, and runs before ours (a
+	// capture-phase listener on window does NOT get to go first here), so it can't simply
+	// be stopped at popstate. Cancelling this event isn't an option either: the router
+	// answers a cancelled navigation with a full `location.href` page load. Instead, let the
+	// navigation proceed but give it a loader that fetches nothing (see also
+	// handleAstroBeforeSwap, which makes the swap a no-op). Registered as a capture-phase
+	// listener on window so it runs before - and stops - the Navbar's own listener on
+	// document, which would otherwise flash the page-loading spinner.
+	//
+	// (Only entries Astro created carry its history state; after a direct page load the
+	// grid's entry has none, and the router ignores the popstate entirely - which is why
+	// this only showed up when /sprites was reached through the navbar.)
+	function handleAstroBeforePreparation(event: Event) {
+		const prep = event as Event & { navigationType: string; to: URL; loader: () => Promise<void>; newDocument: Document };
+		if (
+			viewerReturnUrl !== null &&
+			prep.navigationType === 'traverse' &&
+			prep.to.pathname + prep.to.search === viewerReturnUrl
+		) {
+			viewerReturnUrl = null;
+			neutralizeNextAstroSwap = true;
+			event.stopPropagation();
+			prep.loader = async () => {
+				prep.newDocument = document;
+			};
+		}
+	}
+
+	function handleAstroBeforeSwap(event: Event) {
+		if (!neutralizeNextAstroSwap) return;
+		neutralizeNextAstroSwap = false;
+		const swapEvent = event as Event & { swap: () => void; viewTransition?: ViewTransition };
+		swapEvent.swap = () => {};
+		// Nothing changes, so skip the page-level view transition too - otherwise its
+		// snapshot of the viewer would cross-fade over the grid sliding back in. Skipping
+		// rejects the transition's promises with an AbortError that nothing else handles,
+		// so swallow those here rather than leave an uncaught error on every back.
+		const vt = swapEvent.viewTransition;
+		if (vt) {
+			vt.ready.catch(() => {});
+			vt.finished.catch(() => {});
+			vt.updateCallbackDone.catch(() => {});
+			vt.skipTransition();
+		}
+	}
+
+	// The 3D Three.js logo was previously always mounted and just hidden with CSS on
+	// mobile - it still paid for a WebGL context, a font fetch, and a full geometry
+	// build there for a canvas nobody could see. Only mount it once we actually know
+	// we're on a desktop-width viewport, matching the .desktop-logo/.mobile-logo
+	// breakpoint below.
+	let isDesktopViewport = $state(false);
+
+	// Logo3D (and with it all of three.js, several hundred KB) is loaded with a dynamic
+	// import rather than a static one, so it's split into its own chunk: the grid's own
+	// code downloads/parses/hydrates without waiting on it, and mobile never downloads it
+	// at all. The .desktop-logo box is always rendered at the logo's height so the page
+	// doesn't jump when the canvas arrives.
+	let Logo3D = $state<Component | null>(null);
+	$effect(() => {
+		if (isDesktopViewport && !Logo3D) {
+			import('./Logo3D.svelte').then((m) => {
+				Logo3D = m.default;
+			});
+		}
+	});
 
 	// Derived values for select triggers (updated to match Payload CMS search API)
 	const sortOptions = [
@@ -537,6 +620,8 @@
 			params.set('limit', SPRITES_PER_PAGE.toString());
 			params.set('page', currentPage.toString());
 			params.set('sort', getSortParam(sortBy));
+			// Only the fields the grid + in-page viewer use (see spriteListQuery.ts)
+			applySpriteListFieldParams(params);
 
 			// Add filters using Payload's where query syntax
 			if (authorFilter) {
@@ -677,6 +762,7 @@
 		window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
 
 		// Push state to history
+		viewerReturnUrl = location.pathname + location.search;
 		history.pushState(
 			{ spriteViewer: true, spriteId: sprite.id },
 			'',
@@ -713,6 +799,13 @@
 	}
 
 	function handlePopState(event: PopStateEvent) {
+		// Back on the grid's own entry: the viewer entry is gone. (Astro's popstate listener
+		// runs before this one and has already dispatched astro:before-preparation for this
+		// navigation, if any, so handleAstroBeforePreparation has already seen the URL.)
+		if (viewerReturnUrl !== null && location.pathname + location.search === viewerReturnUrl) {
+			viewerReturnUrl = null;
+		}
+
 		if (viewingSprite && !event.state?.spriteViewer) {
 			// User pressed back button - same reasoning as closeSpriteViewer above.
 			viewingSprite = null;
@@ -822,9 +915,23 @@
 
 		// Listen to popstate for browser back/forward
 		window.addEventListener('popstate', handlePopState);
+		// Capture phase on window - see handleAstroBeforePreparation.
+		window.addEventListener('astro:before-preparation', handleAstroBeforePreparation, true);
+		document.addEventListener('astro:before-swap', handleAstroBeforeSwap);
+
+		// Only mount the 3D logo on desktop-width viewports (see isDesktopViewport above).
+		const desktopLogoQuery = window.matchMedia('(min-width: 769px)');
+		isDesktopViewport = desktopLogoQuery.matches;
+		const handleDesktopLogoQueryChange = (e: MediaQueryListEvent) => {
+			isDesktopViewport = e.matches;
+		};
+		desktopLogoQuery.addEventListener('change', handleDesktopLogoQueryChange);
 
 		return () => {
 			window.removeEventListener('popstate', handlePopState);
+			window.removeEventListener('astro:before-preparation', handleAstroBeforePreparation, true);
+			document.removeEventListener('astro:before-swap', handleAstroBeforeSwap);
+			desktopLogoQuery.removeEventListener('change', handleDesktopLogoQueryChange);
 		};
 	});
 </script>
@@ -857,9 +964,12 @@
 <div class="sprite-page-wrapper">
 	{#if showBrowser && !viewingSprite}
 		<div class="browser-container" in:fly={{ x: -100, duration: 200 }} out:fly={{ x: -100, duration: 200 }}>
-			<!-- 3D Logo Effect - only shows on desktop -->
+			<!-- 3D Logo Effect - only mounted on desktop-width viewports, not just
+			     hidden with CSS, so mobile never pays for the WebGL context/font/geometry -->
 			<div class="desktop-logo">
-				<Logo3D text="SPRITES" />
+				{#if isDesktopViewport && Logo3D}
+					<Logo3D />
+				{/if}
 			</div>
 
 			<!-- Mobile Logo - simple text -->
@@ -1091,6 +1201,7 @@
 								<a
 									href={`/sprites/${sprite.id}`}
 									class="sprite-box sprite-glow"
+									data-astro-prefetch="false"
 									style="view-transition-name: {transitioningCardId === sprite.id ? 'sprite-card' : 'none'}; {cardStyleFor(sprite)}"
 									onclick={(e) => handleSpriteClick(sprite, e)}
 								>
@@ -1231,6 +1342,8 @@
 	/* Logo visibility control */
 	.desktop-logo {
 		display: block;
+		/* Reserve Logo3D's .three-container height before it (lazily) mounts. */
+		min-height: 200px;
 	}
 
 	.mobile-logo {

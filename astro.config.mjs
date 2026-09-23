@@ -1,5 +1,4 @@
 import { defineConfig } from 'astro/config';
-import react from '@astrojs/react';
 import tailwindcss from "@tailwindcss/vite";
 import node from "@astrojs/node";
 import path from 'path';
@@ -13,7 +12,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // https://astro.build/config
 export default defineConfig({
   output: 'server',
-  prefetch: false,
+  // Prefetch a link's page as soon as it's hovered, so the ClientRouter navigation
+  // usually has the HTML in hand by the time the click lands. Opt a link out with
+  // data-astro-prefetch="false" (e.g. SpriteBrowser's cards, whose clicks are
+  // intercepted by the in-page viewer and never navigate).
+  prefetch: {
+    prefetchAll: true,
+    defaultStrategy: 'hover'
+  },
   adapter: node({
     mode: "standalone"
   }),
@@ -44,7 +50,6 @@ export default defineConfig({
     plugins: [tailwindcss()],
   },
   integrations: [
-    react(),
     svelte({
       compilerOptions: {
         hmr: false

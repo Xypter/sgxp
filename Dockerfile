@@ -30,6 +30,7 @@ RUN adduser --system --uid 1001 astro
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json /app/package-lock.json* ./
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/server.mjs ./server.mjs
 
 RUN npm ci --omit=dev
 
@@ -39,4 +40,5 @@ EXPOSE 4321
 ENV HOST=0.0.0.0
 ENV PORT=4321
 
-CMD ["node", "./dist/server/entry.mjs"]
+# server.mjs wraps dist/server/entry.mjs with compression + public/ asset caching
+CMD ["node", "./server.mjs"]
