@@ -1,8 +1,9 @@
 import sharp from 'sharp';
 
-// Builds the 100x100 preview thumbnail shown on Smack Jeeves archive cards:
-// a pixel-for-pixel crop (never scaled - these are sprite comics) of the
-// most sprite-dense spot on the comic's 3rd page.
+// Builds the 100x100 preview thumbnails shown on Smack Jeeves archive cards
+// (the comic's 3rd page) and the reader's page list (each page): a
+// pixel-for-pixel crop (never scaled - these are sprite comics) of the most
+// sprite-dense spot on the page.
 
 const CDN_BASE = 'https://cdn.sgxp.me/smackjeeves_archive';
 export const PREVIEW_SIZE = 100;
@@ -28,7 +29,7 @@ async function fetchChapters(comicId: string): Promise<Chapter[]> {
   return JSON.parse(match[1]).chapters ?? [];
 }
 
-function pageUrl(comicId: string, pagesPath: string): string | null {
+export function pageUrl(comicId: string, pagesPath: string): string | null {
   const base = `${CDN_BASE}/smackjeeves-${comicId}/${comicId}/`;
   const url = new URL(pagesPath, base);
   // pagesPath comes from the metadata file - refuse anything that resolves
@@ -104,9 +105,26 @@ async function pickCrop(image: Buffer) {
   return { left: bestX * CELL, top: bestY * CELL, width: PREVIEW_SIZE, height: PREVIEW_SIZE };
 }
 
+type PageResult = { png: Buffer } | { missing: true } | { unreadable: true };
+
+async function cropPage(url: string): Promise<PageResult> {
+  const response = await fetch(url);
+  if (response.status === 404) return { missing: true }; // page wasn't saved
+  if (!response.ok) throw new Error(`page ${response.status}`);
+
+  const image = Buffer.from(await response.arrayBuffer());
+  try {
+    const crop = await pickCrop(image);
+    return { png: await sharp(image, { animated: false }).extract(crop).png({ compressionLevel: 9 }).toBuffer() };
+  } catch {
+    return { unreadable: true }; // corrupt/unsupported image
+  }
+}
+
 /**
- * Returns the preview PNG, or null if the comic has no usable page.
- * Throws on transient failures (CDN errors) so callers don't cache them.
+ * The comic's card preview. Returns the PNG, or null if the comic has no
+ * usable page. Throws on transient failures (CDN errors) so callers don't
+ * cache them.
  */
 export async function buildComicPreview(comicId: string): Promise<Buffer | null> {
   const chapters = await fetchChapters(comicId);
@@ -116,19 +134,22 @@ export async function buildComicPreview(comicId: string): Promise<Buffer | null>
     if (!pagesPath) continue;
     const url = pageUrl(comicId, pagesPath);
     if (!url) continue;
-
-    const response = await fetch(url);
-    if (response.status === 404) continue; // page wasn't saved - try the next
-    if (!response.ok) throw new Error(`page ${response.status}`);
-
-    const image = Buffer.from(await response.arrayBuffer());
-    try {
-      const crop = await pickCrop(image);
-      return await sharp(image, { animated: false }).extract(crop).png({ compressionLevel: 9 }).toBuffer();
-    } catch {
-      continue; // unreadable/corrupt image - try the next page
-    }
+    const result = await cropPage(url);
+    if ('png' in result) return result.png; // otherwise try the next page
   }
 
   return null;
+}
+
+/**
+ * One page's preview, for the reader's page list. `pagesPath` comes from the
+ * comic's metadata (the client already has it, so the metadata file isn't
+ * re-fetched per thumbnail) and must resolve inside the comic's own folder.
+ * Same null/throw contract as buildComicPreview.
+ */
+export async function buildPagePreview(comicId: string, pagesPath: string): Promise<Buffer | null> {
+  const url = pageUrl(comicId, pagesPath);
+  if (!url) return null;
+  const result = await cropPage(url);
+  return 'png' in result ? result.png : null;
 }

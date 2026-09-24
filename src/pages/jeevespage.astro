@@ -17,6 +17,14 @@ import JeevesViewer from "../components/jeeves/JeevesViewer.svelte";
     padding: 50px 0px;
   }
 
+  /* Below 1200px the navbar becomes a floating hamburger in the top-right
+     corner - start the page below it. */
+  @media (max-width: 1199px) {
+    .jeeves-page-container {
+      padding-top: 68px;
+    }
+  }
+
   @media (max-width: 940px) {
     .jeeves-page-container {
       width: 90%;
@@ -26,7 +34,13 @@ import JeevesViewer from "../components/jeeves/JeevesViewer.svelte";
   @media (max-width: 768px) {
     .jeeves-page-container {
       width: 100%;
-      padding: 20px 0px;
+      padding: 64px 0px 0px;
+    }
+
+    /* The reader starts flush at the top - its title row leaves room for
+       the menu button itself (see JeevesPageStage). */
+    :global(.jeeves-page-container:has(.reader)) {
+      padding-top: 0;
     }
   }
 </style>

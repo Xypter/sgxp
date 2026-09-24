@@ -45,9 +45,13 @@
     box-shadow: var(--box-shadow) !important;
   }
 
-  :global(.theme-button:hover:not(:disabled)) {
-    background: color-mix(in srgb, var(--font-link-color) 80%, white) !important;
-    cursor: url('/img/Sonic_Cursor_Spin.gif'), progress !important;
+  /* Hover only where there's a real hover pointer - on touchscreens a tap
+     leaves it stuck "hovered" until something else is tapped. */
+  @media (hover: hover) {
+    :global(.theme-button:hover:not(:disabled)) {
+      background: color-mix(in srgb, var(--font-link-color) 80%, white) !important;
+      cursor: url('/img/Sonic_Cursor_Spin.gif'), progress !important;
+    }
   }
 
   :global(.theme-button:disabled) {

@@ -17,6 +17,8 @@
     children?: Snippet;
     onValueChange?: (value: string) => void;
     portal?: string | HTMLElement;
+    /** Extra class for the dropdown (it's portaled, so parent styles can't reach it). */
+    contentClass?: string;
   }
 
   let {
@@ -28,13 +30,14 @@
     class: className,
     children,
     onValueChange,
-    portal = 'body'
+    portal = 'body',
+    contentClass: extraContentClass = ''
   }: SelectProps = $props();
 
   const triggerClass = themed
     ? `theme-select-trigger ${className || ''}`
     : className;
-  const contentClass = themed ? 'theme-select-content' : '';
+  const contentClass = `${themed ? 'theme-select-content' : ''} ${extraContentClass}`.trim();
   const itemClass = themed ? 'theme-select-item' : '';
 
   function handleValueChange(newValue: string | undefined) {
@@ -80,8 +83,12 @@
     min-width: 150px;
   }
 
-  :global(.theme-select-trigger:hover) {
-    border-color: color-mix(in srgb, var(--font-link-color) 80%, white) !important;
+  /* Hover only where there's a real hover pointer - on touchscreens a tap
+     leaves it stuck "hovered" until something else is tapped. */
+  @media (hover: hover) {
+    :global(.theme-select-trigger:hover) {
+      border-color: color-mix(in srgb, var(--font-link-color) 80%, white) !important;
+    }
   }
 
   :global(.theme-select-trigger:focus),
@@ -113,7 +120,13 @@
     transition: background-color var(--transition-speed, 200ms) ease-in-out !important;
   }
 
-  :global(.theme-select-item:hover),
+  @media (hover: hover) {
+    :global(.theme-select-item:hover) {
+      background: color-mix(in srgb, var(--font-link-color) 20%, transparent) !important;
+      color: var(--font-link-color) !important;
+    }
+  }
+
   :global(.theme-select-item[data-highlighted]) {
     background: color-mix(in srgb, var(--font-link-color) 20%, transparent) !important;
     color: var(--font-link-color) !important;

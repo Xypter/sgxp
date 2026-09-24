@@ -1,1102 +1,555 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { Book, Users, Calendar, Home, ChevronLeft, ChevronRight, ArrowUp, MessageSquare, User } from 'lucide-svelte';
-  import { Select } from '$lib/components';
+  import { onMount, tick } from 'svelte';
+  import { ArrowLeft, ArrowUp, ChevronLeft, ChevronRight, Library, LoaderCircle } from 'lucide-svelte';
+  import { Button, Select } from '$lib/components';
+  import JeevesPageStage from './JeevesPageStage.svelte';
+  import JeevesComicHome from './JeevesComicHome.svelte';
+  import JeevesComments from './JeevesComments.svelte';
+  import {
+    chapterImageUrl,
+    formatDate,
+    loadArchiveEntry,
+    loadComicMetadata,
+    type ArchiveEntryInfo,
+    type ComicMetadata,
+  } from '$lib/jeevesArchive';
 
-  // State
-  let metadata = $state<any>(null);
+  // The page is ?comic_id=<id>, and the URL hash is the page being read
+  // (#0 / no hash = the comic's home: info + page list).
+
+  let comicId = $state<string | null>(null);
+  let metadata = $state<ComicMetadata | null>(null);
+  let entry = $state<ArchiveEntryInfo | null>(null);
   let loading = $state(true);
   let error = $state<string | null>(null);
   let currentPage = $state(0);
-  let pageHtml = $state<string[]>([]);
-  let comicImageError = $state(false);
-  let chapterImageErrors = $state(new Set<number>());
+  let immersive = $state(false);
+  let resumePage = $state<number | null>(null);
+  let readerEl = $state<HTMLElement>();
 
-  // Get comic ID from URL
-  function getComicId(): string | null {
-    if (typeof window === 'undefined') return null;
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('comic_id');
-  }
+  const pageCount = $derived(metadata?.chapters.length ?? 0);
+  const chapter = $derived(currentPage > 0 ? metadata?.chapters[currentPage - 1] : undefined);
+  const pageSrc = $derived(comicId && chapter ? chapterImageUrl(comicId, chapter) : null);
+  const authorName = $derived(metadata?.authors?.find((a) => a.name)?.name);
+  const pageOptions = $derived([
+    { value: '0', label: 'Comic info & page list' },
+    ...(metadata?.chapters ?? []).map((ch, i) => ({
+      value: String(i + 1),
+      label: `${i + 1} / ${pageCount} · ${ch.articleTitle || `Page ${i + 1}`}`,
+    })),
+  ]);
 
-  // Get current page from hash
-  function getCurrentPageNum(): number {
-    if (typeof window === 'undefined') return 0;
-    const page = window.location.hash.substr(1);
-    if (page === "" || typeof page === 'undefined') {
-      return 0;
-    }
-    return parseInt(page);
-  }
+  // "Continue from page N" - remembered per browser, purely a convenience.
+  const PROGRESS_KEY = 'sgxp-jeeves-progress';
 
-  // Format comment time
-  function formatCommentTime(isoString: string): string {
-    const date = new Date(isoString);
-    const pad = (num: number) => num.toString().padStart(2, '0');
-
-    const year = date.getFullYear();
-    const month = pad(date.getMonth() + 1);
-    const day = pad(date.getDate());
-
-    let hours = date.getHours();
-    const minutes = pad(date.getMinutes());
-    const ampm = hours >= 12 ? 'pm' : 'am';
-
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-
-    return `${month}-${day}-${year}, ${hours}:${minutes}${ampm}`;
-  }
-
-  // Set page
-  function setPage(pgNum: number) {
-    if (!metadata || pgNum < 0 || pgNum > metadata.chapters.length) {
-      return;
-    }
-    currentPage = pgNum;
-    comicImageError = false; // Reset image error state when changing pages
-    window.location.hash = String(pgNum);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  // Handle keyboard navigation
-  function handleKeyup(event: KeyboardEvent) {
-    if (event.key === 'ArrowLeft') {
-      setPage(currentPage - 1);
-    } else if (event.key === 'ArrowRight') {
-      setPage(currentPage + 1);
-    }
-  }
-
-  // Handle image click navigation
-  function handleImageClick(event: MouseEvent) {
-    const target = event.target as HTMLElement;
-    const imageWidth = target.offsetWidth;
-    const clickX = event.offsetX;
-
-    if (clickX < imageWidth / 2) {
-      setPage(currentPage - 1);
-    } else {
-      setPage(currentPage + 1);
-    }
-  }
-
-  // Handle image error - set fallback image
-  function handleImageError(event: Event, fallbackType: 'avatar' | 'comic' = 'avatar') {
-    const img = event.target as HTMLImageElement;
-    img.onerror = null; // Prevent infinite loop
-    if (fallbackType === 'avatar') {
-      img.src = 'https://cdn.sgxp.me/smackjeeves_archive/comic/KansDefaultgif3.gif';
-    } else {
-      img.src = 'https://cdn.sgxp.me/smackjeeves_archive/comic/KansDefaultgif2.gif';
-    }
-  }
-
-  // Load metadata
-  async function loadMetadata() {
-    const comicId = getComicId();
-    if (!comicId) {
-      error = 'No comic ID found. Please add ?comic_id=XXX to the URL.';
-      loading = false;
-      return;
-    }
-
+  function readProgress(): Record<string, number> {
     try {
-      const metadataUrl = `https://cdn.sgxp.me/smackjeeves_archive/smackjeeves-${comicId}/${comicId}/metadata.js`;
-
-      // Fetch the metadata file as text and evaluate it
-      // The file uses "let metadata = {...}" format, so we need to extract and parse it
-      const response = await fetch(metadataUrl);
-      if (!response.ok) {
-        throw new Error('Failed to fetch comic metadata');
-      }
-
-      const scriptText = await response.text();
-
-      // The file contains "let metadata = {...}" - we need to extract the object
-      // Replace "let metadata = " with nothing to get just the object, then parse
-      const jsonMatch = scriptText.match(/let\s+metadata\s*=\s*(\{[\s\S]*\})\s*;?\s*$/);
-      if (!jsonMatch) {
-        throw new Error('Could not parse metadata format');
-      }
-
-      // Evaluate the object literal (it's valid JS object syntax)
-      // Using Function constructor to safely evaluate the object
-      const loadedMetadata = new Function(`return ${jsonMatch[1]}`)();
-
-      if (loadedMetadata) {
-        metadata = loadedMetadata;
-
-        // Process metadata
-        metadata.descriptionHTML = metadata.description?.replace(/(\r\n|\n|\r)/g, "<br />") || '';
-        metadata.numChapters = metadata.chapters?.length || 0;
-        metadata.firstPosted = metadata.chapters?.[0]?.distributedDate?.split("T")[0] || 'Unknown';
-
-        // Process chapters
-        metadata.chapters.forEach((chapter: any, index: number) => {
-          chapter.chapterNumber = index + 1;
-          if (chapter.authorComment) {
-            chapter.authorCommentHTML = chapter.authorComment.replace(/(\r\n|\n|\r)/g, "<br />");
-          }
-
-          // Sort and process comments
-          if (chapter.comments) {
-            chapter.comments.sort((a: any, b: any) =>
-              new Date(a.time).getTime() - new Date(b.time).getTime()
-            );
-            chapter.comments.forEach((comment: any) => {
-              comment.commentHTML = comment.commentText?.replace(/(\r\n|\n|\r)/g, "<br />") || '';
-              comment.formattedTime = formatCommentTime(comment.time);
-            });
-          }
-        });
-
-        currentPage = getCurrentPageNum();
-        loading = false;
-      } else {
-        throw new Error('Metadata not found');
-      }
-    } catch (err) {
-      console.error('Error loading metadata:', err);
-      error = 'Failed to load comic data. Please check the comic ID.';
-      loading = false;
+      return JSON.parse(localStorage.getItem(PROGRESS_KEY) || '{}') ?? {};
+    } catch {
+      return {};
     }
   }
 
-  // Chapter select options
-  let chapterOptions = $derived.by(() => {
-    if (!metadata) return [];
-    const options = [{ value: '0', label: `Home - ${metadata.title}` }];
-    metadata.chapters?.forEach((chapter: any) => {
-      options.push({
-        value: String(chapter.chapterNumber),
-        label: `${chapter.chapterNumber} - ${chapter.articleTitle}`
-      });
-    });
-    return options;
-  });
-
-  let selectedChapter = $state('0');
-
-  // Update selected chapter when currentPage changes
-  $effect(() => {
-    selectedChapter = String(currentPage);
-  });
-
-  function handleChapterChange(value: string) {
-    setPage(parseInt(value));
+  function saveProgress(page: number) {
+    if (!comicId || page < 1) return;
+    resumePage = page;
+    try {
+      localStorage.setItem(PROGRESS_KEY, JSON.stringify({ ...readProgress(), [comicId]: page }));
+    } catch {}
   }
 
-  // Get comic ID for image URLs
-  let comicId = $state<string | null>(null);
+  function pageFromHash(): number {
+    const page = parseInt(window.location.hash.slice(1), 10);
+    return Number.isFinite(page) && page > 0 ? page : 0;
+  }
+
+  function clampPage(page: number) {
+    return Math.min(Math.max(page, 0), pageCount);
+  }
+
+  // Where the comic's home (page list) was when a page was opened, so coming
+  // back lands on the card that was tapped. Kept as "this card, this far
+  // from the top of the screen" rather than a raw scroll offset: the home
+  // page's layout shifts slightly once something's been read (the "Continue
+  // from page N" button appears), which would throw a raw offset off.
+  let homeAnchor: { page: number; top: number } | null = null;
+  let homeScrollY = 0;
+
+  function restoreHomeScroll() {
+    const card = homeAnchor && document.querySelector<HTMLElement>(`.page-card[data-page="${homeAnchor.page}"]`);
+    if (card && homeAnchor) {
+      window.scrollBy({ top: card.getBoundingClientRect().top - homeAnchor.top, behavior: 'instant' });
+    } else {
+      window.scrollTo({ top: homeScrollY, behavior: 'instant' });
+    }
+  }
+
+  /** Switches the view; `setPage` also records it in the URL/history. */
+  async function showPage(page: number) {
+    if (!metadata) return;
+    page = clampPage(page);
+    const previous = currentPage;
+    if (page === previous) return;
+    if (previous === 0) {
+      homeScrollY = window.scrollY;
+      const card = document.querySelector<HTMLElement>(`.page-card[data-page="${page}"]`);
+      const top = card?.getBoundingClientRect().top;
+      // Only anchor to a card that was actually on screen (not e.g. page 1
+      // when "Start reading" was pressed at the top of the page).
+      homeAnchor = card && top !== undefined && top > -card.offsetHeight && top < window.innerHeight ? { page, top } : null;
+    }
+    if (page === 0) immersive = false;
+    // Phones read in fullscreen: opening a page from the list goes straight
+    // into it (the shrink button still leaves it, for the comments).
+    else if (previous === 0 && window.matchMedia('(max-width: 768px)').matches) immersive = true;
+    currentPage = page;
+
+    await tick();
+    // `instant` because the site's CSS sets smooth scrolling, which would
+    // animate every page change (and land short if layout moves meanwhile).
+    // Applied again next frame: the browser's own scroll anchoring and
+    // history restoration can nudge it after the view swap.
+    const applyScroll = () => {
+      if (page === 0) {
+        restoreHomeScroll();
+      } else if (previous === 0) {
+        // Opening a page from the list always starts at the top of it.
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      }
+    };
+    applyScroll();
+    requestAnimationFrame(applyScroll);
+    if (page > 0 && previous > 0 && readerEl && readerEl.getBoundingClientRect().top < 0) {
+      // Turning the page from down in the comments: back to the top of the
+      // new page, not the top of the site.
+      readerEl.scrollIntoView({ block: 'start', behavior: 'instant' });
+    }
+  }
+
+  function setPage(page: number) {
+    if (!metadata) return;
+    page = clampPage(page);
+    if (page === currentPage) return;
+    showPage(page);
+    window.location.hash = String(page);
+  }
+
+  $effect(() => {
+    if (currentPage > 0) saveProgress(currentPage);
+  });
+
+  // Next page is almost always what's wanted next - have it cached.
+  $effect(() => {
+    if (!comicId || !metadata || currentPage >= pageCount) return;
+    const next = chapterImageUrl(comicId, metadata.chapters[currentPage]);
+    if (next) new Image().src = next;
+  });
+
+  $effect(() => {
+    if (metadata?.title) document.title = currentPage > 0 ? `${metadata.title} - Page ${currentPage} | SGXP` : `${metadata.title} | SGXP`;
+  });
+
+  function handleKeydown(event: KeyboardEvent) {
+    const target = event.target as HTMLElement | null;
+    if (target?.closest('input, select, textarea, [contenteditable="true"]')) return;
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
+    if (event.key === 'ArrowLeft' && currentPage > 1) setPage(currentPage - 1);
+    else if (event.key === 'ArrowRight' && currentPage < pageCount) setPage(currentPage + 1);
+  }
 
   onMount(() => {
-    comicId = getComicId();
-    loadMetadata();
+    comicId = new URLSearchParams(window.location.search).get('comic_id');
+    if (!comicId || !/^\d+$/.test(comicId)) {
+      error = 'No comic selected. Pick one from the Smack Jeeves archive.';
+      loading = false;
+      return;
+    }
+    resumePage = readProgress()[comicId] ?? null;
 
-    window.addEventListener('keyup', handleKeyup);
-    window.addEventListener('popstate', () => {
-      currentPage = getCurrentPageNum();
-    });
+    const id = comicId;
+    loadArchiveEntry(id).then((result) => (entry = result));
+    loadComicMetadata(id)
+      .then((result) => {
+        metadata = result;
+        currentPage = Math.min(pageFromHash(), result.chapters.length);
+      })
+      .catch((err) => {
+        console.error('Error loading comic metadata:', err);
+        error = 'This comic could not be loaded from the archive.';
+      })
+      .finally(() => (loading = false));
 
+    const onHashChange = () => {
+      // Browser/phone back and forward.
+      showPage(pageFromHash());
+    };
+    window.addEventListener('hashchange', onHashChange);
+    window.addEventListener('keydown', handleKeydown);
     return () => {
-      window.removeEventListener('keyup', handleKeyup);
+      window.removeEventListener('hashchange', onHashChange);
+      window.removeEventListener('keydown', handleKeydown);
     };
   });
 </script>
 
+{#snippet pageNav()}
+  <nav class="page-nav" aria-label="Page navigation">
+    <Button
+      themed
+      class="page-nav-btn"
+      onclick={() => setPage(currentPage - 1)}
+      disabled={currentPage <= 1}
+      title="Previous page (Left Arrow)"
+      aria-label="Previous page"
+    >
+      <ChevronLeft size={18} /><span class="page-nav-btn-label">Prev</span>
+    </Button>
+
+    <div class="page-select">
+      <Select
+        themed
+        class="page-select-trigger"
+        contentClass="page-select-content"
+        value={String(currentPage)}
+        options={pageOptions}
+        onValueChange={(value) => setPage(parseInt(value, 10))}
+      />
+    </div>
+
+    <Button
+      themed
+      class="page-nav-btn"
+      onclick={() => setPage(currentPage + 1)}
+      disabled={currentPage >= pageCount}
+      title="Next page (Right Arrow)"
+      aria-label="Next page"
+    >
+      <span class="page-nav-btn-label">Next</span><ChevronRight size={18} />
+    </Button>
+  </nav>
+{/snippet}
+
 <div class="jeeves-viewer">
   {#if loading}
-    <div class="jeeves-content-title">
-      <Book class="w-5 h-5" style="display: inline-block; vertical-align: middle; margin-right: 8px;" />
-      Loading Archive...
+    <div class="jeeves-status"><LoaderCircle size={22} class="jeeves-spin" /> Loading comic...</div>
+  {:else if error || !metadata || !comicId}
+    <div class="jeeves-status jeeves-status--error">
+      <p>{error ?? 'Something went wrong.'}</p>
+      <a href="/smackjeeves">Back to the archive</a>
     </div>
-    <div class="jeeves-content-box">
-      <div class="loading-state">
-        <p>Loading comic data...</p>
-      </div>
-    </div>
-  {:else if error}
-    <div class="jeeves-content-title">
-      <Book class="w-5 h-5" style="display: inline-block; vertical-align: middle; margin-right: 8px;" />
-      Error
-    </div>
-    <div class="jeeves-content-box">
-      <div class="error-state">
-        <p>{error}</p>
-      </div>
-    </div>
-  {:else if metadata}
-    <!-- Comic Title Header -->
-    <div class="jeeves-header">
-      <button class="comic-title-link" onclick={() => setPage(0)}>
-        {metadata.title}
-      </button>
-    </div>
+  {:else if currentPage === 0}
+    <JeevesComicHome {comicId} {metadata} {entry} {resumePage} onOpenPage={setPage} />
 
-    {#if currentPage === 0}
-      <!-- Home Page -->
-      <div class="jeeves-home">
-        <!-- Comic Info Section -->
-        <div class="jeeves-content-title">
-          <Book class="w-5 h-5" style="display: inline-block; vertical-align: middle; margin-right: 8px;" />
-          Comic Information
-        </div>
-        <div class="jeeves-content-box">
-          <!-- Authors -->
-          <div class="authors-section">
-            <h4 class="section-label">
-              <Users class="w-4 h-4" />
-              Creators
-            </h4>
-            <div class="authors-list">
-              {#each metadata.authors as author}
-                <div class="author-item">
-                  {#if author.imgPath}
-                    <img
-                      src="https://cdn.sgxp.me/smackjeeves_archive/{author.imgPath}"
-                      alt={author.name}
-                      class="author-avatar"
-                      onerror={(e) => {
-                        const img = e.target as HTMLImageElement;
-                        img.style.display = 'none';
-                        const fallback = img.nextElementSibling as HTMLElement;
-                        if (fallback) fallback.style.display = 'flex';
-                      }}
-                    />
-                    <div class="author-avatar-fallback" style="display: none;">
-                      {author.name?.[0]?.toUpperCase() || '?'}
-                    </div>
-                  {:else}
-                    <div class="author-avatar-fallback">
-                      {author.name?.[0]?.toUpperCase() || '?'}
-                    </div>
-                  {/if}
-                  <span class="author-name">{author.name}</span>
-                </div>
-              {/each}
-            </div>
-          </div>
-
-          <!-- Details Grid -->
-          <div class="details-grid">
-            <div class="detail-item">
-              <h4>
-                <Calendar class="w-4 h-4" />
-                Date Created
-              </h4>
-              <p>{metadata.firstPosted}</p>
-            </div>
-            <div class="detail-item">
-              <h4>
-                <Book class="w-4 h-4" />
-                Chapters
-              </h4>
-              <p>{metadata.numChapters}</p>
-            </div>
-          </div>
-
-          <!-- Description -->
-          <div class="description-section">
-            <h4 class="section-label">Description</h4>
-            <div class="description-text">
-              {@html metadata.descriptionHTML}
-            </div>
-          </div>
-        </div>
-
-        <!-- Chapter List Section -->
-        <div class="jeeves-content-title">
-          <Book class="w-5 h-5" style="display: inline-block; vertical-align: middle; margin-right: 8px;" />
-          Chapter List
-        </div>
-        <div class="jeeves-content-box">
-          <div class="chapter-grid">
-            {#each metadata.chapters as chapter}
-              <button class="chapter-card" onclick={() => setPage(chapter.chapterNumber)}>
-                <div class="chapter-cover">
-                  {#if chapter.pagesPath && !chapterImageErrors.has(chapter.chapterNumber)}
-                    <img
-                      src="https://cdn.sgxp.me/smackjeeves_archive/smackjeeves-{comicId}/{comicId}/{chapter.pagesPath}"
-                      alt="Chapter {chapter.chapterNumber}"
-                      onerror={() => {
-                        chapterImageErrors.add(chapter.chapterNumber);
-                        chapterImageErrors = chapterImageErrors; // Trigger reactivity
-                      }}
-                    />
-                  {:else}
-                    <div class="chapter-cover-placeholder">
-                      <span class="chapter-placeholder-text">No Image</span>
-                    </div>
-                  {/if}
-                </div>
-                <span class="chapter-label">{chapter.chapterNumber} - {chapter.articleTitle}</span>
-              </button>
-            {/each}
-          </div>
-        </div>
-      </div>
-    {:else}
-      <!-- Chapter Page -->
-      {@const chapter = metadata.chapters[currentPage - 1]}
-      <div class="jeeves-chapter">
-        <!-- Comic Image -->
-        <div class="jeeves-content-title">
-          <Book class="w-5 h-5" style="display: inline-block; vertical-align: middle; margin-right: 8px;" />
-          Page
-        </div>
-        <div class="jeeves-content-box comic-display">
-          <!-- Chapter Header (inside box) -->
-          <div class="chapter-header">
-            <span class="chapter-number">Chapter {chapter.chapterNumber}</span>
-            <h2 class="chapter-title">{chapter.articleTitle}</h2>
-          </div>
-
-          <div class="comic-image-container">
-            {#if chapter.pagesPath && !comicImageError}
-              <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-              <!-- svelte-ignore a11y_click_events_have_key_events -->
-              <img
-                src="https://cdn.sgxp.me/smackjeeves_archive/smackjeeves-{comicId}/{comicId}/{chapter.pagesPath}"
-                alt="Chapter {chapter.chapterNumber}"
-                class="comic-image {currentPage < metadata.chapters.length ? 'clickable' : ''}"
-                onclick={currentPage < metadata.chapters.length ? handleImageClick : undefined}
-                onerror={() => { comicImageError = true; }}
-              />
-            {:else}
-              <div class="comic-placeholder">
-                <span class="comic-placeholder-text">Image missing from archive</span>
-              </div>
-            {/if}
-          </div>
-
-          <!-- Chapter Navigation -->
-          <div class="chapter-nav-wrapper">
-            <button
-              class="chapter-nav-btn"
-              onclick={() => setPage(currentPage - 1)}
-              disabled={currentPage <= 0}
-              title="Previous page (Left Arrow)"
-            >
-              <ChevronLeft class="w-5 h-5" />
-            </button>
-            <Select
-              bind:value={selectedChapter}
-              options={chapterOptions}
-              themed
-              onValueChange={handleChapterChange}
-            />
-            <button
-              class="chapter-nav-btn"
-              onclick={() => setPage(currentPage + 1)}
-              disabled={currentPage >= metadata.chapters.length}
-              title="Next page (Right Arrow)"
-            >
-              <ChevronRight class="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-
-        <!-- Author Comment -->
-        <div class="jeeves-content-title">
-          <MessageSquare class="w-5 h-5" style="display: inline-block; vertical-align: middle; margin-right: 8px;" />
-          Author's Comment
-        </div>
-        <div class="jeeves-content-box">
-          {#if chapter.authorComment}
-            <div class="author-comment-text">
-              {@html chapter.authorCommentHTML}
-            </div>
-          {:else}
-            <p class="missing-notice">No comment</p>
-          {/if}
-        </div>
-
-        <!-- Comments Section -->
-        <div class="jeeves-content-title">
-          <MessageSquare class="w-5 h-5" style="display: inline-block; vertical-align: middle; margin-right: 8px;" />
-          User Comments ({chapter.comments?.length || 0})
-        </div>
-        <div class="jeeves-content-box">
-          {#if chapter.comments && chapter.comments.length > 0}
-            <div class="archive-comments-list">
-              {#each chapter.comments as comment}
-                <div class="archive-comment">
-                  <div class="archive-comment-header">
-                    {#if comment.imgPath}
-                      <img
-                        src="https://cdn.sgxp.me/smackjeeves_archive/{comment.imgPath}"
-                        alt={comment.nickname}
-                        class="archive-comment-avatar"
-                        onerror={(e) => {
-                          const img = e.target as HTMLImageElement;
-                          img.style.display = 'none';
-                          const fallback = img.nextElementSibling as HTMLElement;
-                          if (fallback) fallback.style.display = 'flex';
-                        }}
-                      />
-                      <div class="archive-comment-avatar-fallback" style="display: none;">
-                        {comment.nickname?.[0]?.toUpperCase() || '?'}
-                      </div>
-                    {:else}
-                      <div class="archive-comment-avatar-fallback">
-                        {comment.nickname?.[0]?.toUpperCase() || '?'}
-                      </div>
-                    {/if}
-                    <div class="archive-comment-meta">
-                      <span class="archive-comment-author">{comment.nickname}</span>
-                      <span class="archive-comment-date">{comment.formattedTime}</span>
-                    </div>
-                  </div>
-                  <div class="archive-comment-body">
-                    {@html comment.commentHTML}
-                  </div>
-                </div>
-              {/each}
-            </div>
-          {:else}
-            <p class="missing-notice">No comments</p>
-          {/if}
-        </div>
-      </div>
-    {/if}
-
-    <!-- Back to Top Button -->
     <button class="back-to-top" onclick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-      <ArrowUp class="w-4 h-4" />
-      Back to Top
+      <ArrowUp size={16} /> Top
     </button>
+  {:else if chapter}
+    <div class="reader" bind:this={readerEl}>
+      <JeevesPageStage
+        src={pageSrc}
+        alt="{metadata.title}, page {currentPage}"
+        bind:immersive
+      >
+        {#snippet lead()}
+          <button
+            type="button"
+            class="side-btn"
+            onclick={() => setPage(0)}
+            title="Comic info & page list"
+            aria-label="Back to comic info and page list"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <a href="/smackjeeves" class="side-btn no-theme-styles" data-restore-state title="Smack Jeeves Archive" aria-label="Back to the Smack Jeeves archive">
+            <Library size={20} />
+          </a>
+        {/snippet}
+        {#snippet info()}
+          <!-- The page's own title lives in the page picker below. -->
+          <div class="stage-comic-title" title={metadata.title}>{metadata.title}</div>
+          <div class="stage-page-num">
+            Page {currentPage} of {pageCount} ·
+            <span class="stage-page-name">{chapter.articleTitle || `Page ${currentPage}`}</span>
+            · {formatDate(chapter.distributedDate)}
+          </div>
+        {/snippet}
+        {#snippet footer()}
+          {@render pageNav()}
+        {/snippet}
+      </JeevesPageStage>
+
+      <div class="reader-below">
+        <JeevesComments {chapter} {authorName} />
+      </div>
+
+      <!-- Last in the reader so `sticky` keeps it pinned to the bottom of the
+           screen all the way down through the comments. -->
+      {#if !immersive}
+        <div class="reader-nav">{@render pageNav()}</div>
+      {/if}
+    </div>
   {/if}
 </div>
 
 <style>
   .jeeves-viewer {
     width: 100%;
-    max-width: 100%;
-  }
-
-  /* Loading/Error States */
-  .loading-state,
-  .error-state {
-    text-align: center;
-    padding: 40px 20px;
-    font-family: 'saira';
-    font-size: 14px;
+    font-family: 'saira', sans-serif;
     color: var(--font-color);
   }
 
-  .error-state {
-    color: #ff4444;
-  }
-
-
-  /* Header */
-  .jeeves-header {
-    margin-bottom: var(--gap);
-  }
-
-  .comic-title-link {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: color-mix(in srgb, var(--page-color) 60%, black);
-    padding: 10px 15px;
-    font-family: 'saira';
-    font-weight: 800;
-    font-size: 28px;
-    color: var(--font-link-color);
-    border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
-    box-shadow: var(--box-shadow);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    width: 100%;
-    text-align: left;
-    text-shadow:
-      calc(2px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 0 var(--bg-color),
-      calc(2px * var(--multiply-factor)) calc(2px * var(--multiply-factor)) 0 var(--bg-color),
-      calc(0px * var(--multiply-factor)) calc(2px * var(--multiply-factor)) 0 var(--bg-color);
-  }
-
-  .comic-title-link:hover {
-    border-color: var(--font-link-color);
-    color: color-mix(in srgb, var(--font-link-color) 70%, white);
-  }
-
-  /* Content Boxes */
-  .jeeves-content-title {
-    display: flex;
-    align-items: center;
-    background: color-mix(in srgb, var(--page-color) 60%, black);
-    padding: 3px 0px 3px 10px;
-    font-family: 'saira';
-    font-weight: 800;
-    font-size: 18px;
-    color: var(--font-color);
-    text-shadow:
-      calc(1px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 0 var(--bg-color),
-      calc(1px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 0 var(--bg-color),
-      calc(0px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 0 var(--bg-color);
-    border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
-    box-shadow: var(--box-shadow);
-    position: relative;
-  }
-
-  .jeeves-content-box {
-    background: var(--page-color);
-    padding: 20px;
-    border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
-    border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
-    border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
-    box-shadow: var(--box-shadow);
-    margin-bottom: var(--gap);
-    color: var(--font-color);
-    position: relative;
-    z-index: 1;
-  }
-
-  /* Authors Section */
-  .authors-section {
-    margin-bottom: 20px;
-    padding-bottom: 20px;
-    border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 70%, white);
-  }
-
-  .section-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-family: 'saira';
-    font-weight: 800;
-    font-size: 14px;
-    text-transform: uppercase;
-    color: var(--font-link-color);
-    margin-bottom: 12px;
-    text-shadow:
-      calc(1px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 0 var(--bg-color);
-  }
-
-  .authors-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-  }
-
-  .author-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 12px 8px 0px;
-  }
-
-  .author-avatar {
-    width: 127px;
-    height: 127px;
-    object-fit: none;
-    border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
-    box-shadow: calc(3px * var(--multiply-factor)) calc(3px * var(--multiply-factor)) 0 var(--bg-color);
-  }
-
-  .author-avatar-fallback {
-    width: 127px;
-    height: 127px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: color-mix(in srgb, var(--page-color) 60%, black);
-    border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
-    box-shadow: calc(3px * var(--multiply-factor)) calc(3px * var(--multiply-factor)) 0 var(--bg-color);
-    font-family: 'saira';
-    font-weight: 800;
-    font-size: 48px;
-    color: var(--font-link-color);
-    text-shadow:
-      calc(2px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 0 var(--bg-color),
-      calc(2px * var(--multiply-factor)) calc(2px * var(--multiply-factor)) 0 var(--bg-color);
-  }
-
-  .author-name {
-    font-family: 'saira';
-    font-weight: 700;
-    font-size: 14px;
-    color: var(--font-color);
-  }
-
-  /* Details Grid */
-  .details-grid {
-    display: flex;
-    gap: 50px;
-    margin-bottom: 20px;
-  }
-
-  .detail-item h4 {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-family: 'saira';
-    font-weight: 800;
-    font-size: 12px;
-    text-transform: uppercase;
-    color: var(--font-link-color);
-    margin-bottom: 4px;
-    text-shadow:
-      calc(1px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 0 var(--bg-color);
-  }
-
-  .detail-item p {
-    font-family: 'saira';
-    font-size: 16px;
-    color: var(--font-color);
-    font-weight: 600;
-    margin: 0;
-  }
-
-  /* Description */
-  .description-section {
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 70%, white);
-  }
-
-  .description-text {
-    font-family: 'saira';
-    font-size: 14px;
-    line-height: 1.6;
-    color: var(--font-color);
-  }
-
-  /* Chapter Grid */
-  .chapter-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 15px;
-  }
-
-  .chapter-card {
+  .jeeves-status {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
-    padding: 10px;
-    background: color-mix(in srgb, var(--page-color) 80%, black);
-    border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 70%, white);
-    cursor: pointer;
-    transition: all 0.2s ease;
+    gap: 10px;
+    padding: 60px 20px;
+    background: var(--page-color);
+    border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white);
+    box-shadow: var(--box-shadow);
+    font-size: 15px;
     text-align: center;
   }
 
-  .chapter-card:hover {
-    border-color: var(--font-link-color);
-    background: color-mix(in srgb, var(--page-color) 90%, black);
+  .jeeves-status p {
+    margin: 0;
   }
 
-  .chapter-cover {
-    width: 130px;
-    height: 130px;
-    overflow: hidden;
+  .jeeves-status--error p {
+    color: #ff6b6b;
+  }
+
+  .jeeves-status :global(.jeeves-spin) {
+    animation: jeeves-spin 0.9s linear infinite;
+  }
+
+  @keyframes jeeves-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Panels shared by the home and reader views (About, page list,
+     comments). */
+  .jeeves-viewer :global(.jeeves-panel) {
+    background: var(--page-color);
+    border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white);
+    box-shadow: var(--box-shadow);
+    margin-bottom: var(--gap, 20px);
+  }
+
+  .jeeves-viewer :global(.jeeves-panel-title) {
     display: flex;
     align-items: center;
-    justify-content: center;
-    background: color-mix(in srgb, var(--page-color) 50%, black);
-  }
-
-  .chapter-cover img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    image-rendering: auto;
-  }
-
-  .chapter-cover-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: color-mix(in srgb, var(--page-color) 50%, black);
-    border: 1px dashed color-mix(in srgb, var(--page-color) 70%, white);
-  }
-
-  .chapter-placeholder-text {
-    font-family: 'saira';
-    font-size: 10px;
-    font-weight: 600;
+    gap: 8px;
+    margin: 0;
+    padding: 8px 14px;
+    background: color-mix(in srgb, var(--page-color) 60%, black);
+    border-bottom: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white);
+    font-size: 16px;
+    font-weight: 800;
     color: var(--font-color);
-    opacity: 0.4;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    text-shadow:
+      calc(1px * var(--multiply-factor, 1)) 0 0 var(--bg-color),
+      calc(1px * var(--multiply-factor, 1)) calc(1px * var(--multiply-factor, 1)) 0 var(--bg-color),
+      0 calc(1px * var(--multiply-factor, 1)) 0 var(--bg-color);
   }
 
-  .chapter-label {
-    font-family: 'saira';
-    font-size: 12px;
-    font-weight: 600;
+  .jeeves-viewer :global(.jeeves-panel-body) {
+    padding: 14px;
+  }
+
+  .jeeves-viewer :global(.empty-note) {
+    margin: 0;
+    font-size: 14px;
+    font-style: italic;
+    opacity: 0.55;
+  }
+
+  .jeeves-viewer :global(.rich-text) {
+    font-size: 14px;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+  }
+
+  .jeeves-viewer :global(.rich-text a) {
     color: var(--font-link-color);
-    max-width: 130px;
+    text-decoration: underline;
+  }
+
+  .jeeves-viewer :global(.rich-text img) {
+    max-width: 100%;
+    display: inline-block;
+  }
+
+  /* Reader */
+  .side-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: color-mix(in srgb, var(--page-color) 80%, black);
+    border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 65%, white);
+    color: var(--font-color);
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+
+  /* Hover only where there's a real hover pointer - on touchscreens a tap
+     leaves it stuck "hovered" until something else is tapped. */
+  @media (hover: hover) {
+    .side-btn:hover {
+      border-color: var(--font-link-color);
+      color: var(--font-link-color);
+    }
+  }
+
+  .stage-comic-title {
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1.25;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  /* Chapter Page */
-  .chapter-header {
-    text-align: center;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 70%, white);
-  }
-
-  .chapter-number {
-    display: block;
-    font-family: 'saira';
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--font-color);
-    opacity: 0.7;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-bottom: 4px;
-  }
-
-  .chapter-title {
-    font-family: 'saira';
-    font-weight: 800;
-    font-size: 24px;
-    color: var(--font-link-color);
-    margin: 0;
     text-shadow:
-      calc(2px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 0 var(--bg-color),
-      calc(2px * var(--multiply-factor)) calc(2px * var(--multiply-factor)) 0 var(--bg-color),
-      calc(0px * var(--multiply-factor)) calc(2px * var(--multiply-factor)) 0 var(--bg-color);
+      calc(1px * var(--multiply-factor, 1)) 0 0 var(--bg-color),
+      calc(1px * var(--multiply-factor, 1)) calc(1px * var(--multiply-factor, 1)) 0 var(--bg-color),
+      0 calc(1px * var(--multiply-factor, 1)) 0 var(--bg-color);
   }
 
-  /* Chapter Navigation */
-  .chapter-nav-wrapper {
+  .stage-page-num {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 600;
+    color: color-mix(in srgb, var(--font-color) 60%, transparent);
+  }
+
+  /* The page's own title, a step brighter than the numbers around it. */
+  .stage-page-name {
+    color: var(--font-color);
+    font-weight: 700;
+  }
+
+  .reader-below {
+    margin-top: var(--gap, 20px);
+  }
+
+  .reader-nav {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    margin-top: var(--gap, 20px);
+    border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white);
+    box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.35);
+  }
+
+  .page-nav {
     display: flex;
-    justify-content: center;
     align-items: stretch;
-    gap: 0;
-    margin-top: 15px;
-  }
-
-  .chapter-nav-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 12px;
-    background: color-mix(in srgb, var(--page-color) 80%, black);
-    border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 65%, white);
-    color: var(--font-color);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    margin: 0px 10px;
-  }
-
-  .chapter-nav-btn:hover:not(:disabled) {
-    border-color: var(--font-link-color);
+    gap: 10px;
+    padding: 8px;
     background: color-mix(in srgb, var(--page-color) 70%, black);
-    color: var(--font-link-color);
   }
 
-  .chapter-nav-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
+  /* Colors, font and shadow come from the themed Button (.theme-button),
+     same as the archive's Filter & Sort; this only sizes it. */
+  .page-nav :global(.page-nav-btn) {
+    height: 44px;
+    min-width: 48px;
+    padding: 0 14px;
+    gap: 4px;
   }
 
-  /* Comic Display */
-  .comic-display {
-    text-align: center;
-  }
-
-  .comic-image-container {
-    margin-bottom: 20px;
-    min-height: 300px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .comic-image {
-    max-width: 100%;
-    height: auto;
-    display: block;
-    margin: 0 auto;
-  }
-
-  .comic-image.clickable {
-    cursor: pointer;
-  }
-
-  .comic-image.clickable:hover {
-    border-color: var(--font-link-color);
-  }
-
-  .comic-placeholder {
-    width: 100%;
-    min-height: 300px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: color-mix(in srgb, var(--page-color) 50%, black);
-    border: 2px dashed color-mix(in srgb, var(--page-color) 70%, white);
-  }
-
-  .comic-placeholder-text {
-    font-family: 'saira';
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--font-color);
-    opacity: 0.4;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-
-  /* Author Comment */
-  .author-comment-text {
-    font-family: 'saira';
-    font-size: 14px;
-    line-height: 1.6;
-    color: var(--font-color);
-  }
-
-  .missing-notice {
-    font-family: 'saira';
-    font-size: 14px;
-    color: var(--font-color);
-    opacity: 0.5;
-    font-style: italic;
-    margin: 0;
-  }
-
-  /* Archive Comments */
-  .archive-comments-list {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .archive-comment {
-    background: color-mix(in srgb, var(--page-color) 95%, white);
-    border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 70%, white);
-    padding: 15px;
-    box-shadow: var(--box-shadow);
-  }
-
-  .archive-comment-header {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    margin-bottom: 12px;
-    padding-bottom: 12px;
-    border-bottom: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 70%, white);
-  }
-
-  .archive-comment-avatar {
-    width: 127px;
-    height: 127px;
-    object-fit: none;
-    flex-shrink: 0;
-    border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
-    box-shadow: calc(3px * var(--multiply-factor)) calc(3px * var(--multiply-factor)) 0 var(--bg-color);
-  }
-
-  .archive-comment-avatar-fallback {
-    width: 127px;
-    height: 127px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: color-mix(in srgb, var(--page-color) 60%, black);
-    border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
-    box-shadow: calc(3px * var(--multiply-factor)) calc(3px * var(--multiply-factor)) 0 var(--bg-color);
-    font-family: 'saira';
-    font-weight: 800;
-    font-size: 48px;
-    color: var(--font-link-color);
-    text-shadow:
-      calc(2px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 0 var(--bg-color),
-      calc(2px * var(--multiply-factor)) calc(2px * var(--multiply-factor)) 0 var(--bg-color);
-  }
-
-  .archive-comment-meta {
+  .page-select {
     flex: 1;
+    min-width: 0;
     display: flex;
-    flex-direction: column;
-    gap: 2px;
   }
 
-  .archive-comment-author {
-    font-family: 'saira';
-    font-weight: 800;
-    font-size: 14px;
-    color: var(--font-link-color);
-    text-shadow:
-      calc(1px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 0 var(--bg-color);
+  /* Themed Select (.theme-select-trigger) sized to sit level with the
+     Prev/Next buttons. */
+  .page-select :global(.page-select-trigger) {
+    width: 100%;
+    min-width: 0;
+    height: 44px !important;
+    min-height: 44px !important;
+    overflow: hidden;
   }
 
-  .archive-comment-date {
-    font-family: 'saira';
-    font-size: 12px;
-    color: var(--font-color);
-    opacity: 0.7;
+  /* Page titles can be long - without a cap the open list grows wider than
+     a phone's screen, and the phone zooms the whole page out to fit it. */
+  :global(.page-select-content) {
+    max-width: calc(100vw - 16px) !important;
   }
 
-  .archive-comment-body {
-    font-family: 'saira';
-    font-size: 14px;
-    line-height: 1.6;
-    color: var(--font-color);
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
 
-  /* Back to Top */
   .back-to-top {
     position: fixed;
     bottom: 20px;
     right: 20px;
+    z-index: 100;
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 10px 16px;
+    padding: 10px 14px;
     background: color-mix(in srgb, var(--page-color) 80%, black);
-    border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 70%, white);
-    color: var(--font-link-color);
-    font-family: 'saira';
-    font-weight: 700;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    z-index: 100;
+    border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 70%, white);
     box-shadow: var(--box-shadow);
+    color: var(--font-link-color);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
   }
 
-  .back-to-top:hover {
-    border-color: var(--font-link-color);
-    background: color-mix(in srgb, var(--page-color) 90%, black);
+  @media (hover: hover) {
+    .back-to-top:hover {
+      border-color: var(--font-link-color);
+    }
   }
 
-  /* Responsive Design */
   @media (max-width: 768px) {
-    .comic-title-link {
-      font-size: 20px;
-      padding: 8px 12px;
-      border-left: none !important;
-      border-right: none !important;
-      width: 100vw !important;
-      margin-left: calc(-50vw + 50%) !important;
-      margin-right: calc(-50vw + 50%) !important;
-      box-shadow: none !important;
+    .jeeves-viewer :global(.jeeves-panel),
+    .jeeves-status,
+    .reader-nav {
+      border-left: none;
+      border-right: none;
+      box-shadow: none;
+      width: 100vw;
+      margin-left: calc(-50vw + 50%);
     }
 
-    .jeeves-content-title {
-      font-size: 16px;
-      padding: 3px 0px 3px 1rem;
-      border-left: none !important;
-      border-right: none !important;
-      width: 100vw !important;
-      margin-left: calc(-50vw + 50%) !important;
-      margin-right: calc(-50vw + 50%) !important;
+    .reader-nav {
+      box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.35);
+      padding-bottom: env(safe-area-inset-bottom);
+      background: color-mix(in srgb, var(--page-color) 70%, black);
     }
 
-    .jeeves-content-box {
-      padding: 15px;
-      border-left: none !important;
-      border-right: none !important;
-      width: 100vw !important;
-      margin-left: calc(-50vw + 50%) !important;
-      margin-right: calc(-50vw + 50%) !important;
-      box-shadow: none !important;
-    }
-
-    .chapter-grid {
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 10px;
-    }
-
-    .chapter-cover {
-      width: 100px;
-      height: 100px;
-    }
-
-    .chapter-label {
-      font-size: 11px;
-      max-width: 100px;
-    }
-
-    .chapter-placeholder-text {
-      font-size: 9px;
-    }
-
-    .chapter-title {
-      font-size: 20px;
-    }
-
-    .author-item {
-      padding: 6px 10px;
-    }
-
-    .author-avatar {
-      width: 40px;
-      height: 40px;
-    }
-
-    .author-avatar-fallback {
-      width: 40px;
-      height: 40px;
-      font-size: 18px;
-    }
-
-    /* Mobile comment styling matching SpriteViewer */
-    .archive-comment {
-      border-left: none !important;
-      border-right: none !important;
-      width: 100vw !important;
-      margin-left: calc(-50vw + 50%) !important;
-      margin-right: calc(-50vw + 50%) !important;
-      box-shadow: none !important;
-    }
-
-    .archive-comment-avatar {
-      width: 40px;
-      height: 40px;
-    }
-
-    .archive-comment-avatar-fallback {
-      width: 40px;
-      height: 40px;
-      font-size: 18px;
-    }
-
-    .chapter-nav-btn {
-      padding: 0 8px;
-    }
-
-    .comic-placeholder {
-      min-height: 200px;
-    }
-
-    .comic-placeholder-text {
-      font-size: 12px;
+    .page-nav :global(.page-nav-btn) {
+      padding: 0 10px;
     }
 
     .back-to-top {
-      bottom: 10px;
-      right: 10px;
-      padding: 8px 12px;
-      font-size: 11px;
+      bottom: 12px;
+      right: 12px;
     }
   }
 
-  @media (max-width: 480px) {
-    .chapter-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    .details-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .authors-list {
-      flex-direction: column;
+  @media (max-width: 420px) {
+    /* Arrows alone on narrow phones - the page picker needs the room. */
+    .page-nav-btn-label {
+      display: none;
     }
   }
 </style>

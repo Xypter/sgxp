@@ -7,7 +7,8 @@
     getPaginationRowModel,
     getSortedRowModel,
   } from '@tanstack/table-core';
-  import { onMount } from 'svelte';
+  import { onMount, tick, untrack } from 'svelte';
+  import { isReturnVisit } from '$lib/navIntent';
   import { scale } from 'svelte/transition';
   import { createSvelteTable, renderComponent } from '$components/ui/data-table';
   import * as Tooltip from '$components/ui/tooltip';
@@ -55,6 +56,15 @@
   let isLoading = $state(true);
   let error = $state('');
 
+  function shuffle<T>(items: T[]): T[] {
+    const out = [...items];
+    for (let i = out.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [out[i], out[j]] = [out[j], out[i]];
+    }
+    return out;
+  }
+
   async function fetchComics() {
     isLoading = true;
     error = '';
@@ -72,7 +82,25 @@
       if (!response.ok) {
         throw new Error(data.errors?.[0]?.message || data.message || 'Failed to load the archive.');
       }
-      comics = data.docs || [];
+      const docs: ArchiveComic[] = data.docs || [];
+      const saved = isReturnVisit('/smackjeeves') ? readSavedState() : null;
+      if (saved) {
+        restoreState(docs, saved);
+      } else {
+        // Shuffled once per visit - "Random" (no sort) is the default order,
+        // so every fresh visit starts somewhere different in the archive.
+        comics = shuffle(docs);
+      }
+      restored = true;
+      isLoading = false;
+      if (saved) {
+        await tick();
+        // Instant (the site's CSS makes scrolling smooth), and again next
+        // frame in case the router's own scroll restoration lands after us.
+        const scroll = () => window.scrollTo({ top: saved.scrollY, behavior: 'instant' });
+        scroll();
+        requestAnimationFrame(scroll);
+      }
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to load the archive.';
     } finally {
@@ -81,6 +109,82 @@
   }
 
   onMount(fetchComics);
+
+  // Coming back to the archive (browser back, or the "Smack Jeeves Archive"
+  // buttons in the comic reader - see navIntent.ts) picks up exactly where it
+  // was left: same shuffle order, page, sort, filters and scroll position. A
+  // real page load or the navbar link starts fresh with a new shuffle.
+  const STATE_KEY = 'sgxp-smackjeeves-state';
+  interface SavedState {
+    order: number[];
+    pageIndex: number;
+    pageSize: number;
+    sorting: SortingState;
+    search: string;
+    categories: string[];
+    ratings: string[];
+    scrollY: number;
+  }
+  // Nothing is saved until the list is in place, so the initial empty state
+  // never overwrites what a return visit is about to restore.
+  let restored = false;
+
+  function readSavedState(): SavedState | null {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(STATE_KEY) || 'null');
+      return saved && Array.isArray(saved.order) ? saved : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function restoreState(docs: ArchiveComic[], saved: SavedState) {
+    const byId = new Map(docs.map((c) => [c.comicId, c]));
+    const ordered = saved.order.map((id) => byId.get(id)).filter((c): c is ArchiveComic => !!c);
+    // Anything added to the archive since then goes on the end.
+    const known = new Set(saved.order);
+    comics = [...ordered, ...shuffle(docs.filter((c) => !known.has(c.comicId)))];
+    sorting = saved.sorting ?? [];
+    searchInput = saved.search ?? '';
+    categoryFilterValues = saved.categories ?? [];
+    ratingFilterValues = saved.ratings ?? [];
+    pagination = { pageIndex: saved.pageIndex ?? 0, pageSize: saved.pageSize ?? BASE_PAGE_SIZE };
+  }
+
+  function saveState(scrollY = window.scrollY) {
+    if (!restored) return;
+    const state: SavedState = {
+      order: comics.map((c) => c.comicId),
+      pageIndex: pagination.pageIndex,
+      pageSize: pagination.pageSize,
+      sorting,
+      search: searchInput,
+      categories: categoryFilterValues,
+      ratings: ratingFilterValues,
+      scrollY,
+    };
+    try {
+      sessionStorage.setItem(STATE_KEY, JSON.stringify(state));
+    } catch {}
+  }
+
+  $effect(() => {
+    // Re-saved whenever any of these change.
+    comics; pagination; sorting; searchInput; categoryFilterValues; ratingFilterValues;
+    untrack(() => saveState());
+  });
+
+  onMount(() => {
+    // Scroll position is captured on the way out (clicking a comic, or any
+    // other navigation), not on every scroll.
+    const onLeave = () => saveState();
+    document.addEventListener('astro:before-preparation', onLeave);
+    window.addEventListener('pagehide', onLeave);
+    return () => {
+      document.removeEventListener('astro:before-preparation', onLeave);
+      window.removeEventListener('pagehide', onLeave);
+    };
+  });
 
   // Filters
   let searchInput = $state('');
@@ -154,10 +258,40 @@
   const totalPages = $derived(comics.reduce((sum, c) => sum + (c.pagesFolder || 0), 0));
 
   // Table state
-  // 24 divides evenly into the 1/2/3-column card grids, so full pages never
-  // end on a ragged last row.
-  let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 24 });
-  let sorting = $state<SortingState>([{ id: 'comicId', desc: false }]);
+  // Page size is ~24, rounded up to a whole number of card-grid rows. The
+  // 1400px+ grid is auto-fill, so its column count (4, 5, ...) depends on the
+  // viewport - a fixed 24 left a ragged last row whenever it wasn't a divisor.
+  const BASE_PAGE_SIZE = 24;
+  let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: BASE_PAGE_SIZE });
+  let cardsGrid = $state<HTMLElement>();
+  let gridColumns = $state(1);
+
+  $effect(() => {
+    const el = cardsGrid;
+    if (!el) return;
+    const measure = () => {
+      // Hidden (table view) grids report 0 width and an unresolved template;
+      // keep the last real measurement instead.
+      if (el.clientWidth === 0) return;
+      const cols = getComputedStyle(el).gridTemplateColumns.split(' ').filter(Boolean).length;
+      if (cols > 0) gridColumns = cols;
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  });
+
+  $effect(() => {
+    const size = Math.ceil(BASE_PAGE_SIZE / gridColumns) * gridColumns;
+    const current = untrack(() => pagination);
+    if (size === current.pageSize) return;
+    // Keep the first comic on screen in view across the resize.
+    const firstIndex = current.pageIndex * current.pageSize;
+    pagination = { pageIndex: Math.floor(firstIndex / size), pageSize: size };
+  });
+  // Empty = the shuffled load order ("Random").
+  let sorting = $state<SortingState>([]);
 
   // Cards are the default everywhere; at 1400px+ (where the table fits) the
   // viewer can switch to the table instead. Remembered per browser - purely a
@@ -332,6 +466,7 @@
   // header filters move into a sheet instead - same underlying state as the
   // table, so switching widths never loses what's selected.
   const CARD_SORT_OPTIONS = [
+    { value: 'random', label: 'Random' },
     { value: 'comicId:asc', label: 'Oldest first' },
     { value: 'comicId:desc', label: 'Newest first' },
     { value: 'title:asc', label: 'Title A–Z' },
@@ -341,14 +476,14 @@
     { value: 'pagesFolder:desc', label: 'Most pages' },
     { value: 'percentSaved:desc', label: 'Best preserved' },
   ];
-  const sortValue = $derived(sorting[0] ? `${sorting[0].id}:${sorting[0].desc ? 'desc' : 'asc'}` : 'comicId:asc');
+  const sortValue = $derived(sorting[0] ? `${sorting[0].id}:${sorting[0].desc ? 'desc' : 'asc'}` : 'random');
   const sortLabel = $derived(
     CARD_SORT_OPTIONS.find((o) => o.value === sortValue)?.label ?? 'Custom'
   );
 
   function setSort(value: string) {
     const [id, dir] = value.split(':');
-    sorting = [{ id, desc: dir === 'desc' }];
+    sorting = value === 'random' ? [] : [{ id, desc: dir === 'desc' }];
     resetPage();
   }
 
@@ -505,10 +640,10 @@
 
       <!-- What's currently applied, removable one at a time - the card view
            has no column headers to show active filters on. -->
-      {#if activeFilterCount > 0 || sortValue !== 'comicId:asc'}
+      {#if activeFilterCount > 0 || sortValue !== 'random'}
         <div class="active-chips card-view-only">
-          {#if sortValue !== 'comicId:asc'}
-            <button type="button" class="active-chip active-chip--sort" onclick={() => setSort('comicId:asc')}>
+          {#if sortValue !== 'random'}
+            <button type="button" class="active-chip active-chip--sort" onclick={() => setSort('random')}>
               Sort: {sortLabel} <X size={13} />
             </button>
           {/if}
@@ -561,7 +696,7 @@
 
       <!-- Mobile Cards -->
       <div class="card-view" bind:this={cardsTop}>
-        <div class="cards-grid">
+        <div class="cards-grid" bind:this={cardsGrid}>
           {#each table.getRowModel().rows as row (row.id)}
             {@const comic = row.original}
             <ArchiveComicCard
@@ -709,8 +844,12 @@
     text-decoration: none;
   }
 
-  .intro a:hover {
-    text-decoration: underline;
+  /* Hover only where there's a real hover pointer - on touchscreens a tap
+     leaves it stuck "hovered" until something else is tapped. */
+  @media (hover: hover) {
+    .intro a:hover {
+      text-decoration: underline;
+    }
   }
 
   .toolbar {
@@ -832,8 +971,10 @@
     font-weight: 600;
   }
 
-  .table-view :global(.entry-link:hover) {
-    text-decoration: underline;
+  @media (hover: hover) {
+    .table-view :global(.entry-link:hover) {
+      text-decoration: underline;
+    }
   }
 
   .table-view :global(.entry-na) {
@@ -852,8 +993,8 @@
     display: block;
   }
 
-  /* Card grid: three-up on desktop (see the 1400px rule), two on
-     tablet/small-desktop widths, one on phones (768px). */
+  /* Card grid: auto-fill 320px+ columns at 1400px+ (page size follows the
+     measured column count), two on tablet/small-desktop, one on phones. */
   .cards-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -912,8 +1053,10 @@
     box-shadow: var(--box-shadow);
   }
 
-  .filter-trigger:hover {
-    background: color-mix(in srgb, var(--font-link-color) 85%, white);
+  @media (hover: hover) {
+    .filter-trigger:hover {
+      background: color-mix(in srgb, var(--font-link-color) 85%, white);
+    }
   }
 
   .filter-trigger-badge {
@@ -956,9 +1099,11 @@
     opacity: 0.7;
   }
 
-  .active-chip:hover :global(svg) {
-    opacity: 1;
-    color: var(--font-link-color);
+  @media (hover: hover) {
+    .active-chip:hover :global(svg) {
+      opacity: 1;
+      color: var(--font-link-color);
+    }
   }
 
   .active-chip--sort {
@@ -1034,8 +1179,10 @@
     border-left: none;
   }
 
-  .view-toggle-btn:hover {
-    opacity: 1;
+  @media (hover: hover) {
+    .view-toggle-btn:hover {
+      opacity: 1;
+    }
   }
 
   .view-toggle-btn[aria-pressed='true'] {

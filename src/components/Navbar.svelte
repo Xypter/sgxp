@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  // Side effect: records how each in-site navigation happened (see navIntent.ts).
+  import '$lib/navIntent';
   import { cn } from '$lib/utils';
   
   // Corrected shadcn-svelte component imports

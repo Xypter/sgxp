@@ -33,6 +33,11 @@ export default defineConfig({
   security: {
     checkOrigin: false
   },
+  // Dev-only floating toolbar; unused, and it sits over bottom-of-screen UI
+  // (e.g. the comic reader's page nav) during local testing.
+  devToolbar: {
+    enabled: false
+  },
   vite: {
     resolve: {
       alias: {

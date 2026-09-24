@@ -197,7 +197,8 @@
     padding: 0;
     border: none;
     background: var(--font-link-color);
-    color: var(--font-color);
+    /* Same as the themed buttons' text (.theme-button), e.g. Start reading. */
+    color: var(--page-color);
     font-family: inherit;
     line-height: 1;
   }
@@ -217,7 +218,14 @@
     border-color: transparent var(--page-color) color-mix(in srgb, var(--font-link-color) 60%, black) transparent;
   }
 
-  .comic-card :global(.rating-block--notes:hover),
+  /* Hover only where there's a real hover pointer - on touchscreens a tap
+     leaves it stuck "hovered" until something else is tapped. */
+  @media (hover: hover) {
+    .comic-card :global(.rating-block--notes:hover) {
+      background: color-mix(in srgb, var(--font-link-color) 85%, white);
+    }
+  }
+
   .comic-card :global(.rating-block--notes[data-state="open"]) {
     background: color-mix(in srgb, var(--font-link-color) 85%, white);
   }
@@ -257,8 +265,10 @@
     overflow: hidden;
   }
 
-  .comic-card-title:hover {
-    color: var(--font-link-color);
+  @media (hover: hover) {
+    .comic-card-title:hover {
+      color: var(--font-link-color);
+    }
   }
 
   .comic-card-byline {
@@ -379,7 +389,13 @@
     transition: background 0.15s ease, color 0.15s ease;
   }
 
-  .comic-card-cta:hover,
+  @media (hover: hover) {
+    .comic-card-cta:hover {
+      background: var(--font-link-color);
+      color: var(--font-color);
+    }
+  }
+
   .comic-card-cta:active {
     background: var(--font-link-color);
     color: var(--font-color);
