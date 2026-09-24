@@ -373,31 +373,37 @@
   }
 
   /* Pushed to the bottom so cards in the same grid row line up their
-     footers even when their titles or stats wrap differently. */
+     footers even when their titles or stats wrap differently. Styled to
+     match the archive toolbar's Filter & Sort button (.filter-trigger in
+     SmackJeevesArchiveTable.svelte). */
   .comic-card-cta {
-    margin-top: auto;
+    margin: auto 14px 14px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    min-height: 44px;
-    border-top: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 75%, white);
-    color: var(--font-link-color);
+    gap: 8px;
+    height: 42px;
+    padding: 0 16px;
+    background: var(--font-link-color);
+    color: var(--page-color);
+    font-family: 'saira', sans-serif;
     font-size: 14px;
     font-weight: 700;
     text-decoration: none;
-    transition: background 0.15s ease, color 0.15s ease;
+    text-shadow: none;
+    white-space: nowrap;
+    box-shadow: var(--box-shadow);
   }
 
   @media (hover: hover) {
     .comic-card-cta:hover {
-      background: var(--font-link-color);
-      color: var(--font-color);
+      background: color-mix(in srgb, var(--font-link-color) 85%, white);
     }
   }
 
-  .comic-card-cta:active {
-    background: var(--font-link-color);
-    color: var(--font-color);
+  @media (max-width: 768px) {
+    .comic-card-cta {
+      height: 46px;
+    }
   }
 </style>

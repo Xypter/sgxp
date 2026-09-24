@@ -1188,6 +1188,8 @@
   .view-toggle-btn[aria-pressed='true'] {
     background: var(--font-link-color);
     border-color: var(--font-link-color);
+    /* Matches the Filter & Sort trigger's text on the same accent fill. */
+    color: var(--page-color);
     opacity: 1;
     font-weight: 700;
   }

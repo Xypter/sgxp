@@ -55,14 +55,15 @@
 </script>
 
 <section class="comic-hero">
+  <!-- A breadcrumb-style eyebrow above the preview on desktop; on phones it
+       becomes a boxed button in the empty band beside the hamburger. -->
   <nav class="hero-nav" aria-label="Archive">
     <a href="/smackjeeves" class="hero-back no-theme-styles" data-restore-state>
-      <ArrowLeft size={16} />
-      <Library size={16} />
+      <ArrowLeft size={14} />
+      <span class="hero-back-icon"><Library size={16} /></span>
       Smack Jeeves Archive
     </a>
   </nav>
-
   <div class="hero-top">
     <!-- Same pre-cropped 1:1 preview as the archive's cards. -->
     <div class="hero-preview" aria-hidden="true">
@@ -99,7 +100,6 @@
             +{extraAuthors} more
           </button>
         {/if}
-        <span class="hero-id">#{comicId}</span>
       </div>
       <div class="hero-chips">
         {#if entry?.category}<span class="chip chip--accent">{entry.category}</span>{/if}
@@ -251,37 +251,35 @@
 
   .hero-nav {
     display: flex;
-    padding: 6px;
-    border-bottom: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 85%, white);
+    padding: 12px 16px 0;
   }
 
-  /* Same look as the reader toolbar's square nav buttons. */
   .hero-back {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    height: 36px;
-    padding: 0 12px 0 10px;
-    background: color-mix(in srgb, var(--page-color) 80%, black);
-    border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 65%, white);
-    color: var(--font-color);
+    gap: 4px;
+    color: var(--font-link-color);
     font-size: 13px;
     font-weight: 700;
+    line-height: 1.2;
     text-decoration: none;
-    transition: border-color 0.15s ease, color 0.15s ease;
+    text-shadow: none;
+  }
+
+  .hero-back-icon {
+    display: none;
   }
 
   @media (hover: hover) {
     .hero-back:hover {
-      border-color: var(--font-link-color);
-      color: var(--font-link-color);
+      text-decoration: underline;
     }
   }
 
   .hero-top {
     display: flex;
     gap: 16px;
-    padding: 16px 16px 12px;
+    padding: 10px 16px 12px;
   }
 
   .hero-preview {
@@ -319,11 +317,13 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 1px;
   }
 
   .hero-title {
-    margin: 0;
+    /* Pulls the line box's leading up so the tallest letters sit flush with
+       the preview's top edge rather than a few pixels below it. */
+    margin: -5px 0 0;
     font-size: 28px;
     font-weight: 800;
     line-height: 1.15;
@@ -372,16 +372,11 @@
     }
   }
 
-  .hero-id {
-    opacity: 0.6;
-    font-variant-numeric: tabular-nums;
-  }
-
   .hero-chips {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    margin-top: 6px;
+    margin-top: 4px;
   }
 
   .chip {
@@ -418,6 +413,16 @@
 
   .comic-hero :global(.rating-block--notes) {
     cursor: pointer;
+  }
+
+  /* The eyebrow row above the preview pushes this row down; pull the rating
+     back up to 16px from the card's top, level with the eyebrow (12px nav
+     padding + 16px link + 10px row padding = 38px down otherwise). Phones
+     move the eyebrow out of the card, so there's nothing to undo there. */
+  @media (min-width: 769px) {
+    .comic-hero :global(.rating-block) {
+      margin-top: -22px;
+    }
   }
 
   .comic-hero :global(.rating-block--notes)::after {
@@ -688,11 +693,21 @@
       top: calc(-52px - var(--border-width, 1px));
       left: 12px;
       padding: 0;
-      border: none;
     }
 
+    /* Same look as the reader toolbar's square nav buttons. */
     .hero-back {
+      gap: 6px;
       height: 42px;
+      padding: 0 12px 0 10px;
+      background: color-mix(in srgb, var(--page-color) 80%, black);
+      border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 65%, white);
+      color: var(--font-color);
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .hero-back-icon {
+      display: inline-flex;
     }
 
     .comic-hero {
@@ -715,6 +730,7 @@
     }
 
     .hero-title {
+      margin-top: -3px;
       font-size: 21px;
       /* Clear the floating hamburger menu button. */
       padding-right: 8px;
