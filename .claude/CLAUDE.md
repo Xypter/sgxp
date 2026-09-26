@@ -20,6 +20,15 @@ The SGXP is an open-source sprite website where users can upload sprite sheets, 
 - Database interactions happen through Payload CMS API, not direct queries
 - Custom stylesheets take precedence; Tailwind is supplementary
 
+## Buttons (the button standard - applies to every new or changed button)
+- **Every button is `<Button>` from `$lib/components` with a standard `variant`.** No new hand-styled `<button>`s and no new custom button CSS. Styles: `src/styles/buttons.css`; every variant and state on the dev-only reference page `/dev/buttons` - check it before building anything button-like.
+- Variants: `primary` (the main action), `secondary` (supporting actions; also pagination, with the current page as `aria-current="page"`), `danger` (deletes/removes), `toggle` (on/off or selected state via `aria-pressed`; side-by-side toggles go in `ButtonGroup`), `tool` (boxed icon buttons), `subtle` (unboxed icon inside content), `quiet` (low-emphasis uppercase text action - provisional). Sizes: `default`, `mini` (24px), `icon`, `icon-mini`.
+- **Primary buttons always get an `icon`** that describes the action (lucide for now; sprite icons someday). Icon-only buttons need an `aria-label`. Two-state icon buttons (e.g. bookmark) set `aria-pressed` - their icon fills in automatically.
+- Never set a button's height, colors, radius or shadow by hand: sizes use `--control-height` (42px on desktop and phones), which search inputs share so toolbars line up.
+- Anything that waits on the server uses `loading` (disables the button and shows the site `Spinner`) - don't hand-roll "Saving..." spinners.
+- If no variant fits, stop and ask the user rather than inventing a one-off look. Exceptions: navbar items keep their own pixel-font look.
+- Pages are being migrated one commit at a time (started 2026-09-26); buttons with `themed` or stock shadcn variants (`default`/`outline`/`ghost`) are pre-standard and get converted when their page is migrated.
+
 ## Project Structure
 - `/src/components` - Svelte UI components
 - `/src/pages` - Astro pages and routes
