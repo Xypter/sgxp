@@ -16,6 +16,8 @@
 <script lang="ts">
   import * as SheetPrimitive from '$components/ui/sheet';
   import type { Snippet } from 'svelte';
+  import { X } from 'lucide-svelte';
+  import { sgxpButtonClass } from '$components/ui/button';
 
   type Side = 'top' | 'bottom' | 'left' | 'right';
 
@@ -56,6 +58,7 @@
 <SheetPrimitive.Root bind:open onOpenChange={handleOpenChange}>
   <SheetPrimitive.Content
     {side}
+    showCloseButton={false}
     class="themed-sheet-content {className || ''}"
     style="--sheet-width: {width};"
   >
@@ -87,6 +90,9 @@
         </SheetPrimitive.Footer>
       {/if}
     </div>
+    <SheetPrimitive.Close class="{sgxpButtonClass({ variant: 'tool', size: 'icon-mini' })} themed-sheet-close" aria-label="Close" title="Close">
+      <X />
+    </SheetPrimitive.Close>
   </SheetPrimitive.Content>
 </SheetPrimitive.Root>
 
@@ -157,19 +163,11 @@
     flex-shrink: 0;
   }
 
-  /* Custom close button styling */
-  :global(.themed-sheet-content > button),
-  :global(.themed-sheet-content [data-bits-dialog-close]) {
-    background: transparent !important;
-    color: var(--font-color) !important;
-    opacity: 0.7;
-    transition: all 0.2s ease;
-  }
-
-  :global(.themed-sheet-content > button:hover),
-  :global(.themed-sheet-content [data-bits-dialog-close]:hover) {
-    opacity: 1;
-    color: var(--font-link-color) !important;
+  /* The close button is the standard tool icon-mini; only its position lives here. */
+  :global(.themed-sheet-close) {
+    position: absolute;
+    top: 12px;
+    right: 12px;
   }
 
   /* Overlay styling */

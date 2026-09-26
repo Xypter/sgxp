@@ -1,6 +1,7 @@
 <script lang="ts">
   import * as Popover from '$components/ui/popover';
   import Input from '../base/Input.svelte';
+  import Button from '../base/Button.svelte';
   import { ChevronDown, Check, Plus } from 'lucide-svelte';
 
   interface Option {
@@ -132,14 +133,14 @@
   </Popover.Root>
 
   {#if allowSuggestions && onAddNew}
-    <button
-      type="button"
-      class="add-new-btn"
+    <Button
+      variant="tool"
+      size="icon"
+      icon={Plus}
       onclick={handleAddNew}
       title="Suggest new {label?.toLowerCase() || 'item'}"
-    >
-      <Plus class="h-4 w-4" />
-    </button>
+      aria-label="Suggest new {label?.toLowerCase() || 'item'}"
+    />
   {/if}
 </div>
 
@@ -164,7 +165,7 @@
   .select-with-button-row {
     display: flex;
     align-items: stretch;
-    gap: 8px;
+    gap: 10px;
   }
 
   .select-with-button-row :global(.theme-select-suggest-trigger) {
@@ -185,34 +186,6 @@
     margin-left: 2px;
   }
 
-  .add-new-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 12px 16px;
-    background: var(--font-link-color);
-    color: var(--page-color);
-    border: none;
-    border-radius: 0px;
-    font-family: 'saira', monospace;
-    font-weight: 700;
-    font-size: 16px;
-    transition: all var(--transition-speed, 200ms) ease-in-out;
-    cursor: url('/img/Sonic_Cursor.png'), pointer;
-    box-shadow: var(--box-shadow);
-    flex-shrink: 0;
-  }
-
-  .add-new-btn:hover {
-    background: color-mix(in srgb, var(--font-link-color) 80%, white);
-    cursor: url('/img/Sonic_Cursor_Spin.gif'), progress;
-  }
-
-  .add-new-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-  }
 
   .field-error {
     font-size: 12px;

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { toast } from 'svelte-sonner';
+  import { Plus, Save, Upload, X } from 'lucide-svelte';
   import { FormInput, FormTextarea, FormCheckbox, Button, Select, SelectWithSuggest, MultiSelect, Sheet } from '$lib/components';
-  import Spinner from '../Spinner.svelte';
   import FileUploadField from './FileUploadField.svelte';
   import CardColorPicker from './CardColorPicker.svelte';
 
@@ -1212,7 +1212,7 @@
 
   <!-- Submit -->
   <div class="form-actions">
-    <Button themed type="submit" disabled={isSubmitting}>
+    <Button variant="primary" type="submit" icon={isEditMode ? Save : Upload} loading={isSubmitting}>
       {#if isSubmitting}
         {isEditMode ? 'Updating...' : 'Submitting...'}
       {:else}
@@ -1247,15 +1247,8 @@
   </div>
 
   {#snippet footer()}
-    <Button themed onclick={() => { teamSheetOpen = false; closeTeamSheet(); }} class="sheet-cancel-btn">
-      Cancel
-    </Button>
-    <Button themed onclick={submitTeamSuggestion} class="sheet-submit-btn" disabled={teamSubmitting}>
-      {#if teamSubmitting}
-        <Spinner size={16} label="Submitting" />
-      {/if}
-      Add Suggestion
-    </Button>
+    <Button variant="secondary" icon={X} onclick={() => { teamSheetOpen = false; closeTeamSheet(); }} class="sheet-cancel-btn">Cancel</Button>
+    <Button variant="primary" icon={Plus} onclick={submitTeamSuggestion} class="sheet-submit-btn" loading={teamSubmitting}>Add Suggestion</Button>
   {/snippet}
 </Sheet>
 
@@ -1290,15 +1283,8 @@
   </div>
 
   {#snippet footer()}
-    <Button themed onclick={() => { officialGameSheetOpen = false; closeOfficialGameSheet(); }} class="sheet-cancel-btn">
-      Cancel
-    </Button>
-    <Button themed onclick={submitOfficialGameSuggestion} class="sheet-submit-btn" disabled={officialGameSubmitting}>
-      {#if officialGameSubmitting}
-        <Spinner size={16} label="Submitting" />
-      {/if}
-      Add Suggestion
-    </Button>
+    <Button variant="secondary" icon={X} onclick={() => { officialGameSheetOpen = false; closeOfficialGameSheet(); }} class="sheet-cancel-btn">Cancel</Button>
+    <Button variant="primary" icon={Plus} onclick={submitOfficialGameSuggestion} class="sheet-submit-btn" loading={officialGameSubmitting}>Add Suggestion</Button>
   {/snippet}
 </Sheet>
 
@@ -1333,15 +1319,8 @@
   </div>
 
   {#snippet footer()}
-    <Button themed onclick={() => { fanGameSheetOpen = false; closeFanGameSheet(); }} class="sheet-cancel-btn">
-      Cancel
-    </Button>
-    <Button themed onclick={submitFanGameSuggestion} class="sheet-submit-btn" disabled={fanGameSubmitting}>
-      {#if fanGameSubmitting}
-        <Spinner size={16} label="Submitting" />
-      {/if}
-      Add Suggestion
-    </Button>
+    <Button variant="secondary" icon={X} onclick={() => { fanGameSheetOpen = false; closeFanGameSheet(); }} class="sheet-cancel-btn">Cancel</Button>
+    <Button variant="primary" icon={Plus} onclick={submitFanGameSuggestion} class="sheet-submit-btn" loading={fanGameSubmitting}>Add Suggestion</Button>
   {/snippet}
 </Sheet>
 
@@ -1376,15 +1355,8 @@
   </div>
 
   {#snippet footer()}
-    <Button themed onclick={() => { seriesSheetOpen = false; closeSeriesSheet(); }} class="sheet-cancel-btn">
-      Cancel
-    </Button>
-    <Button themed onclick={submitSeriesSuggestion} class="sheet-submit-btn" disabled={seriesSubmitting}>
-      {#if seriesSubmitting}
-        <Spinner size={16} label="Submitting" />
-      {/if}
-      Add Suggestion
-    </Button>
+    <Button variant="secondary" icon={X} onclick={() => { seriesSheetOpen = false; closeSeriesSheet(); }} class="sheet-cancel-btn">Cancel</Button>
+    <Button variant="primary" icon={Plus} onclick={submitSeriesSuggestion} class="sheet-submit-btn" loading={seriesSubmitting}>Add Suggestion</Button>
   {/snippet}
 </Sheet>
 
@@ -1409,15 +1381,8 @@
   </div>
 
   {#snippet footer()}
-    <Button themed onclick={() => { sectionSheetOpen = false; closeSectionSheet(); }} class="sheet-cancel-btn">
-      Cancel
-    </Button>
-    <Button themed onclick={submitSectionSuggestion} class="sheet-submit-btn" disabled={sectionSubmitting}>
-      {#if sectionSubmitting}
-        <Spinner size={16} label="Submitting" />
-      {/if}
-      Add Suggestion
-    </Button>
+    <Button variant="secondary" icon={X} onclick={() => { sectionSheetOpen = false; closeSectionSheet(); }} class="sheet-cancel-btn">Cancel</Button>
+    <Button variant="primary" icon={Plus} onclick={submitSectionSuggestion} class="sheet-submit-btn" loading={sectionSubmitting}>Add Suggestion</Button>
   {/snippet}
 </Sheet>
 
@@ -1443,15 +1408,8 @@
   </div>
 
   {#snippet footer()}
-    <Button themed onclick={() => { characterSheetOpen = false; closeCharacterSheet(); }} class="sheet-cancel-btn">
-      Cancel
-    </Button>
-    <Button themed onclick={submitCharacterSuggestion} class="sheet-submit-btn" disabled={characterSubmitting}>
-      {#if characterSubmitting}
-        <Spinner size={16} label="Submitting" />
-      {/if}
-      Add Suggestion
-    </Button>
+    <Button variant="secondary" icon={X} onclick={() => { characterSheetOpen = false; closeCharacterSheet(); }} class="sheet-cancel-btn">Cancel</Button>
+    <Button variant="primary" icon={Plus} onclick={submitCharacterSuggestion} class="sheet-submit-btn" loading={characterSubmitting}>Add Suggestion</Button>
   {/snippet}
 </Sheet>
 
@@ -1475,15 +1433,8 @@
   </div>
 
   {#snippet footer()}
-    <Button themed onclick={() => { contributorSheetOpen = false; closeContributorSheet(); }} class="sheet-cancel-btn">
-      Cancel
-    </Button>
-    <Button themed onclick={submitContributorSuggestion} class="sheet-submit-btn" disabled={contributorSubmitting}>
-      {#if contributorSubmitting}
-        <Spinner size={16} label="Submitting" />
-      {/if}
-      Add Contributor
-    </Button>
+    <Button variant="secondary" icon={X} onclick={() => { contributorSheetOpen = false; closeContributorSheet(); }} class="sheet-cancel-btn">Cancel</Button>
+    <Button variant="primary" icon={Plus} onclick={submitContributorSuggestion} class="sheet-submit-btn" loading={contributorSubmitting}>Add Contributor</Button>
   {/snippet}
 </Sheet>
 
@@ -1630,11 +1581,6 @@
     text-align: center;
   }
 
-  :global(.sprite-upload-form button[type="submit"]) {
-    padding: 12px 40px;
-    font-size: 16px;
-  }
-
   /* Error Summary Styles */
   .error-summary {
     background: color-mix(in srgb, #ef4444 15%, var(--page-color));
@@ -1698,14 +1644,11 @@
     gap: 20px;
   }
 
-  :global(.sheet-cancel-btn) {
-    flex: 1;
-    background: color-mix(in srgb, var(--page-color) 60%, black) !important;
-    border: 1px solid color-mix(in srgb, var(--page-color) 80%, white) !important;
-  }
-
+  /* `auto` basis, not 0: the sheet footer stacks in a column, where a zero
+     basis squashes the buttons' height instead of sharing the width. */
+  :global(.sheet-cancel-btn),
   :global(.sheet-submit-btn) {
-    flex: 1;
+    flex: 1 1 auto;
   }
 
   /* Terms of Use Styles */

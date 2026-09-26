@@ -1,7 +1,8 @@
 <script lang="ts">
   import * as Popover from '$components/ui/popover';
   import Input from '../base/Input.svelte';
-  import Badge from '../base/Badge.svelte';
+  import Button from '../base/Button.svelte';
+  import { sgxpButtonClass } from '$components/ui/button';
   import { ChevronDown, Check, Plus, X } from 'lucide-svelte';
 
   interface Option {
@@ -100,18 +101,19 @@
           <span class="placeholder-text">{placeholder}</span>
         {:else}
           {#each selectedOptions as option (option.value)}
-            <Badge themed class="selected-badge">
-              {#snippet children()}
-                <span>{option.label}</span>
-                <button
-                  type="button"
-                  class="remove-tag"
-                  onclick={(e) => removeOption(option.value, e)}
-                >
-                  <X class="h-3 w-3" />
-                </button>
-              {/snippet}
-            </Badge>
+            <!-- The archive's removable-chip look (a mini toggle shown "on" with a
+                 trailing X). A span, not a <button>: it sits inside the popover's
+                 trigger button, so keyboard and screen-reader users uncheck the
+                 item in the list instead. -->
+            <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+            <span
+              class={sgxpButtonClass({ variant: 'toggle', size: 'mini' })}
+              data-state="on"
+              title="Remove {option.label}"
+              onclick={(e) => removeOption(option.value, e)}
+            >
+              {option.label} <X />
+            </span>
           {/each}
         {/if}
       </div>
@@ -160,14 +162,14 @@
   </Popover.Root>
 
   {#if allowSuggestions && onAddNew}
-    <button
-      type="button"
-      class="add-new-btn"
+    <Button
+      variant="tool"
+      size="icon"
+      icon={Plus}
       onclick={handleAddNew}
       title="Suggest new {label?.toLowerCase() || 'item'}"
-    >
-      <Plus class="h-4 w-4" />
-    </button>
+      aria-label="Suggest new {label?.toLowerCase() || 'item'}"
+    />
   {/if}
 </div>
 
@@ -192,7 +194,7 @@
   .multiselect-with-button-row {
     display: flex;
     align-items: stretch;
-    gap: 8px;
+    gap: 10px;
   }
 
   .multiselect-with-button-row :global(.theme-multiselect-trigger) {
@@ -213,34 +215,6 @@
     margin-left: 2px;
   }
 
-  .add-new-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 12px 16px;
-    background: var(--font-link-color);
-    color: var(--page-color);
-    border: none;
-    border-radius: 0px;
-    font-family: 'saira', monospace;
-    font-weight: 700;
-    font-size: 16px;
-    transition: all var(--transition-speed, 200ms) ease-in-out;
-    cursor: url('/img/Sonic_Cursor.png'), pointer;
-    box-shadow: var(--box-shadow);
-    flex-shrink: 0;
-  }
-
-  .add-new-btn:hover {
-    background: color-mix(in srgb, var(--font-link-color) 80%, white);
-    cursor: url('/img/Sonic_Cursor_Spin.gif'), progress;
-  }
-
-  .add-new-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-  }
 
   .field-error {
     font-size: 12px;
@@ -257,7 +231,7 @@
   .selected-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 10px;
     flex: 1;
     align-items: center;
   }
@@ -266,29 +240,6 @@
     color: color-mix(in srgb, var(--font-color) 50%, transparent);
   }
 
-  :global(.selected-badge) {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-  }
-
-  .remove-tag {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: none;
-    color: white;
-    cursor: pointer;
-    padding: 0;
-    margin-left: 2px;
-    opacity: 0.8;
-    transition: opacity 0.2s;
-  }
-
-  .remove-tag:hover {
-    opacity: 1;
-  }
 
   .checkbox-indicator {
     display: flex;

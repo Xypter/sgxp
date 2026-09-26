@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Upload, X, Image as ImageIcon } from 'lucide-svelte';
+  import { Button } from '$lib/components';
 
   interface FileUploadFieldProps {
     name: string;
@@ -206,14 +207,7 @@
         <span class="file-name">{value.name}</span>
         <span class="file-size">{formatFileSize(value.size)}</span>
       </div>
-      <button
-        type="button"
-        class="remove-file-btn"
-        onclick={removeFile}
-        title="Remove file"
-      >
-        <X class="h-4 w-4" />
-      </button>
+      <Button variant="danger" size="icon-mini" icon={X} class="file-action-btn" onclick={removeFile} title="Remove file" aria-label="Remove file" />
     </div>
   {:else if existingImageUrl}
     <!-- Existing image preview -->
@@ -234,14 +228,7 @@
         <span class="file-name">Current Image</span>
         <span class="file-size">Click or drag to replace</span>
       </div>
-      <button
-        type="button"
-        class="replace-file-btn"
-        onclick={triggerFileSelect}
-        title="Replace image"
-      >
-        <Upload class="h-4 w-4" />
-      </button>
+      <Button variant="tool" size="icon-mini" icon={Upload} class="file-action-btn" onclick={triggerFileSelect} title="Replace image" aria-label="Replace image" />
     </div>
   {:else}
     <div
@@ -431,42 +418,8 @@
     color: color-mix(in srgb, var(--font-color) 60%, transparent);
   }
 
-  .remove-file-btn {
+  .file-preview :global(.file-action-btn) {
     flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    background: color-mix(in srgb, #ef4444 20%, transparent);
-    border: 1px solid #ef4444;
-    color: #ef4444;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .remove-file-btn:hover {
-    background: #ef4444;
-    color: white;
-  }
-
-  .replace-file-btn {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    background: color-mix(in srgb, var(--font-link-color) 20%, transparent);
-    border: 1px solid var(--font-link-color);
-    color: var(--font-link-color);
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .replace-file-btn:hover {
-    background: var(--font-link-color);
-    color: white;
   }
 
   .file-preview.existing {
