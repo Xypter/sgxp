@@ -182,9 +182,7 @@
     <!-- Header -->
     <div class="modal-header">
       <h2 class="modal-title">Admin Feedback</h2>
-      <button class="close-btn" onclick={handleClose}>
-        <X class="h-5 w-5" />
-      </button>
+      <Button variant="tool" size="icon" icon={X} onclick={handleClose} aria-label="Close" title="Close" />
     </div>
 
     {#if sprite}
@@ -271,17 +269,8 @@
               rows={3}
               disabled={isSubmitting}
             />
-            <Button
-              themed
-              onclick={handleSubmitResponse}
-              disabled={!responseText.trim() || isSubmitting}
-            >
-              {#if isSubmitting}
-                Submitting...
-              {:else}
-                <Send class="h-4 w-4" />
-                Submit Response
-              {/if}
+            <Button variant="primary" icon={Send} onclick={handleSubmitResponse} disabled={!responseText.trim()} loading={isSubmitting}>
+              {isSubmitting ? 'Submitting...' : 'Submit Response'}
             </Button>
           </div>
         {:else}
@@ -319,23 +308,6 @@
     font-size: 20px;
     color: var(--font-color);
     margin: 0;
-  }
-
-  .close-btn {
-    background: transparent;
-    border: none;
-    color: var(--font-color);
-    cursor: pointer;
-    padding: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0.7;
-    transition: opacity 0.2s;
-  }
-
-  .close-btn:hover {
-    opacity: 1;
   }
 
   .sprite-info {
@@ -497,11 +469,8 @@
     gap: 12px;
   }
 
-  .response-form :global(button) {
+  .response-form :global(.sgxp-btn) {
     align-self: flex-end;
-    display: flex;
-    align-items: center;
-    gap: 8px;
   }
 
   .approved-notice {

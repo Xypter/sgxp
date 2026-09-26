@@ -1,7 +1,6 @@
 <script lang="ts">
   import { Button } from '$lib/components';
   import { MessageSquare, Trash2, Pencil } from 'lucide-svelte';
-  import Spinner from '../../Spinner.svelte';
 
   interface Sprite {
     id: number;
@@ -34,65 +33,21 @@
 
 <div class="actions-cell">
   {#if canEdit}
-    <a href="/upload?edit={sprite.id}" class="edit-link">
-      <Button
-        themed
-        variant="outline"
-        size="sm"
-        class="edit-btn"
-      >
-        <Pencil class="h-4 w-4" />
-        Edit
-      </Button>
-    </a>
+    <Button variant="secondary" size="mini" icon={Pencil} href="/upload?edit={sprite.id}">Edit</Button>
   {/if}
 
   {#if hasFeedback || sprite.status === 'needs_revision' || sprite.status === 'revision'}
-    <Button
-      themed
-      variant="outline"
-      size="sm"
-      onclick={onViewFeedback}
-      class="feedback-btn"
-    >
-      <MessageSquare class="h-4 w-4" />
-      Feedback
-    </Button>
+    <Button variant="secondary" size="mini" icon={MessageSquare} onclick={onViewFeedback}>Feedback</Button>
   {/if}
 
-  <Button
-    themed
-    variant="outline"
-    size="sm"
-    onclick={handleDelete}
-    class="delete-btn"
-    disabled={isDeleting || !canDelete}
-  >
-    {#if isDeleting}
-      <Spinner size={16} label="Deleting" />
-    {:else}
-      <Trash2 class="h-4 w-4" />
-    {/if}
-    Delete
-  </Button>
+  <Button variant="danger" size="mini" icon={Trash2} onclick={handleDelete} loading={isDeleting} disabled={!canDelete}>Delete</Button>
 </div>
 
 <style>
   .actions-cell {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
   }
 
-  .edit-link {
-    text-decoration: none;
-  }
-
-  :global(.feedback-btn),
-  :global(.edit-btn),
-  :global(.delete-btn) {
-    display: flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-  }
 </style>

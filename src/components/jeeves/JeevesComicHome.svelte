@@ -499,9 +499,11 @@
   }
 
   /* The standard subtle button, its 42px hit area pulled into the row's
-     padding so it doesn't make the row taller. */
+     padding so it doesn't make the row taller. Bottom-aligned so the icon
+     sits level with the values' line (the "91%") rather than centred on
+     label + value - or on both lines once the stats wrap on phones. */
   .hero-stats-row :global(.hero-bookmark) {
-    align-self: center;
+    align-self: flex-end;
     margin: -10px -10px -10px 0;
     padding: 0 10px;
     gap: 5px;

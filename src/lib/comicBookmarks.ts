@@ -32,6 +32,14 @@ export interface BookmarkListItem {
   href: string;
   previewUrl: string | null;
   updatedAt: string;
+  /** What the archive's comic card shows (see ArchiveComicCard). */
+  comicId: number;
+  category: string | null;
+  rating: number | null;
+  notes: string | null;
+  pagesMetadata: number | null;
+  percentSaved: number | null;
+  bookmarkCount: number;
 }
 
 const RELATION = 'archive-entries';
@@ -105,7 +113,10 @@ const SOURCES: Record<string, { label: string; home: string; fields: string[]; t
   'archive-entries': {
     label: 'Smack Jeeves Archive',
     home: '/smackjeeves',
-    fields: ['comicId', 'title', 'author', 'pagesFolder', 'link', 'status'],
+    fields: [
+      'comicId', 'title', 'author', 'pagesFolder', 'link', 'status',
+      'category', 'rating', 'notes', 'pagesMetadata', 'percentSaved', 'bookmarkCount',
+    ],
     toItem: (entry) => {
       // Only what's actually in the public archive (a comic could be pulled).
       if (!entry?.comicId || entry.status !== 'uploaded') return null;
@@ -115,6 +126,13 @@ const SOURCES: Record<string, { label: string; home: string; fields: string[]; t
         pageCount: entry.pagesFolder ?? null,
         href: entry.link || `/jeevespage?comic_id=${entry.comicId}`,
         previewUrl: `/api/smackjeeves-preview/${entry.comicId}`,
+        comicId: entry.comicId,
+        category: entry.category ?? null,
+        rating: entry.rating ?? null,
+        notes: entry.notes ?? null,
+        pagesMetadata: entry.pagesMetadata ?? null,
+        percentSaved: entry.percentSaved ?? null,
+        bookmarkCount: entry.bookmarkCount ?? 0,
       };
     },
   },

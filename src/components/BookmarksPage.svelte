@@ -1,7 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { toast } from 'svelte-sonner';
-  import { ArrowLeft, ArrowRight, Bookmark, ImageOff, X } from 'lucide-svelte';
+  import { ArrowLeft, ArrowRight, Bookmark, RotateCw } from 'lucide-svelte';
+  import { Button } from '$lib/components';
+  import ArchiveComicCard from './archive/ArchiveComicCard.svelte';
   import {
     BOOKMARKS_CHANGED,
     addArchiveBookmark,
@@ -36,8 +38,6 @@
   let error = $state<string | null>(initialError);
   let sourceFilter = $state<string | null>(null);
   let removing = $state(new Set<number>());
-  let failedPreviews = $state(new Set<number>());
-  let loadedPreviews = $state(new Set<number>());
 
   async function refresh() {
     try {
@@ -84,11 +84,6 @@
   $effect(() => {
     if (sourceFilter && !sources.some((s) => s.value === sourceFilter)) sourceFilter = null;
   });
-
-  function progressPercent(item: BookmarkListItem) {
-    if (!item.lastPage || !item.pageCount) return 0;
-    return Math.min(100, Math.round((item.lastPage / item.pageCount) * 100));
-  }
 
   // Built once - Intl formatters are expensive to create per item.
   const relativeTime = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
@@ -154,18 +149,13 @@
 
     {#if sources.length > 1}
       <div class="source-chips" role="group" aria-label="Show bookmarks from">
-        <button type="button" class="source-chip" aria-pressed={sourceFilter === null} onclick={() => (sourceFilter = null)}>
-          All <span class="source-chip-count">{items.length}</span>
-        </button>
+        <Button variant="toggle" size="mini" aria-pressed={sourceFilter === null} onclick={() => (sourceFilter = null)}>
+          All <span class="sgxp-btn-count">{items.length}</span>
+        </Button>
         {#each sources as source (source.value)}
-          <button
-            type="button"
-            class="source-chip"
-            aria-pressed={sourceFilter === source.value}
-            onclick={() => (sourceFilter = source.value)}
-          >
-            {source.label} <span class="source-chip-count">{source.count}</span>
-          </button>
+          <Button variant="toggle" size="mini" aria-pressed={sourceFilter === source.value} onclick={() => (sourceFilter = source.value)}>
+            {source.label} <span class="sgxp-btn-count">{source.count}</span>
+          </Button>
         {/each}
       </div>
     {/if}
@@ -174,7 +164,7 @@
   {#if error}
     <div class="bookmarks-empty">
       <p class="bookmarks-error">{error}</p>
-      <button type="button" class="empty-link" onclick={refresh}>Try again</button>
+      <Button variant="secondary" icon={RotateCw} onclick={refresh}>Try again</Button>
     </div>
   {:else if items.length === 0}
     <div class="bookmarks-empty">
@@ -199,62 +189,36 @@
         </div>
         <ul class="bookmark-grid">
           {#each section.items as item (item.id)}
-            <li class="bookmark-card">
-              <a href={item.href} class="bookmark-preview no-theme-styles" tabindex="-1" aria-hidden="true">
-                {#if item.previewUrl && !failedPreviews.has(item.id)}
-                  <!-- The archive's pre-cropped 100x100 preview, shown 1:1. -->
-                  <img
-                    src={item.previewUrl}
-                    alt=""
-                    width="100"
-                    height="100"
-                    loading="lazy"
-                    decoding="async"
-                    class:loaded={loadedPreviews.has(item.id)}
-                    onload={() => (loadedPreviews = new Set(loadedPreviews).add(item.id))}
-                    onerror={() => (failedPreviews = new Set(failedPreviews).add(item.id))}
-                  />
-                {:else}
-                  <ImageOff size={22} />
-                {/if}
-              </a>
-
-              <div class="bookmark-body">
-                <a href={item.href} class="bookmark-title no-theme-styles">{item.title}</a>
-                <span class="bookmark-byline">
-                  {#if item.author}by <span class="bookmark-author">{item.author}</span>{/if}
-                  {#if sources.length > 1}<span class="bookmark-source">{item.sourceLabel}</span>{/if}
-                </span>
-
-                <div class="bookmark-progress">
-                  <span class="bookmark-progress-text">
-                    {#if item.lastPage}
-                      Page {item.lastPage.toLocaleString()}{item.pageCount ? ` of ${item.pageCount.toLocaleString()}` : ''}
-                    {:else}
-                      Not started
-                    {/if}
-                    <span class="bookmark-when">· {timeAgo(item.updatedAt)}</span>
-                  </span>
-                  <span class="bookmark-meter" aria-hidden="true">
-                    <span class="bookmark-meter-fill" style:width="{progressPercent(item)}%"></span>
-                  </span>
-                </div>
-
-                <a href={item.href} class="bookmark-continue no-theme-styles">
-                  {item.lastPage ? 'Continue reading' : 'Start reading'} <ArrowRight size={15} />
-                </a>
-              </div>
-
-              <button
-                type="button"
-                class="bookmark-remove"
-                onclick={() => remove(item)}
-                disabled={removing.has(item.id)}
-                title="Remove bookmark"
-                aria-label="Remove bookmark for {item.title}"
+            <!-- The archive's own card, so a comic looks the same here as in
+                 the archive. Its bookmark toggle is shown "on"; pressing it
+                 removes the bookmark (with an Undo toast). -->
+            <li>
+              <ArchiveComicCard
+                comicId={item.comicId}
+                title={item.title}
+                author={item.author ?? undefined}
+                category={item.category}
+                pagesMetadata={item.pagesMetadata}
+                pagesFolder={item.pageCount}
+                percentSaved={item.percentSaved}
+                rating={item.rating}
+                notes={item.notes}
+                bookmarkCount={item.bookmarkCount}
+                href={item.href}
+                bookmarked
+                bookmarkBusy={removing.has(item.id)}
+                onToggleBookmark={() => remove(item)}
+                ctaLabel={item.lastPage ? `Continue from page ${item.lastPage.toLocaleString()}` : 'Start reading'}
               >
-                <X size={16} />
-              </button>
+                {#snippet footnote()}
+                  {#if item.lastPage}
+                    On page {item.lastPage.toLocaleString()}{item.pageCount ? ` of ${item.pageCount.toLocaleString()}` : ''}
+                  {:else}
+                    Not started
+                  {/if}
+                  · {timeAgo(item.updatedAt)}
+                {/snippet}
+              </ArchiveComicCard>
             </li>
           {/each}
         </ul>
@@ -320,33 +284,8 @@
   .source-chips {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 10px;
     margin-top: 14px;
-  }
-
-  .source-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    min-height: 36px;
-    padding: 0 12px;
-    background: color-mix(in srgb, var(--page-color) 85%, white);
-    border: 1px solid color-mix(in srgb, var(--page-color) 75%, white);
-    color: var(--font-color);
-    font-family: 'saira', sans-serif;
-    font-size: 14px;
-    cursor: pointer;
-  }
-
-  .source-chip[aria-pressed='true'] {
-    border-color: var(--font-link-color);
-    background: color-mix(in srgb, var(--font-link-color) 18%, var(--page-color));
-    font-weight: 700;
-  }
-
-  .source-chip-count {
-    opacity: 0.6;
-    font-variant-numeric: tabular-nums;
   }
 
   .bookmarks-empty {
@@ -372,20 +311,9 @@
     vertical-align: -2px;
   }
 
-  .bookmarks-empty a,
-  .empty-link {
+  .bookmarks-empty a {
     color: var(--font-link-color);
     font-weight: 700;
-  }
-
-  .empty-link {
-    background: none;
-    border: none;
-    padding: 0;
-    font-family: inherit;
-    font-size: 14px;
-    text-decoration: underline;
-    cursor: pointer;
   }
 
   .bookmarks-error {
@@ -439,184 +367,34 @@
     text-shadow: none;
   }
 
+  /* Same grid as the archive's card view. */
   .bookmark-grid {
     list-style: none;
     margin: 0;
     padding: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 15px;
   }
 
-  /* Styled after the archive's comic cards. */
-  .bookmark-card {
-    position: relative;
+  /* Each item is the archive's comic card, stretched to its grid cell so
+     cards in a row line up. */
+  .bookmark-grid > li {
     display: flex;
-    gap: 14px;
-    padding: 14px;
-    background: var(--page-color);
-    border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white);
-    box-shadow: var(--box-shadow);
     min-width: 0;
   }
 
-  .bookmark-preview {
-    flex-shrink: 0;
-    align-self: flex-start;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100px;
-    height: 100px;
-    overflow: hidden;
-    background: color-mix(in srgb, var(--page-color) 70%, black);
-    outline: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 75%, white);
-    color: var(--font-color);
-  }
-
-  .bookmark-preview :global(svg) {
-    opacity: 0.35;
-  }
-
-  .bookmark-preview img {
-    width: 100px;
-    height: 100px;
-    object-fit: none;
-    image-rendering: pixelated;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-  }
-
-  .bookmark-preview img.loaded {
-    opacity: 1;
-  }
-
-  .bookmark-body {
-    min-width: 0;
+  .bookmark-grid > li > :global(.comic-card) {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    /* Clear of the remove button in the corner. */
-    padding-right: 22px;
-  }
-
-  .bookmark-title {
-    font-size: 17px;
-    font-weight: 800;
-    line-height: 1.25;
-    color: var(--font-color);
-    text-decoration: none;
-    text-shadow: none;
-    overflow-wrap: anywhere;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .bookmark-byline {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 4px 8px;
-    font-size: 13px;
-    opacity: 0.75;
-  }
-
-  .bookmark-author {
-    font-weight: 600;
-  }
-
-  .bookmark-source {
-    padding: 0 6px;
-    border: 1px solid color-mix(in srgb, var(--font-link-color) 60%, transparent);
-    font-size: 11px;
-    font-weight: 700;
-    line-height: 18px;
-  }
-
-  .bookmark-progress {
-    margin-top: auto;
-    padding-top: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  .bookmark-progress-text {
-    font-size: 13px;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .bookmark-when {
-    font-weight: 400;
-    opacity: 0.6;
-  }
-
-  .bookmark-meter {
-    display: block;
-    height: 5px;
-    background: color-mix(in srgb, var(--page-color) 70%, white);
-    overflow: hidden;
-  }
-
-  .bookmark-meter-fill {
-    display: block;
-    height: 100%;
-    background: var(--font-link-color);
-  }
-
-  .bookmark-continue {
-    align-self: flex-start;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    margin-top: 6px;
-    color: var(--font-link-color);
-    font-size: 14px;
-    font-weight: 700;
-    text-decoration: none;
-    text-shadow: none;
-  }
-
-  .bookmark-remove {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
-    padding: 0;
-    background: transparent;
-    border: 1px solid transparent;
-    color: var(--font-color);
-    opacity: 0.5;
-    cursor: pointer;
-  }
-
-  .bookmark-remove:disabled {
-    cursor: default;
   }
 
   /* Hover only where there's a real hover pointer - on touchscreens a tap
      leaves it stuck "hovered" until something else is tapped. */
   @media (hover: hover) {
-    .bookmark-title:hover,
-    .bookmark-continue:hover,
     .bookmarks-back:hover,
     .bookmark-section-link:hover {
       color: var(--font-link-color);
       text-decoration: underline;
-    }
-
-    .bookmark-remove:hover:not(:disabled) {
-      opacity: 1;
-      border-color: color-mix(in srgb, var(--font-color) 40%, transparent);
     }
   }
 
@@ -658,19 +436,7 @@
 
     .bookmark-grid {
       grid-template-columns: minmax(0, 1fr);
-      gap: 10px;
-    }
-
-    .bookmark-card {
-      padding: 12px;
-    }
-
-    /* Bigger target on touchscreens. */
-    .bookmark-remove {
-      width: 38px;
-      height: 38px;
-      top: 4px;
-      right: 4px;
+      gap: 12px;
     }
   }
 </style>

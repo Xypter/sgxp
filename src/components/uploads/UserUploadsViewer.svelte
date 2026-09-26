@@ -9,9 +9,9 @@
     getSortedRowModel,
   } from '@tanstack/table-core';
   import { createSvelteTable, FlexRender, renderComponent, renderSnippet } from '$components/ui/data-table';
-  import { DataTable, Badge, Button, AlertDialog } from '$lib/components';
+  import { DataTable, Badge, Button, AlertDialog, NumberedPagination } from '$lib/components';
   import { formatDate } from '$lib/spriteUtils';
-  import { MessageSquare, ExternalLink } from 'lucide-svelte';
+  import { MessageSquare, ExternalLink, RotateCw, Upload } from 'lucide-svelte';
   import AdminFeedbackModal from './AdminFeedbackModal.svelte';
   import { toast } from 'svelte-sonner';
 
@@ -309,14 +309,12 @@
     {:else if error}
       <div class="error-state">
         <p>{error}</p>
-        <Button themed onclick={fetchSprites}>Try Again</Button>
+        <Button variant="secondary" icon={RotateCw} onclick={fetchSprites}>Try Again</Button>
       </div>
     {:else if sprites.length === 0}
       <div class="empty-state">
         <p>You haven't uploaded any sprites yet.</p>
-        <a href="/upload" class="upload-link">
-          <Button themed>Upload Your First Sprite</Button>
-        </a>
+        <Button variant="primary" icon={Upload} href="/upload">Upload Your First Sprite</Button>
       </div>
     {:else}
       <!-- Desktop Table View -->
@@ -373,23 +371,12 @@
         <!-- Mobile Pagination -->
         {#if pageCount > 1}
           <div class="mobile-pagination">
-            <button
-              class="pagination-btn"
-              onclick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              Previous
-            </button>
-            <span class="pagination-info">
-              Page {pagination.pageIndex + 1} of {pageCount}
-            </span>
-            <button
-              class="pagination-btn"
-              onclick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              Next
-            </button>
+            <NumberedPagination
+              count={totalSprites}
+              perPage={pagination.pageSize}
+              page={pagination.pageIndex + 1}
+              onPageChange={(page) => (pagination = { ...pagination, pageIndex: page - 1 })}
+            />
           </div>
         {/if}
       </div>
@@ -471,10 +458,6 @@
   .empty-state p {
     margin: 0;
     font-size: 16px;
-  }
-
-  .upload-link {
-    text-decoration: none;
   }
 
   /* Global styles for table cells */
@@ -630,43 +613,8 @@
   /* Mobile Pagination */
   .mobile-pagination {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 15px;
-    background: var(--page-color);
-    border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white);
-    box-shadow: var(--box-shadow);
+    justify-content: center;
     margin-top: 15px;
-  }
-
-  .pagination-btn {
-    padding: 8px 16px;
-    background: var(--font-link-color);
-    color: white;
-    border: none;
-    font-family: 'saira';
-    font-weight: 700;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .pagination-btn:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--font-link-color) 80%, white);
-  }
-
-  .pagination-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
-  .pagination-info {
-    font-family: 'saira';
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--font-color);
-    white-space: nowrap;
   }
 
   /* Mobile Styles */
@@ -699,23 +647,13 @@
       box-shadow: none !important;
     }
 
-    .upload-card,
-    .mobile-pagination {
+    .upload-card {
       border-left: none !important;
       border-right: none !important;
       width: 100vw !important;
       margin-left: calc(-50vw + 50%) !important;
       margin-right: calc(-50vw + 50%) !important;
       box-shadow: none !important;
-    }
-
-    .pagination-btn {
-      padding: 6px 12px;
-      font-size: 12px;
-    }
-
-    .pagination-info {
-      font-size: 12px;
     }
   }
 </style>

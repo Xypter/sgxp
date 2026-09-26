@@ -1,5 +1,6 @@
 <script lang="ts">
   import * as Popover from '$components/ui/popover';
+  import type { Snippet } from 'svelte';
   import { Bookmark, BookOpen, ImageOff } from 'lucide-svelte';
   import { Button } from '$lib/components';
   import { sgxpButtonClass } from '$components/ui/button';
@@ -22,6 +23,10 @@
     bookmarkBusy?: boolean;
     /** Only passed for logged-in viewers - no toggle is shown otherwise. */
     onToggleBookmark?: () => void;
+    /** The button's label (e.g. "Continue from page 12" on /bookmarks). */
+    ctaLabel?: string;
+    /** An extra line under the stats (e.g. /bookmarks' reading progress). */
+    footnote?: Snippet;
   }
 
   let {
@@ -39,6 +44,8 @@
     bookmarked = false,
     bookmarkBusy = false,
     onToggleBookmark,
+    ctaLabel = 'Read comic',
+    footnote,
   }: Props = $props();
 
   // Some entries have more pages in the folder than the metadata claimed
@@ -163,7 +170,11 @@
     {/if}
   </div>
 
-  <Button variant="secondary" icon={BookOpen} {href} class="comic-card-cta">Read comic</Button>
+  {#if footnote}
+    <div class="comic-card-footnote">{@render footnote()}</div>
+  {/if}
+
+  <Button variant="secondary" icon={BookOpen} {href} class="comic-card-cta">{ctaLabel}</Button>
 </article>
 
 <style>
@@ -318,6 +329,13 @@
     gap: 8px 14px;
     padding: 0 14px 12px;
     font-size: 13px;
+  }
+
+  .comic-card-footnote {
+    margin-top: -4px;
+    padding: 0 14px 12px;
+    font-size: 13px;
+    opacity: 0.8;
   }
 
   .category-chip {
