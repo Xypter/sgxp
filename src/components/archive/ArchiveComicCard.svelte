@@ -159,7 +159,9 @@
     {/if}
   </div>
 
-  <a {href} class="comic-card-cta no-theme-styles">
+  <!-- The empty touchstart listener is what makes iOS Safari apply :active
+       on tap at all (it skips it for elements with no touch listener). -->
+  <a {href} class="comic-card-cta no-theme-styles" ontouchstart={() => {}}>
     Read comic <ArrowRight size={16} />
   </a>
 </article>
@@ -437,6 +439,19 @@
     .comic-card-cta:hover {
       background: color-mix(in srgb, var(--font-link-color) 85%, white);
     }
+  }
+
+  /* Pressed state - the only feedback a tap gets on touchscreens, where the
+     hover above never applies. Replaces the browser's own tap highlight. */
+  .comic-card-cta {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .comic-card-cta:active {
+    background: color-mix(in srgb, var(--font-link-color) 80%, black);
+    box-shadow: none;
+    transform: translateY(1px);
   }
 
   /* Sits at the end of the stats row (margin-left: auto), after the saved

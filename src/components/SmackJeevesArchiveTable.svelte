@@ -20,6 +20,7 @@
   import { scale } from 'svelte/transition';
   import { createSvelteTable, renderComponent } from '$components/ui/data-table';
   import * as Tooltip from '$components/ui/tooltip';
+  import * as Accordion from '$components/ui/accordion';
   import { DataTable, Input, Button } from '$lib/components';
   import { Bookmark, ChevronLeft, ChevronRight, LayoutGrid, SlidersHorizontal, Table, X } from 'lucide-svelte';
 
@@ -136,6 +137,16 @@
   }
 
   onMount(fetchComics);
+
+  // Intro text starts collapsed, same as the triage page's "About This
+  // Project" - opening it is remembered per-browser. Guarded for SSR
+  // (client:load renders this server-side first, without localStorage).
+  const INTRO_STORAGE_KEY = 'smackjeeves-archive-intro-open';
+  let introValue = $state(typeof localStorage !== 'undefined' && localStorage.getItem(INTRO_STORAGE_KEY) === 'open' ? 'intro' : '');
+
+  $effect(() => {
+    localStorage.setItem(INTRO_STORAGE_KEY, introValue ? 'open' : 'closed');
+  });
 
   // The viewer's private bookmarks (logged-in only): a toggle on each card,
   // and a "Bookmarked" filter. The full list lives on /bookmarks.
@@ -703,23 +714,33 @@
       <div class="toolbar-header">
         <div class="toolbar-header-text">
           <h1>Smack Jeeves Archive</h1>
-          <div class="intro">
-            <p>
-              Welcome to this archive, a sanctuary for comics and their original user comments, preserved
-              from a now-vanished website. The thoughts and views expressed in these works belong solely to
-              their creators. They do not, in any way, reflect the opinions or beliefs of this website or its
-              keeper.
-            </p>
-            <p>
-              This collection exists to honor history, to educate, and perhaps even to entertain. It is not an
-              endorsement but a preservation of voices from another time. So, as you journey through these
-              pages, remember: discretion is your guide. Take what you will, leave what you must, and
-              understand it for what it is—a glimpse into the past.
-            </p>
-            <p class="intro-cta">
-              Want to help preserve more? Join the <a href="/smackjeevesarchivetriage">archive triage project</a>.
-            </p>
-          </div>
+          <Accordion.Root type="single" bind:value={introValue} class="intro-accordion">
+            <Accordion.Item value="intro" class="intro-accordion-item">
+              <Accordion.Trigger class="intro-accordion-trigger">
+                About This Archive
+                <span class="intro-toggle-label">({introValue ? 'Collapse' : 'Expand'})</span>
+              </Accordion.Trigger>
+              <Accordion.Content class="intro-accordion-content">
+                <div class="intro">
+                  <p>
+                    Welcome to this archive, a sanctuary for comics and their original user comments, preserved
+                    from a now-vanished website. The thoughts and views expressed in these works belong solely to
+                    their creators. They do not, in any way, reflect the opinions or beliefs of this website or its
+                    keeper.
+                  </p>
+                  <p>
+                    This collection exists to honor history, to educate, and perhaps even to entertain. It is not an
+                    endorsement but a preservation of voices from another time. So, as you journey through these
+                    pages, remember: discretion is your guide. Take what you will, leave what you must, and
+                    understand it for what it is—a glimpse into the past.
+                  </p>
+                  <p class="intro-cta">
+                    Want to help preserve more? Join the <a href="/smackjeevesarchivetriage">archive triage project</a>.
+                  </p>
+                </div>
+              </Accordion.Content>
+            </Accordion.Item>
+          </Accordion.Root>
         </div>
       </div>
 
@@ -981,6 +1002,52 @@
     font-size: 24px;
     color: var(--font-color);
     margin: 0 0 8px 0;
+  }
+
+  /* Collapsible intro - same look as the triage page's (ArchiveTriageTable.svelte). */
+  :global(.intro-accordion) {
+    max-width: 100%;
+  }
+
+  :global(.intro-accordion-item) {
+    border: none !important;
+  }
+
+  :global(.intro-accordion-trigger) {
+    font-family: 'saira' !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--font-color) !important;
+    opacity: 0.75;
+    padding: 0 0 4px 0 !important;
+    display: inline-flex !important;
+    flex: none !important;
+    width: auto !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 6px !important;
+  }
+
+  :global(.intro-accordion-trigger:hover) {
+    opacity: 1;
+    text-decoration: none !important;
+  }
+
+  :global(.intro-toggle-label) {
+    font-style: italic;
+    font-weight: 400 !important;
+    text-transform: none;
+    opacity: 0.65;
+  }
+
+  :global(.intro-accordion-content) {
+    font-size: inherit !important;
+  }
+
+  :global(.intro-accordion-content > div) {
+    padding: 4px 0 0 0 !important;
   }
 
   .intro p {
@@ -1416,9 +1483,21 @@
       min-width: 0;
     }
 
+    /* A zero basis (and min-width 0) makes Filter & Sort the one that
+       gives up room, so Clear and the bookmarks button always stay on its
+       row instead of the bookmarks button wrapping onto a line of its own
+       on narrow phones. */
     .filter-trigger {
-      flex: 1;
+      flex: 1 1 0;
+      min-width: 0;
       height: 46px;
+    }
+
+    /* Too tight for the icon on the smallest phones - the label wins. */
+    @media (max-width: 340px) {
+      .filter-trigger :global(svg) {
+        display: none;
+      }
     }
 
     .toolbar :global(.clear-filters-btn) {
