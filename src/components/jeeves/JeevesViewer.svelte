@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount, tick, untrack } from 'svelte';
   import { toast } from 'svelte-sonner';
-  import { ArrowLeft, ArrowUp, Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Library, LoaderCircle } from 'lucide-svelte';
+  import { ArrowLeft, ArrowUp, Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Library } from 'lucide-svelte';
+  import Spinner from '../Spinner.svelte';
   import { Button, Select } from '$lib/components';
   import {
     addArchiveBookmark,
@@ -326,7 +327,7 @@
 
 <div class="jeeves-viewer">
   {#if loading}
-    <div class="jeeves-status"><LoaderCircle size={22} class="jeeves-spin" /> Loading comic...</div>
+    <div class="jeeves-status"><Spinner size={22} label={null} /> Loading comic...</div>
   {:else if error || !metadata || !comicId}
     <div class="jeeves-status jeeves-status--error">
       <p>{error ?? 'Something went wrong.'}</p>
@@ -435,16 +436,6 @@
 
   .jeeves-status--error p {
     color: #ff6b6b;
-  }
-
-  .jeeves-status :global(.jeeves-spin) {
-    animation: jeeves-spin 0.9s linear infinite;
-  }
-
-  @keyframes jeeves-spin {
-    to {
-      transform: rotate(360deg);
-    }
   }
 
   /* Panels shared by the home and reader views (About, page list,

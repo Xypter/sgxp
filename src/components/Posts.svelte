@@ -5,6 +5,7 @@
     import { getDisplayName, getUsername } from '$lib/spriteUtils';
     import { fly } from 'svelte/transition';
     import { untrack } from 'svelte';
+    import Spinner from './Spinner.svelte';
 
     // Reactive state using Svelte's new runes API
     let posts = $state([]);
@@ -213,7 +214,7 @@
         </div>
     {/if}
 {#if loading}
-    <div style="font-weight: 600; text-align: center; padding: 20px; display: flex; align-items:center; justify-content:center;">Loading<img src="https://cdn.sgxp.me/img/BIG_SGXPkanDos.gif" alt="">Posts :D</div>
+    <div style="font-weight: 600; text-align: center; padding: 20px; display: flex; align-items:center; justify-content:center; gap: 8px;"><Spinner size={20} label={null} /> Loading posts...</div>
 {:else if error}
     <div class="error">Failed to load posts. Please try again later.</div>
 {:else if showPosts}

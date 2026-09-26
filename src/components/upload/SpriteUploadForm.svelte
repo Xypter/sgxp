@@ -1,7 +1,7 @@
 <script lang="ts">
   import { toast } from 'svelte-sonner';
   import { FormInput, FormTextarea, FormCheckbox, Button, Select, SelectWithSuggest, MultiSelect, Sheet } from '$lib/components';
-  import { Loader2 } from 'lucide-svelte';
+  import Spinner from '../Spinner.svelte';
   import FileUploadField from './FileUploadField.svelte';
   import CardColorPicker from './CardColorPicker.svelte';
 
@@ -1252,7 +1252,7 @@
     </Button>
     <Button themed onclick={submitTeamSuggestion} class="sheet-submit-btn" disabled={teamSubmitting}>
       {#if teamSubmitting}
-        <Loader2 class="h-4 w-4 animate-spin" />
+        <Spinner size={16} label="Submitting" />
       {/if}
       Add Suggestion
     </Button>
@@ -1295,7 +1295,7 @@
     </Button>
     <Button themed onclick={submitOfficialGameSuggestion} class="sheet-submit-btn" disabled={officialGameSubmitting}>
       {#if officialGameSubmitting}
-        <Loader2 class="h-4 w-4 animate-spin" />
+        <Spinner size={16} label="Submitting" />
       {/if}
       Add Suggestion
     </Button>
@@ -1338,7 +1338,7 @@
     </Button>
     <Button themed onclick={submitFanGameSuggestion} class="sheet-submit-btn" disabled={fanGameSubmitting}>
       {#if fanGameSubmitting}
-        <Loader2 class="h-4 w-4 animate-spin" />
+        <Spinner size={16} label="Submitting" />
       {/if}
       Add Suggestion
     </Button>
@@ -1381,7 +1381,7 @@
     </Button>
     <Button themed onclick={submitSeriesSuggestion} class="sheet-submit-btn" disabled={seriesSubmitting}>
       {#if seriesSubmitting}
-        <Loader2 class="h-4 w-4 animate-spin" />
+        <Spinner size={16} label="Submitting" />
       {/if}
       Add Suggestion
     </Button>
@@ -1414,7 +1414,7 @@
     </Button>
     <Button themed onclick={submitSectionSuggestion} class="sheet-submit-btn" disabled={sectionSubmitting}>
       {#if sectionSubmitting}
-        <Loader2 class="h-4 w-4 animate-spin" />
+        <Spinner size={16} label="Submitting" />
       {/if}
       Add Suggestion
     </Button>
@@ -1448,7 +1448,7 @@
     </Button>
     <Button themed onclick={submitCharacterSuggestion} class="sheet-submit-btn" disabled={characterSubmitting}>
       {#if characterSubmitting}
-        <Loader2 class="h-4 w-4 animate-spin" />
+        <Spinner size={16} label="Submitting" />
       {/if}
       Add Suggestion
     </Button>
@@ -1480,7 +1480,7 @@
     </Button>
     <Button themed onclick={submitContributorSuggestion} class="sheet-submit-btn" disabled={contributorSubmitting}>
       {#if contributorSubmitting}
-        <Loader2 class="h-4 w-4 animate-spin" />
+        <Spinner size={16} label="Submitting" />
       {/if}
       Add Contributor
     </Button>

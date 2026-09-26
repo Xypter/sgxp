@@ -11,6 +11,7 @@
   import { Button } from '../components/ui/button/index.js';
   import PresenceCans from './PresenceCans.svelte';
   import PixelText from './PixelText.svelte';
+  import Spinner from './Spinner.svelte';
   import { BOOKMARK_ICON_URL, BOOKMARK_ICON_WIDTH, BOOKMARK_ICON_HEIGHT } from '$lib/bookmarkIcon';
 
   // Define types in module context
@@ -42,27 +43,16 @@
   let uploadCount = $state<number>(0);
   // let unreadMessageCount = $state<number>(0);
 
-  // "dots" spinner from cli-spinners (https://github.com/sindresorhus/cli-spinners)
-  const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
-  const SPINNER_INTERVAL_MS = 80 / 3;
+  // Page-loading spinner (shared <Spinner>), shown while an Astro
+  // navigation is in flight.
   let isPageLoading = $state(false);
-  let spinnerFrameIndex = $state(0);
-  let spinnerInterval: ReturnType<typeof setInterval> | null = null;
 
   function startPageLoadingSpinner(): void {
     isPageLoading = true;
-    if (spinnerInterval) return;
-    spinnerInterval = setInterval(() => {
-      spinnerFrameIndex = (spinnerFrameIndex + 1) % SPINNER_FRAMES.length;
-    }, SPINNER_INTERVAL_MS);
   }
 
   function stopPageLoadingSpinner(): void {
     isPageLoading = false;
-    if (spinnerInterval) {
-      clearInterval(spinnerInterval);
-      spinnerInterval = null;
-    }
   }
 
   // Mobile menu shows theme names as "First Letter Of Each Word" instead of
@@ -335,7 +325,7 @@ async function checkAuthStatus(): Promise<void> {
   // If a navigation gets interrupted (browser back/forward, or a reload
   // while a transition is in flight) the page can be restored from bfcache
   // with this component's JS state frozen mid-transition - isPageLoading
-  // stuck true and the spinner sitting on whatever frame it was on, since
+  // stuck true and the spinner showing on the restored page, since
   // the whole JS context (and this onMount) never reran to reset it.
   // event.persisted is only true for an actual bfcache restore - never for
   // a normal fresh load or an Astro SPA-style navigation - so this can't
@@ -437,15 +427,10 @@ async function checkAuthStatus(): Promise<void> {
         THE SGXP
       </div>
 
-      <span
-        class="no-theme-styles page-loading-spinner"
-        class:page-loading-spinner--visible={isPageLoading}
-        style="color: var(--font-color); margin-left: 12px;"
-        role="status"
-        aria-label="Loading"
-        aria-hidden={!isPageLoading}
-      >
-        {SPINNER_FRAMES[spinnerFrameIndex]}
+      <!-- Reserves the spinner's box up front so showing it never shifts the
+           menu beside it. -->
+      <span class="no-theme-styles page-loading-spinner" style="color: var(--font-color); margin-left: 12px;">
+        {#if isPageLoading}<Spinner />{/if}
       </span>
 
       <NavigationMenu.Root viewport={false}>
@@ -1000,7 +985,7 @@ async function checkAuthStatus(): Promise<void> {
                 }}
                 href="/bookmarks"
               >
-                <img src={BOOKMARK_ICON_URL} alt="" class="nav-icon" width={BOOKMARK_ICON_WIDTH} height={BOOKMARK_ICON_HEIGHT} style="position: relative; top: 1px; left: 2px; margin-right: 8px;" />
+                <img src={BOOKMARK_ICON_URL} alt="" class="nav-icon" width={BOOKMARK_ICON_WIDTH} height={BOOKMARK_ICON_HEIGHT} style="position: relative; top: 1px; left: 2px; margin-right: 10px;" />
                 <PixelText text="Bookmarks" lineHeight={22} />
               </NavigationMenu.Link>
               <NavigationMenu.Link
@@ -1283,7 +1268,7 @@ async function checkAuthStatus(): Promise<void> {
 <div class="min-[1200px]:hidden fixed top-3 right-3 z-50">
   <Sheet.Root bind:open={isMobileMenuOpen}>
     <Sheet.Trigger
-      class="no-theme-styles p-2.5 rounded-lg shadow-lg"
+      class="no-theme-styles p-2.5 shadow-lg"
       style="
         color: var(--font-color);
         background-color: var(--page-color);
@@ -1379,7 +1364,7 @@ async function checkAuthStatus(): Promise<void> {
                 class="mobile-nav-link"
                 onclick={() => (isMobileMenuOpen = false)}
               >
-                <img src={BOOKMARK_ICON_URL} alt="" class="nav-icon" width={BOOKMARK_ICON_WIDTH} height={BOOKMARK_ICON_HEIGHT} style="position: relative; left: 2px; margin-right: 4px;" />
+                <img src={BOOKMARK_ICON_URL} alt="" class="nav-icon" width={BOOKMARK_ICON_WIDTH} height={BOOKMARK_ICON_HEIGHT} style="position: relative; left: 2px; margin-right: 8px;" />
                 <span style="position: relative; left: 3px;">Bookmarks</span>
               </a>
               <a
@@ -1471,6 +1456,24 @@ async function checkAuthStatus(): Promise<void> {
   </Sheet.Root>
 </div>
 
+<!-- Mobile: the desktop bar's page-loading spinner has no bar to sit in
+     here, so it floats top-left while a navigation is loading, styled to
+     match the hamburger opposite it. -->
+{#if isPageLoading}
+  <div
+    class="flex items-center justify-center min-[1200px]:hidden fixed top-3 left-3 z-50 no-theme-styles shadow-lg mobile-page-loading"
+    style="
+      color: var(--font-color);
+      background-color: var(--page-color);
+      border: 1px solid rgba(255,255,255,0.2);
+    "
+    role="status"
+    aria-label="Loading"
+  >
+    <Spinner size={24} label={null} />
+  </div>
+{/if}
+
 <style>
   /* "Motion: on/off" at the bottom of the theme menu - styled like its theme rows,
      under a divider. */
@@ -1498,18 +1501,20 @@ async function checkAuthStatus(): Promise<void> {
     flex-direction: row !important;
   }
 
+  /* Reserves the spinner's 16px box whether or not it's showing, so it
+     never shifts the menu beside it. */
   :global(.page-loading-spinner) {
-    display: inline-block;
-    /* Reserve a fixed box up front (own font, native/unscaled size) so
-       toggling visibility never changes the layout around it. */
-    width: 1em;
-    text-align: center;
-    font-family: monospace;
-    visibility: hidden;
+    display: inline-flex;
+    align-items: center;
+    width: 16px;
   }
 
-  :global(.page-loading-spinner--visible) {
-    visibility: visible;
+  /* Same 42px box as the mobile hamburger button. (Its display comes from
+     the Tailwind classes, so min-[1200px]:hidden can still hide it.) */
+  .mobile-page-loading {
+    width: 42px;
+    height: 42px;
+    font-size: 20px;
   }
 
   /* Chrome (Windows) drops text in an animating/scaled layer from LCD to grayscale

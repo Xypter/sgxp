@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { LoaderCircle } from 'lucide-svelte';
+  import Spinner from '../Spinner.svelte';
 
   interface Props {
     comicId: number;
@@ -64,7 +64,7 @@
   {#if !failed}
     {#if !loaded}
       <div class="qs-image-loading">
-        <LoaderCircle size={24} class="qs-img-spinner" />
+        <Spinner size={24} />
       </div>
     {/if}
     <img {src} onerror={handleError} onload={handleLoad} alt="Page {n}" loading="eager" class:qs-image-hidden={!loaded} />
@@ -140,16 +140,6 @@
     align-items: center;
     justify-content: center;
     color: color-mix(in srgb, var(--font-color) 50%, transparent);
-  }
-
-  :global(.qs-img-spinner) {
-    animation: qs-img-spin 1s linear infinite;
-  }
-
-  @keyframes qs-img-spin {
-    to {
-      transform: rotate(360deg);
-    }
   }
 
   .qs-no-preview {

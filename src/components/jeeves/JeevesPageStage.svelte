@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, tick, untrack, type Snippet } from 'svelte';
-  import { ImageOff, LoaderCircle, Maximize2, Minimize2, ZoomIn, ZoomOut } from 'lucide-svelte';
+  import { ImageOff, Maximize2, Minimize2, ZoomIn, ZoomOut } from 'lucide-svelte';
+  import Spinner from '../Spinner.svelte';
 
   // One comic page, shown pixel-perfect and pannable - the reader's take on
   // SpriteImageViewer. Pages are never scaled by a fractional amount (that's
@@ -310,7 +311,7 @@
     </div>
 
     {#if loading && src && !failed}
-      <div class="stage-spinner" aria-hidden="true"><LoaderCircle size={28} /></div>
+      <div class="stage-spinner"><Spinner size={28} /></div>
     {/if}
 
     {#if overflowing && src && !failed}
@@ -502,16 +503,6 @@
     pointer-events: none;
     color: var(--font-color);
     opacity: 0.6;
-  }
-
-  .stage-spinner :global(svg) {
-    animation: stage-spin 0.9s linear infinite;
-  }
-
-  @keyframes stage-spin {
-    to {
-      transform: rotate(360deg);
-    }
   }
 
   .minimap {

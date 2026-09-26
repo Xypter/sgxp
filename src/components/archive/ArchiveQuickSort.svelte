@@ -1,7 +1,8 @@
 <script lang="ts">
   import { toast } from 'svelte-sonner';
   import { fade } from 'svelte/transition';
-  import { X, ChevronLeft, ChevronRight, LoaderCircle } from 'lucide-svelte';
+  import { X, ChevronLeft, ChevronRight } from 'lucide-svelte';
+  import Spinner from '../Spinner.svelte';
   import { Button, ToggleGroup } from '$lib/components';
   import { applyArchiveFilters } from '$lib/archiveFilterQuery';
   import ArchiveStatusBadge from './cells/ArchiveStatusBadge.svelte';
@@ -638,7 +639,7 @@
               </span>
             {:else}
               <span class="qs-page-badge qs-page-badge--loading">
-                <LoaderCircle size={11} class="qs-spinner" /> loading info...
+                <Spinner size={12} label={null} /> loading info...
               </span>
             {/if}
             <span class="qs-meta-divider">—</span>
@@ -654,7 +655,7 @@
 
     {#if loadingInitial}
       <div class="qs-state-message">
-        <LoaderCircle size={28} class="qs-spinner" />
+        <Spinner size={28} label={null} />
         <p>{isTargetMode ? `Locating comic #${targetComicId}...` : `Loading ${statusFilter ? STATUS_LABELS[statusFilter] || statusFilter : ''} comics...`}</p>
       </div>
     {:else if error}
@@ -831,7 +832,7 @@
               onclick={markReady}
             >
               {#if savingField === 'ready'}
-                <LoaderCircle size={16} class="qs-spinner" /> Submitting...
+                <Spinner size={16} label={null} /> Submitting...
               {:else}
                 Ready for Review →
               {/if}
@@ -842,7 +843,7 @@
             {:else}
               <Button themed class="qs-ready-btn" disabled={!!savingField} onclick={confirmReviewAction}>
                 {#if savingField === 'confirm'}
-                  <LoaderCircle size={16} class="qs-spinner" /> Submitting...
+                  <Spinner size={16} label={null} /> Submitting...
                 {:else}
                   {willExclude ? 'Confirm Exclusion' : 'Confirm Review'} →
                 {/if}
@@ -1091,16 +1092,6 @@
     display: flex;
     align-items: center;
     gap: 0.4rem;
-  }
-
-  :global(.qs-spinner) {
-    animation: qs-spin 1s linear infinite;
-  }
-
-  @keyframes qs-spin {
-    to {
-      transform: rotate(360deg);
-    }
   }
 
   /* Mobile: three images side by side don't fit on a phone screen, so

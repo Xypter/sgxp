@@ -10,7 +10,8 @@
   import { createSvelteTable, renderComponent } from '$components/ui/data-table';
   import * as Accordion from '$components/ui/accordion';
   import { DataTable, Select, Input, Button } from '$lib/components';
-  import { ExternalLink, LoaderCircle, Check, X } from 'lucide-svelte';
+  import { ExternalLink, Check, X } from 'lucide-svelte';
+  import Spinner from './Spinner.svelte';
   import { fade } from 'svelte/transition';
   import { toast } from 'svelte-sonner';
 
@@ -1034,7 +1035,7 @@
 
         <div class="save-status save-status--{saveStatus}">
           {#if saveStatus === 'saving'}
-            <LoaderCircle size={16} class="save-status-spinner" />
+            <Spinner size={16} label={null} />
             <span>Saving...</span>
           {:else if saveStatus === 'saved'}
             <Check size={16} />
@@ -1502,19 +1503,6 @@
   .save-status--saved {
     color: #22c55e;
     opacity: 1;
-  }
-
-  :global(.save-status-spinner) {
-    animation: save-status-spin 0.8s linear infinite;
-  }
-
-  @keyframes save-status-spin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
   }
 
   .toolbar {

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Button, Input, Label, Textarea, Select } from '$lib/components';
-  import { X, Upload, Loader2, Plus, Trash2 } from 'lucide-svelte';
+  import { X, Upload, Plus, Trash2 } from 'lucide-svelte';
+  import Spinner from '../Spinner.svelte';
   import { fade, scale } from 'svelte/transition';
   import SodaCanPicker from './SodaCanPicker.svelte';
   import { getBodyPreset, getEyePreset } from '../../lib/sodaCan';
@@ -540,7 +541,7 @@
         </Button>
         <Button themed onclick={handleSave} disabled={saving}>
           {#if saving}
-            <Loader2 class="w-4 h-4 mr-2 animate-spin" />
+            <Spinner size={16} label={null} class="mr-2" />
             Saving...
           {:else}
             Save Changes
@@ -887,13 +888,4 @@
     }
   }
 
-  /* Spin animation */
-  :global(.animate-spin) {
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-</style>
+  /* Spin animation */</style>

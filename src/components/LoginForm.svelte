@@ -8,6 +8,7 @@
 	import * as Alert from '../components/ui/alert/index.ts';
 	import * as Card from '../components/ui/card/index.ts';
 	import * as Tabs from '../components/ui/tabs/index.ts';
+	import Spinner from './Spinner.svelte';
 
 	// Login form state using Svelte 5 Runes
 	let loginFormData = $state({
@@ -227,7 +228,7 @@
 						Checking authentication status...
 					</Card.Description>
 					<div class="flex justify-center">
-						<div class="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+						<Spinner size={24} label={null} />
 					</div>
 				</div>
 			</Card.Content>
@@ -244,7 +245,7 @@
 						Redirecting to home page...
 					</Card.Description>
 					<div class="flex justify-center">
-						<div class="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+						<Spinner size={24} label={null} />
 					</div>
 				</div>
 			</Card.Content>
@@ -321,7 +322,7 @@
 							{/if}
 							<Button type="submit" class="w-full theme-button" disabled={isLoginLoading}>
 								{#if isLoginLoading}
-									<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+									<Spinner size={16} label={null} class="mr-2" />
 									Signing in...
 								{:else}
 									Sign in
@@ -441,7 +442,7 @@
 							{/if}
 							<Button type="submit" class="w-full theme-button" disabled={isRegisterLoading || !!usernameValidationError || !!displayNameValidationError}>
 								{#if isRegisterLoading}
-									<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+									<Spinner size={16} label={null} class="mr-2" />
 									Creating account...
 								{:else}
 									Create Account

@@ -2,7 +2,8 @@
   import { Button, Input, Label, Switch } from '$lib/components';
   import { Toaster } from '$lib/components';
   import { toast } from 'svelte-sonner';
-  import { Settings, Lock, Save, Loader2, Eye, EyeOff, Shield } from 'lucide-svelte';
+  import { Settings, Lock, Save, Eye, EyeOff, Shield } from 'lucide-svelte';
+  import Spinner from '../Spinner.svelte';
 
   // Props
   let {
@@ -222,7 +223,7 @@
           disabled={savingPassword}
         >
           {#if savingPassword}
-            <Loader2 class="w-4 h-4 mr-2 animate-spin" />
+            <Spinner size={16} label={null} class="mr-2" />
             Updating...
           {:else}
             <Lock class="w-4 h-4 mr-2" />
@@ -259,7 +260,7 @@
           disabled={savingPrivacy}
         >
           {#if savingPrivacy}
-            <Loader2 class="w-4 h-4 mr-2 animate-spin" />
+            <Spinner size={16} label={null} class="mr-2" />
             Saving...
           {:else}
             <Save class="w-4 h-4 mr-2" />
@@ -474,15 +475,6 @@
   }
 
   /* Spin animation */
-  :global(.animate-spin) {
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-
   /* Responsive */
   @media (max-width: 600px) {
     :global(.save-btn) {

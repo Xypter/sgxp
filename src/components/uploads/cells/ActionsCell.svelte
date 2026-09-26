@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Button } from '$lib/components';
-  import { MessageSquare, Trash2, Pencil, Loader2 } from 'lucide-svelte';
+  import { MessageSquare, Trash2, Pencil } from 'lucide-svelte';
+  import Spinner from '../../Spinner.svelte';
 
   interface Sprite {
     id: number;
@@ -68,7 +69,7 @@
     disabled={isDeleting || !canDelete}
   >
     {#if isDeleting}
-      <Loader2 class="h-4 w-4 animate-spin" />
+      <Spinner size={16} label="Deleting" />
     {:else}
       <Trash2 class="h-4 w-4" />
     {/if}

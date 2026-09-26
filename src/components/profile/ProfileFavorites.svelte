@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { Heart, Loader2, Image } from 'lucide-svelte';
+  import { Heart, Image } from 'lucide-svelte';
+  import Spinner from '../Spinner.svelte';
   import { spriteCardText } from '../../lib/spriteCardText';
   import { getCardColorUrls } from '../../lib/cardColors';
   import { ensureGradientOverridesLoaded, getGradientOverrides } from '../../lib/cardColorGradients.svelte';
@@ -124,7 +125,7 @@
   <div class="profile-favorites-box" bind:clientWidth={boxWidth}>
     {#if loading}
       <div class="favorites-loading">
-        <Loader2 class="w-6 h-6 animate-spin" />
+        <Spinner size={24} label={null} />
         <span>Loading favorites...</span>
       </div>
     {:else if error}
@@ -331,13 +332,4 @@
     }
   }
 
-  /* Spin animation for loader */
-  :global(.animate-spin) {
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-</style>
+  /* Spin animation for loader */</style>

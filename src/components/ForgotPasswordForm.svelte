@@ -5,6 +5,7 @@
 	import { Label } from '../components/ui/label/index.ts';
 	import * as Alert from '../components/ui/alert/index.ts';
 	import * as Card from '../components/ui/card/index.ts';
+	import Spinner from './Spinner.svelte';
 
 	// State
 	let email = $state('');
@@ -90,7 +91,7 @@
 					{/if}
 					<Button type="submit" class="w-full theme-button" disabled={isLoading}>
 						{#if isLoading}
-							<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+							<Spinner size={16} label={null} class="mr-2" />
 							Sending...
 						{:else}
 							Send Reset Link
