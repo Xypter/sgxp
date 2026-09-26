@@ -1,5 +1,8 @@
 import type { APIRoute } from 'astro';
 import { USER_COOKIE, toCachedUser, userCookieOptions } from '$lib/userCache';
+import { updatePresenceCan } from '$lib/presenceHub';
+import { normalizeCanChoice } from '$lib/sodaCan';
+import { invalidateUserCache } from '$lib/redis';
 
 export const PATCH: APIRoute = async ({ request, cookies }) => {
   const token = cookies.get('payload-token')?.value;
@@ -43,8 +46,11 @@ export const PATCH: APIRoute = async ({ request, cookies }) => {
     console.log('[API] Updating user:', userId);
     console.log('[API] Update data:', JSON.stringify(updateData, null, 2));
 
-    // Forward the update to Payload CMS using the user ID
-    const response = await fetch(`${payloadUrl}/api/users/${userId}`, {
+    // Forward the update to Payload CMS using the user ID. depth=3 matches the
+    // profile page's own fetch, so the response has populated media objects
+    // (profilePicture/headerImage with urls, not bare ids) and the profile
+    // can update in place without reloading.
+    const response = await fetch(`${payloadUrl}/api/users/${userId}?depth=3`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -74,7 +80,11 @@ export const PATCH: APIRoute = async ({ request, cookies }) => {
 
     // Refresh the display cache so the navbar reflects the change immediately
     if (updatedUserDoc?.id) {
+      // Drop the Redis-cached profile so the next /profile load (anyone's) is fresh
+      await invalidateUserCache(updatedUserDoc.id);
       cookies.set(USER_COOKIE, JSON.stringify(toCachedUser(updatedUserDoc)), userCookieOptions());
+      // Recolor their can in the live presence bar for everyone watching
+      updatePresenceCan(`user:${updatedUserDoc.id}`, normalizeCanChoice(updatedUserDoc.sodaCan));
     }
 
     return new Response(

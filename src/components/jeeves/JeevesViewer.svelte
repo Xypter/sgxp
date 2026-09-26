@@ -1,7 +1,15 @@
 <script lang="ts">
-  import { onMount, tick } from 'svelte';
-  import { ArrowLeft, ArrowUp, ChevronLeft, ChevronRight, Library, LoaderCircle } from 'lucide-svelte';
+  import { onMount, tick, untrack } from 'svelte';
+  import { toast } from 'svelte-sonner';
+  import { ArrowLeft, ArrowUp, Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Library, LoaderCircle } from 'lucide-svelte';
   import { Button, Select } from '$lib/components';
+  import {
+    addArchiveBookmark,
+    fetchArchiveBookmark,
+    removeBookmark,
+    saveBookmarkProgress,
+    type ComicBookmark,
+  } from '$lib/comicBookmarks';
   import JeevesPageStage from './JeevesPageStage.svelte';
   import JeevesComicHome from './JeevesComicHome.svelte';
   import JeevesComments from './JeevesComments.svelte';
@@ -16,6 +24,8 @@
 
   // The page is ?comic_id=<id>, and the URL hash is the page being read
   // (#0 / no hash = the comic's home: info + page list).
+
+  let { loggedIn = false }: { loggedIn?: boolean } = $props();
 
   let comicId = $state<string | null>(null);
   let metadata = $state<ComicMetadata | null>(null);
@@ -56,6 +66,83 @@
     try {
       localStorage.setItem(PROGRESS_KEY, JSON.stringify({ ...readProgress(), [comicId]: page }));
     } catch {}
+    if (bookmark && bookmark.lastPage !== page) queueBookmarkProgress(page);
+  }
+
+  // Bookmarked comics also keep their progress on the account, so "Continue
+  // from page N" follows the reader to other devices. Private to the reader
+  // (see the CMS's Bookmarks collection).
+  let bookmark = $state<ComicBookmark | null>(null);
+  let bookmarkBusy = $state(false);
+  let progressTimer: ReturnType<typeof setTimeout> | undefined;
+  let pendingProgress: number | null = null;
+
+  // Debounced so flipping through pages quickly is one request, not dozens.
+  function queueBookmarkProgress(page: number) {
+    pendingProgress = page;
+    clearTimeout(progressTimer);
+    progressTimer = setTimeout(flushBookmarkProgress, 1000);
+  }
+
+  function flushBookmarkProgress() {
+    clearTimeout(progressTimer);
+    const page = pendingProgress;
+    pendingProgress = null;
+    if (!bookmark || page === null || bookmark.lastPage === page) return;
+    bookmark.lastPage = page;
+    saveBookmarkProgress(bookmark.id, page).catch((err) => console.error('Error saving reading progress:', err));
+  }
+
+  async function loadBookmark(entryId: number) {
+    try {
+      bookmark = await fetchArchiveBookmark(entryId);
+      if (!bookmark) return;
+      // Already reading (opened straight onto a page): that's the progress now.
+      // Otherwise the account's progress wins over this browser's - it's from
+      // whichever device was used last.
+      if (currentPage > 0) {
+        if (bookmark.lastPage !== currentPage) queueBookmarkProgress(currentPage);
+      } else if (bookmark.lastPage) {
+        resumePage = bookmark.lastPage;
+      }
+    } catch (err) {
+      console.error('Error loading bookmark:', err);
+    }
+  }
+
+  async function toggleBookmark() {
+    if (!loggedIn) {
+      toast('Log in to bookmark comics', {
+        description: 'Bookmarks are private - only you can see them.',
+        action: { label: 'Log in', onClick: () => (window.location.href = '/login') },
+      });
+      return;
+    }
+    if (!entry || bookmarkBusy) return;
+    bookmarkBusy = true;
+    try {
+      if (bookmark) {
+        clearTimeout(progressTimer);
+        pendingProgress = null;
+        await removeBookmark(bookmark);
+        bookmark = null;
+        entry.bookmarkCount = Math.max(0, (entry.bookmarkCount ?? 0) - 1);
+        toast.success('Bookmark removed');
+      } else {
+        bookmark = await addArchiveBookmark(entry.id, currentPage || resumePage);
+        // What the CMS's recount will store - no refetch needed to show it.
+        entry.bookmarkCount = (entry.bookmarkCount ?? 0) + 1;
+        toast.success('Bookmarked', {
+          description: 'Your place is saved.',
+          action: { label: 'View bookmarks', onClick: () => (window.location.href = '/bookmarks') },
+        });
+      }
+    } catch (err) {
+      console.error('Error updating bookmark:', err);
+      toast.error(err instanceof Error ? err.message : 'Could not update the bookmark');
+    } finally {
+      bookmarkBusy = false;
+    }
   }
 
   function pageFromHash(): number {
@@ -135,7 +222,8 @@
   }
 
   $effect(() => {
-    if (currentPage > 0) saveProgress(currentPage);
+    const page = currentPage;
+    if (page > 0) untrack(() => saveProgress(page));
   });
 
   // Next page is almost always what's wanted next - have it cached.
@@ -167,7 +255,10 @@
     resumePage = readProgress()[comicId] ?? null;
 
     const id = comicId;
-    loadArchiveEntry(id).then((result) => (entry = result));
+    loadArchiveEntry(id).then((result) => {
+      entry = result;
+      if (result && loggedIn) loadBookmark(result.id);
+    });
     loadComicMetadata(id)
       .then((result) => {
         metadata = result;
@@ -185,9 +276,13 @@
     };
     window.addEventListener('hashchange', onHashChange);
     window.addEventListener('keydown', handleKeydown);
+    // Leaving mid-debounce still saves the last page read.
+    window.addEventListener('pagehide', flushBookmarkProgress);
     return () => {
       window.removeEventListener('hashchange', onHashChange);
       window.removeEventListener('keydown', handleKeydown);
+      window.removeEventListener('pagehide', flushBookmarkProgress);
+      flushBookmarkProgress();
     };
   });
 </script>
@@ -238,7 +333,16 @@
       <a href="/smackjeeves">Back to the archive</a>
     </div>
   {:else if currentPage === 0}
-    <JeevesComicHome {comicId} {metadata} {entry} {resumePage} onOpenPage={setPage} />
+    <JeevesComicHome
+      {comicId}
+      {metadata}
+      {entry}
+      {resumePage}
+      onOpenPage={setPage}
+      bookmarked={!!bookmark}
+      {bookmarkBusy}
+      onToggleBookmark={toggleBookmark}
+    />
 
     <button class="back-to-top" onclick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
       <ArrowUp size={16} /> Top
@@ -263,6 +367,20 @@
           <a href="/smackjeeves" class="side-btn no-theme-styles" data-restore-state title="Smack Jeeves Archive" aria-label="Back to the Smack Jeeves archive">
             <Library size={20} />
           </a>
+          {#if entry}
+            <button
+              type="button"
+              class="side-btn"
+              class:side-btn--active={!!bookmark}
+              onclick={toggleBookmark}
+              disabled={bookmarkBusy}
+              aria-pressed={!!bookmark}
+              title={bookmark ? 'Remove bookmark' : 'Bookmark this comic'}
+              aria-label={bookmark ? 'Remove bookmark' : 'Bookmark this comic'}
+            >
+              {#if bookmark}<BookmarkCheck size={20} />{:else}<Bookmark size={20} />{/if}
+            </button>
+          {/if}
         {/snippet}
         {#snippet info()}
           <!-- The page's own title lives in the page picker below. -->
@@ -403,6 +521,16 @@
       border-color: var(--font-link-color);
       color: var(--font-link-color);
     }
+  }
+
+  .side-btn--active {
+    border-color: var(--font-link-color);
+    color: var(--font-link-color);
+  }
+
+  .side-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
   }
 
   .stage-comic-title {

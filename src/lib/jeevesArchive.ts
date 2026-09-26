@@ -35,17 +35,21 @@ export interface ComicMetadata {
 
 /** The comic's row in the `archive-entries` collection (rating, notes, ...). */
 export interface ArchiveEntryInfo {
+  /** The row's own id (what bookmarks point at), not the Smack Jeeves comicId. */
+  id: number;
   category?: string | null;
   rating?: number | null;
   notes?: string | null;
   pagesFolder?: number | null;
   pagesMetadata?: number | null;
   percentSaved?: number | null;
+  /** How many readers have bookmarked it (public; who is private). */
+  bookmarkCount?: number | null;
 }
 
 export async function loadArchiveEntry(comicId: string): Promise<ArchiveEntryInfo | null> {
   const params = new URLSearchParams({ 'where[comicId][equals]': comicId, limit: '1', depth: '0' });
-  for (const field of ['category', 'rating', 'notes', 'pagesFolder', 'pagesMetadata', 'percentSaved']) {
+  for (const field of ['category', 'rating', 'notes', 'pagesFolder', 'pagesMetadata', 'percentSaved', 'bookmarkCount']) {
     params.set(`select[${field}]`, 'true');
   }
   try {

@@ -11,6 +11,7 @@
   import { Button } from '../components/ui/button/index.js';
   import PresenceCans from './PresenceCans.svelte';
   import PixelText from './PixelText.svelte';
+  import { BOOKMARK_ICON_URL, BOOKMARK_ICON_WIDTH, BOOKMARK_ICON_HEIGHT } from '$lib/bookmarkIcon';
 
   // Define types in module context
   type ThemeValue = 'ark' | 'snow' | 'cozy' | 'sbn' | 'style_v7' | 'hpz' | 'mfz' | 'ssz';
@@ -23,14 +24,17 @@
   }
 
   // Use $props() for Svelte 5 runes mode
-  const { initialUser, baseURL, initialTheme }: { 
-    initialUser: User | null; 
-    baseURL: string; 
+  const { initialUser, baseURL, initialTheme, initialMotionOff = false }: {
+    initialUser: User | null;
+    baseURL: string;
     initialTheme: ThemeValue;
+    initialMotionOff?: boolean;
   } = $props();
 
   // Svelte 5 runes for state management
   let selectedTheme = $state<ThemeValue>(initialTheme);
+  // "Motion: off" holds the theme scenery still, for slower computers.
+  let motionOff = $state(initialMotionOff);
   let isMobileMenuOpen = $state(false);
   let user = $state<User | null>(initialUser);
   let isLoggedIn = $state<boolean>(!!initialUser);
@@ -243,6 +247,16 @@ async function checkAuthStatus(): Promise<void> {
   }
   }
 
+  // Saved like the theme: a cookie the layout reads, so every page renders with
+  // the scenery already still (no flash of motion).
+  function toggleMotion(): void {
+    motionOff = !motionOff;
+    if (motionOff) document.documentElement.setAttribute('data-motion', 'off');
+    else document.documentElement.removeAttribute('data-motion');
+    const secureAttr = window.location.protocol === 'https:' ? '; Secure' : '';
+    document.cookie = `motion=${motionOff ? 'off' : 'on'}; path=/; max-age=31536000; SameSite=Lax${secureAttr}`;
+  }
+
   // Function from your original code
   const updateWorldStarsClass = (theme: ThemeValue): void => {
     const worldStarsDiv = document.querySelector('.world-stars');
@@ -256,6 +270,27 @@ async function checkAuthStatus(): Promise<void> {
       worldStarsDiv.remove();
     }
   };
+
+  // Keep every nav icon on the whole-pixel grid. Icons are vertically
+  // centered in their rows, so an odd-height icon (all the 18x19 theme icons,
+  // guidelines, upload) in an even-height row lands on a half pixel, which
+  // blurs pixel art. An extra 1px of bottom margin makes its box even again.
+  // Decided from the real image on load, so new icons are handled too - and
+  // capture-phase on document, since dropdown icons only mount when opened.
+  function snapNavIcon(img: HTMLImageElement) {
+    img.style.marginBottom = img.naturalHeight % 2 ? '1px' : '';
+  }
+
+  onMount(() => {
+    const onIconLoad = (e: Event) => {
+      if (e.target instanceof HTMLImageElement && e.target.classList.contains('nav-icon')) snapNavIcon(e.target);
+    };
+    document.addEventListener('load', onIconLoad, true);
+    document.querySelectorAll<HTMLImageElement>('img.nav-icon').forEach((img) => {
+      if (img.complete && img.naturalHeight) snapNavIcon(img);
+    });
+    return () => document.removeEventListener('load', onIconLoad, true);
+  });
 
   onMount(() => {
   preloadNavIcons();
@@ -895,7 +930,7 @@ async function checkAuthStatus(): Promise<void> {
                 }}
                 href="/profile"
               >
-                <img src="https://cdn.sgxp.me/img/sonic_login_icon.svg" alt="" class="nav-icon" style="width: 16px; height: 16px; position: relative; top: 3px;" />
+                <img src="https://cdn.sgxp.me/img/sonic_login_icon.svg" alt="" class="nav-icon" style="width: 16px; height: 16px; position: relative; top: 1px;" />
                 <PixelText text="Profile" lineHeight={22} />
               </NavigationMenu.Link>
               <NavigationMenu.Link
@@ -930,8 +965,43 @@ async function checkAuthStatus(): Promise<void> {
                 }}
                 href="/profile/uploads"
               >
-                <img src="https://cdn.sgxp.me/img/nav_icons/nav_icon_uploads.png" alt="" class="nav-icon" style="position: relative; top: 2px;" />
+                <img src="https://cdn.sgxp.me/img/nav_icons/nav_icon_uploads.png" alt="" class="nav-icon" style="position: relative; top: 1px;" />
                 <PixelText text={`Uploads (${uploadCount})`} lineHeight={22} />
+              </NavigationMenu.Link>
+              <NavigationMenu.Link
+                class="cursor-pointer focus:outline-none no-theme-styles"
+                style="
+                  background-color: color-mix(in srgb, var(--page-color) 99%, black);
+                  border-radius: 0;
+                  padding: 12px 18px;
+                  color: var(--font-color);
+                  font-family: nav;
+                  font-size: 16px;
+                  line-height: 22px;
+                  text-shadow:
+                    -1px -1px 0 var(--bg-color),
+                    0px -1px 0 var(--bg-color),
+                    1px -1px 0 var(--bg-color),
+                    1px 0px 0 var(--bg-color),
+                    1px 1px 0 var(--bg-color),
+                    0px 1px 0 var(--bg-color),
+                    -1px 1px 0 var(--bg-color),
+                    -1px 0px 0 var(--bg-color);
+                "
+                onmouseenter={(e: MouseEvent) => {
+                  if (e.currentTarget instanceof HTMLElement) {
+                    e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--page-color) 60%, black)';
+                  }
+                }}
+                onmouseleave={(e: MouseEvent) => {
+                  if (e.currentTarget instanceof HTMLElement) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
+                href="/bookmarks"
+              >
+                <img src={BOOKMARK_ICON_URL} alt="" class="nav-icon" width={BOOKMARK_ICON_WIDTH} height={BOOKMARK_ICON_HEIGHT} style="position: relative; top: 1px; left: 2px; margin-right: 8px;" />
+                <PixelText text="Bookmarks" lineHeight={22} />
               </NavigationMenu.Link>
               <NavigationMenu.Link
                 class="cursor-pointer focus:outline-none no-theme-styles"
@@ -1039,7 +1109,7 @@ async function checkAuthStatus(): Promise<void> {
               }}
               href="/upload"
             >
-              <img src="https://cdn.sgxp.me/img/nav_icons/nav_icon_upload.png" alt="" class="nav-icon" style="position: relative; top: -2px;" />
+              <img src="https://cdn.sgxp.me/img/nav_icons/nav_icon_upload.png" alt="" class="nav-icon" style="position: relative; top: 0px;" />
               <span class="nav-top-label"><PixelText text="Upload" /></span>
             </Button>
           </NavigationMenu.Item>
@@ -1127,6 +1197,7 @@ async function checkAuthStatus(): Promise<void> {
               src={themes.find(theme => theme.value === selectedTheme)?.icon || 'https://cdn.sgxp.me/img/nav_icons/nav_icon_doomsday.png'}
               alt=""
               class="nav-icon"
+              style="position: relative; top: 2px;"
             />
             <span class="nav-top-label"><PixelText text={themes.find(theme => theme.value === selectedTheme)?.label || 'DOOMSDAY ZONE'} /></span>
             <span class="nav-caret" aria-hidden="true"><PixelText text="▾" /><PixelText text="▴" /></span>
@@ -1191,6 +1262,15 @@ async function checkAuthStatus(): Promise<void> {
                 <PixelText text={theme.label} lineHeight={22} />
               </NavigationMenu.Link>
             {/each}
+            <button
+              type="button"
+              class="motion-toggle no-theme-styles"
+              aria-pressed={motionOff}
+              title="Hold the theme's background scenery still - easier on slower computers"
+              onclick={toggleMotion}
+            >
+              <PixelText text={motionOff ? 'MOTION: OFF' : 'MOTION: ON'} lineHeight={22} />
+            </button>
           </NavigationMenu.Content>
         </NavigationMenu.Item>
       </NavigationMenu.List>
@@ -1295,6 +1375,14 @@ async function checkAuthStatus(): Promise<void> {
                 <span style="position: relative; left: 2px;">Uploads ({uploadCount})</span>
               </a>
               <a
+                href="/bookmarks"
+                class="mobile-nav-link"
+                onclick={() => (isMobileMenuOpen = false)}
+              >
+                <img src={BOOKMARK_ICON_URL} alt="" class="nav-icon" width={BOOKMARK_ICON_WIDTH} height={BOOKMARK_ICON_HEIGHT} style="position: relative; left: 2px; margin-right: 4px;" />
+                <span style="position: relative; left: 3px;">Bookmarks</span>
+              </a>
+              <a
                 href="/settings"
                 class="mobile-nav-link"
                 onclick={() => (isMobileMenuOpen = false)}
@@ -1384,6 +1472,26 @@ async function checkAuthStatus(): Promise<void> {
 </div>
 
 <style>
+  /* "Motion: on/off" at the bottom of the theme menu - styled like its theme rows,
+     under a divider. */
+  .motion-toggle {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 12px 18px;
+    border: none;
+    border-top: 1px solid color-mix(in srgb, var(--page-color) 80%, white);
+    background: transparent;
+    color: var(--font-color);
+    cursor: pointer;
+  }
+
+  .motion-toggle:hover,
+  .motion-toggle:focus-visible {
+    background-color: color-mix(in srgb, var(--page-color) 60%, black);
+    outline: none;
+  }
+
   /* NavigationMenu.Link's base classes include `flex flex-col`, which stacks
      our icon above the label instead of beside it - force row direction. */
   :global([data-slot="navigation-menu-link"]) {
@@ -1463,6 +1571,9 @@ async function checkAuthStatus(): Promise<void> {
     width: auto;
     height: auto;
     max-width: none;
+    /* Never stretched to a flex row's height (dropdown rows are 22px tall,
+       which pulled the 18px uploads icon to 18x22) - always native size. */
+    align-self: center;
     margin-right: 6px;
     vertical-align: middle;
     image-rendering: pixelated;

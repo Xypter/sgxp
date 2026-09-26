@@ -2,6 +2,8 @@
   import { Button, Input, Label, Textarea, Select } from '$lib/components';
   import { X, Upload, Loader2, Plus, Trash2 } from 'lucide-svelte';
   import { fade, scale } from 'svelte/transition';
+  import SodaCanPicker from './SodaCanPicker.svelte';
+  import { getBodyPreset, getEyePreset } from '../../lib/sodaCan';
 
   // Props
   let {
@@ -17,6 +19,8 @@
   // Form state
   let displayName = $state(user?.displayName || user?.username || '');
   let bio = $state(user?.bio || '');
+  let canBody = $state(getBodyPreset(user?.sodaCan?.body).id);
+  let canEyes = $state(getEyePreset(user?.sodaCan?.eyes).id);
   let profilePictureFile = $state<File | null>(null);
   let profilePicturePreview = $state<string | null>(user?.profilePicture?.url || null);
   let deleteProfilePicture = $state(false);
@@ -269,6 +273,7 @@
       const updateData: any = {
         displayName: displayName.trim() || user?.username,
         bio: bio,
+        sodaCan: { body: canBody, eyes: canEyes },
         // Always send socialLinks, even if empty (to allow deletion)
         socialLinks: socialLinksData
       };
@@ -373,6 +378,13 @@
             maxlength={50}
           />
           <p class="upload-hint">This name will be shown on your profile and posts</p>
+        </div>
+
+        <!-- Soda-Kan Section -->
+        <div class="form-section">
+          <h3 class="section-title">Soda-Kan</h3>
+          <SodaCanPicker bind:body={canBody} bind:eyes={canEyes} disabled={saving} />
+          <p class="upload-hint">Your can in the "who's online" bar at the top of every page</p>
         </div>
 
         <!-- Profile Picture Section -->

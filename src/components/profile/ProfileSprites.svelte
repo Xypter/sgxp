@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Image, Loader2 } from 'lucide-svelte';
-  import { charMap, altNumberMap } from '../../lib/charMap.js';
+  import { spriteCardText } from '../../lib/spriteCardText';
   import { getCardColorUrls } from '../../lib/cardColors';
   import { ensureGradientOverridesLoaded, getGradientOverrides } from '../../lib/cardColorGradients.svelte';
 
@@ -29,8 +29,7 @@
     );
   }
 
-  // Extended interface with memoized sprite text conversions
-  interface SpriteWithMemoized {
+  interface ProfileSprite {
     id: number;
     title: string;
     author: any;
@@ -39,19 +38,10 @@
     section?: any;
     typeOfSheet?: any[];
     createdAt: string;
-    _memoized?: {
-      spriteNumber: any[];
-      title: any[];
-      author: any[];
-      gameName: any[];
-      blockType: any[];
-      createdDate: any[];
-      fileSize: any[];
-    };
   }
 
   // State
-  let sprites = $state<SpriteWithMemoized[]>([]);
+  let sprites = $state<ProfileSprite[]>([]);
   let loading = $state(true);
   let error = $state<string | null>(null);
   let totalSprites = $state(0);
@@ -74,153 +64,6 @@
 
   const API_BASE_URL = "https://cms.sgxp.me/api/sprites";
 
-  // Helper function to create individual character sprite
-  function createCharacterSprite(char: string, characterMap: any, isAltNumberMap: boolean, index: number) {
-    if (characterMap[char]) {
-      const charData = characterMap[char];
-      const width = charData.width;
-      const height = charData.height;
-      const offsetX = charData.offsetX || 0;
-      const offsetY = charData.offsetY || 0;
-      const marginRight = isAltNumberMap ? '0px' : '1px';
-
-      return {
-        key: `${char}-${index}`,
-        style: `display: inline-block; width: ${width}px; height: ${height}px; background-image: url('https://i.imgur.com/DFC6vib.png'); background-size: 400px 14px; background-position: ${charData.x}px ${charData.y}px; margin-left: ${offsetX}px; margin-right: ${marginRight}; margin-top: ${offsetY}px;`
-      };
-    }
-    return null;
-  }
-
-  // Helper function to generate sprite for a string of text
-  function textToSprite(text: string | null | undefined) {
-    if (!text || typeof text !== 'string') {
-      return [];
-    }
-    const characters = text.toUpperCase().split('');
-    return characters
-      .map((char, index) => createCharacterSprite(char, charMap, false, index))
-      .filter((item): item is NonNullable<ReturnType<typeof createCharacterSprite>> => item !== null);
-  }
-
-  // Helper function for formatting sprite count
-  function count(number: number) {
-    if (number <= 9) {
-      return '0000' + number;
-    } else if (number > 9 && number <= 99) {
-      return '000' + number;
-    } else if (number > 99 && number <= 999) {
-      return '00' + number;
-    } else if (number > 999 && number <= 9999) {
-      return '0' + number;
-    } else {
-      return number.toString();
-    }
-  }
-
-  // Helper function to generate sprite for a formatted number string
-  function formattedNumberToAltSprite(numString: string | null | undefined) {
-    if (!numString || typeof numString !== 'string') {
-      return [];
-    }
-    const digits = numString.split('');
-    return digits
-      .map((digit, index) => createCharacterSprite(digit, altNumberMap, true, index))
-      .filter((item): item is NonNullable<ReturnType<typeof createCharacterSprite>> => item !== null);
-  }
-
-  // Format bytes for display
-  function formatBytes(bytes: number, decimals: number = 2) {
-    if (!+bytes) return '0 Bytes';
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
-  }
-
-  // Enhanced text to sprite with word wrapping and truncation
-  function textToSpriteWithWrapping(text: string | null | undefined, characterMap: any, maxWidth: number | null = null, maxLines: number | null = null) {
-    if (!text || typeof text !== 'string') {
-      return [];
-    }
-    const input = text.toString().toUpperCase();
-    const isAltNumberMap = characterMap === altNumberMap;
-
-    if (!maxWidth) {
-      const characters = input.split('');
-      return characters
-        .map((char, index) => createCharacterSprite(char, characterMap, isAltNumberMap, index))
-        .filter((item): item is NonNullable<ReturnType<typeof createCharacterSprite>> => item !== null);
-    }
-
-    const words = input.split(' ');
-    const result: any[] = [];
-    let currentLineWidth = 0;
-    let currentLine = 0;
-
-    for (let i = 0; i < words.length; i++) {
-      const word = words[i];
-      const wordChars = word.split('');
-      let wordWidth = 0;
-
-      for (const char of wordChars) {
-        const charData = characterMap[char];
-        if (charData) {
-          wordWidth += charData.width + (isAltNumberMap ? 0 : 1);
-        }
-      }
-
-      const spaceWidth = characterMap[' ']?.width || 3;
-      const needsSpace = i > 0 && currentLineWidth > 0;
-      const totalWidth = wordWidth + (needsSpace ? spaceWidth : 0);
-
-      if (currentLineWidth + totalWidth > maxWidth && currentLineWidth > 0) {
-        if (maxLines && currentLine >= maxLines - 1) {
-          break;
-        }
-        result.push({ isNewline: true, key: `newline-${currentLine}` });
-        currentLine++;
-        currentLineWidth = 0;
-      } else if (needsSpace) {
-        const spaceSprite = createCharacterSprite(' ', characterMap, isAltNumberMap, result.length);
-        if (spaceSprite) {
-          result.push(spaceSprite);
-          currentLineWidth += spaceWidth;
-        }
-      }
-
-      for (let j = 0; j < wordChars.length; j++) {
-        const char = wordChars[j];
-        const sprite = createCharacterSprite(char, characterMap, isAltNumberMap, result.length);
-        if (sprite) {
-          result.push(sprite);
-          const charData = characterMap[char];
-          if (charData) {
-            currentLineWidth += charData.width + (isAltNumberMap ? 0 : 1);
-          }
-        }
-      }
-    }
-
-    return result;
-  }
-
-  // Memoize text-to-sprite conversions for performance
-  function memoizeSpriteText(sprite: SpriteWithMemoized): void {
-    if (sprite._memoized) return;
-
-    sprite._memoized = {
-      spriteNumber: formattedNumberToAltSprite(count(sprite.id)),
-      title: textToSpriteWithWrapping(sprite.title || '', charMap, 100, 2),
-      author: textToSprite(sprite.author?.displayName || sprite.author?.username || ''),
-      gameName: textToSpriteWithWrapping(sprite.section?.name || '', charMap, 150, 1),
-      blockType: textToSprite(sprite.image?.width && sprite.image?.height ? `${sprite.image.width} X ${sprite.image.height}` : ''),
-      createdDate: textToSprite(sprite.createdAt ? new Date(sprite.createdAt).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : ''),
-      fileSize: textToSprite(sprite.image?.filesize ? formatBytes(sprite.image.filesize) : '0 Bytes')
-    };
-  }
-
   // Fetch user's sprites
   async function loadSprites() {
     loading = true;
@@ -237,9 +80,6 @@
         const data = await response.json();
         sprites = data.docs || [];
         totalSprites = data.totalDocs || 0;
-
-        // Memoize sprites for charMap rendering
-        sprites.forEach(sprite => memoizeSpriteText(sprite));
       } else {
         error = 'Failed to load sprites';
       }
@@ -289,6 +129,7 @@
     {:else}
       <div class="sprites-container">
         {#each sprites as sprite (sprite.id)}
+          {@const text = spriteCardText(sprite)}
           <a
             href={`/sprites/${sprite.id}`}
             class="sprite-box sprite-glow"
@@ -302,23 +143,11 @@
             </div>
 
             <!-- Sprite number -->
-            <div class="sprite-number">
-              {#each sprite._memoized?.spriteNumber || [] as item (item.key)}
-                <span style={item.style}></span>
-              {/each}
-            </div>
+            <div class="sprite-number">{@html text.number}</div>
 
             <!-- Sprite title -->
             <div class="sprite-title">
-              <div id="author" class="sprite-text">
-                {#each sprite._memoized?.title || [] as item (item.key)}
-                  {#if item.isNewline}
-                    <div class="sprite-newline" style="display: block; width: 100%;"></div>
-                  {:else}
-                    <span style={item.style}></span>
-                  {/if}
-                {/each}
-              </div>
+              <div id="author" class="sprite-text">{@html text.title}</div>
             </div>
 
             <!-- Sprite image -->
@@ -332,51 +161,27 @@
 
             <!-- Author -->
             <div class="sprite-author">
-              <div class="sprite-text">
-                {#each sprite._memoized?.author || [] as item (item.key)}
-                  <span style={item.style}></span>
-                {/each}
-              </div>
+              <div class="sprite-text">{@html text.author}</div>
             </div>
 
             <!-- Game name -->
             <div class="sprite-stats">
-              <div class="sprite-text">
-                {#each sprite._memoized?.gameName || [] as item (item.key)}
-                  {#if item.isNewline}
-                    <div class="sprite-newline" style="display: block; width: 100%;"></div>
-                  {:else}
-                    <span style={item.style}></span>
-                  {/if}
-                {/each}
-              </div>
+              <div class="sprite-text">{@html text.gameName}</div>
             </div>
 
             <!-- Block type -->
             <div class="sprite-stats">
-              <div class="sprite-text">
-                {#each sprite._memoized?.blockType || [] as item (item.key)}
-                  <span style={item.style}></span>
-                {/each}
-              </div>
+              <div class="sprite-text">{@html text.dimensions}</div>
             </div>
 
             <!-- Date -->
             <div class="sprite-stats">
-              <div class="sprite-text">
-                {#each sprite._memoized?.createdDate || [] as item (item.key)}
-                  <span style={item.style}></span>
-                {/each}
-              </div>
+              <div class="sprite-text">{@html text.createdDate}</div>
             </div>
 
             <!-- File size -->
             <div class="sprite-stats">
-              <div class="sprite-text">
-                {#each sprite._memoized?.fileSize || [] as item (item.key)}
-                  <span style={item.style}></span>
-                {/each}
-              </div>
+              <div class="sprite-text">{@html text.fileSize}</div>
             </div>
           </a>
         {/each}

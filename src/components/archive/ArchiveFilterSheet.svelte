@@ -20,6 +20,11 @@
     categoryOptions: Option[];
     categorySelected: string[];
     onCategoryChange: (values: string[]) => void;
+    /** How many of the archive's comics the viewer has bookmarked; null when
+     *  logged out (no Bookmarks section then). */
+    bookmarkCount?: number | null;
+    bookmarkedOnly?: boolean;
+    onBookmarkedOnlyChange?: (value: boolean) => void;
     resultCount: number;
     onClearAll: () => void;
   }
@@ -36,6 +41,9 @@
     categoryOptions,
     categorySelected,
     onCategoryChange,
+    bookmarkCount = null,
+    bookmarkedOnly = false,
+    onBookmarkedOnlyChange,
     resultCount,
     onClearAll,
   }: Props = $props();
@@ -51,7 +59,7 @@
     return selected.includes(value) ? selected.filter((v) => v !== value) : [...selected, value];
   }
 
-  const hasFilters = $derived(ratingSelected.length > 0 || categorySelected.length > 0);
+  const hasFilters = $derived(ratingSelected.length > 0 || categorySelected.length > 0 || bookmarkedOnly);
 </script>
 
 <Sheet
@@ -80,6 +88,26 @@
       {/each}
     </div>
   </section>
+
+  {#if bookmarkCount !== null}
+    <section class="filter-section">
+      <h3 class="filter-section-title">Bookmarks</h3>
+      <div class="check-list">
+        <button
+          type="button"
+          role="checkbox"
+          aria-checked={bookmarkedOnly}
+          class="check-row"
+          class:check-row--checked={bookmarkedOnly}
+          onclick={() => onBookmarkedOnlyChange?.(!bookmarkedOnly)}
+        >
+          {#if bookmarkedOnly}<SquareCheck size={17} />{:else}<Square size={17} />{/if}
+          <span class="check-row-label">Only my bookmarks</span>
+          <span class="check-row-count">{bookmarkCount}</span>
+        </button>
+      </div>
+    </section>
+  {/if}
 
   <section class="filter-section">
     <div class="filter-section-head">

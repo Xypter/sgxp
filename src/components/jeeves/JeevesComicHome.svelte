@@ -2,7 +2,7 @@
   import * as Popover from '$components/ui/popover';
   import { Button } from '$lib/components';
   import JeevesActivityChart from './JeevesActivityChart.svelte';
-  import { ArrowLeft, BookOpen, ImageOff, Info, Library, List, MessageSquare, RotateCcw, Users } from 'lucide-svelte';
+  import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, ImageOff, Info, Library, List, MessageSquare, RotateCcw, Users } from 'lucide-svelte';
   import {
     archiveAssetUrl,
     archiveTime,
@@ -19,9 +19,22 @@
     /** Last page this browser read, if any. */
     resumePage: number | null;
     onOpenPage: (page: number) => void;
+    /** Whether the viewer has this comic in their (private) bookmarks. */
+    bookmarked?: boolean;
+    bookmarkBusy?: boolean;
+    onToggleBookmark?: () => void;
   }
 
-  let { comicId, metadata, entry, resumePage, onOpenPage }: Props = $props();
+  let {
+    comicId,
+    metadata,
+    entry,
+    resumePage,
+    onOpenPage,
+    bookmarked = false,
+    bookmarkBusy = false,
+    onToggleBookmark,
+  }: Props = $props();
 
   const chapters = $derived(metadata.chapters);
   const authors = $derived(metadata.authors?.filter((a) => a.name) ?? []);
@@ -35,6 +48,10 @@
   const totalComments = $derived(chapters.reduce((sum, c) => sum + (c.comments?.length ?? 0), 0));
   const savedPercent = $derived(
     entry?.percentSaved === null || entry?.percentSaved === undefined ? null : Math.round(entry.percentSaved * 100)
+  );
+  const bookmarkCount = $derived(entry?.bookmarkCount ?? 0);
+  const bookmarkCountLabel = $derived(
+    `Bookmarked by ${bookmarkCount.toLocaleString()} ${bookmarkCount === 1 ? 'reader' : 'readers'}`
   );
   const ratingLabel = $derived(
     entry?.rating !== null && entry?.rating !== undefined ? `Rated ${entry.rating} out of 10` : 'Unrated'
@@ -130,21 +147,40 @@
     {/if}
   </div>
 
-  <dl class="hero-stats">
-    <div><dt>Pages</dt><dd>{chapters.length.toLocaleString()}</dd></div>
-    <div><dt>Comments</dt><dd>{totalComments.toLocaleString()}</dd></div>
-    <div><dt>Started</dt><dd>{firstPosted}</dd></div>
-    <div><dt>Last page</dt><dd>{lastPosted}</dd></div>
-    {#if savedPercent !== null}
-      <div class="hero-saved">
-        <dt>Preserved</dt>
-        <dd>
-          <span class="saved-meter-track"><span class="saved-meter-fill" style:width="{Math.min(savedPercent, 100)}%"></span></span>
-          {savedPercent}%
-        </dd>
-      </div>
+  <div class="hero-stats-row">
+    <dl class="hero-stats">
+      <div><dt>Pages</dt><dd>{chapters.length.toLocaleString()}</dd></div>
+      <div><dt>Comments</dt><dd>{totalComments.toLocaleString()}</dd></div>
+      <div><dt>Started</dt><dd>{firstPosted}</dd></div>
+      <div><dt>Last page</dt><dd>{lastPosted}</dd></div>
+      {#if savedPercent !== null}
+        <div class="hero-saved">
+          <dt>Preserved</dt>
+          <dd>
+            <span class="saved-meter-track"><span class="saved-meter-fill" style:width="{Math.min(savedPercent, 100)}%"></span></span>
+            {savedPercent}%
+          </dd>
+        </div>
+      {/if}
+    </dl>
+    {#if entry && onToggleBookmark}
+      <!-- Same quiet toggle + reader count as the archive cards' (end of the
+           stats row). -->
+      <button
+        type="button"
+        class="hero-bookmark"
+        class:active={bookmarked}
+        onclick={onToggleBookmark}
+        disabled={bookmarkBusy}
+        aria-pressed={bookmarked}
+        title="{bookmarkCountLabel}. {bookmarked ? 'Remove your bookmark' : 'Bookmark it (only you can see your bookmarks)'}"
+        aria-label="{bookmarked ? 'Remove bookmark' : 'Bookmark this comic'} ({bookmarkCountLabel})"
+      >
+        {#if bookmarked}<BookmarkCheck size={20} />{:else}<Bookmark size={20} />{/if}
+        {#if bookmarkCount > 0}<span class="hero-bookmark-count">{bookmarkCount.toLocaleString()}</span>{/if}
+      </button>
     {/if}
-  </dl>
+  </div>
 
   <div class="hero-actions">
     {#if chapters.length > 0}
@@ -448,13 +484,69 @@
     margin-top: 1px;
   }
 
+  .hero-stats-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-top: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 85%, white);
+  }
+
   .hero-stats {
+    flex: 1;
+    min-width: 0;
     display: flex;
     flex-wrap: wrap;
     gap: 10px 28px;
     margin: 0;
-    padding: 12px 16px;
-    border-top: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 85%, white);
+  }
+
+  /* A 36px hit area around the icon, pulled into the row's padding so it
+     doesn't make the row taller. */
+  .hero-bookmark {
+    flex-shrink: 0;
+    align-self: center;
+    margin: -8px -8px -8px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 8px;
+    background: transparent;
+    border: none;
+    color: var(--font-color);
+    cursor: pointer;
+  }
+
+  /* The icon stays faint until used; the count reads like the stats. */
+  .hero-bookmark :global(svg) {
+    opacity: 0.45;
+    transition: opacity 0.15s ease, color 0.15s ease;
+  }
+
+  .hero-bookmark-count {
+    font-family: 'saira', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hero-bookmark.active :global(svg) {
+    color: var(--font-link-color);
+    opacity: 1;
+  }
+
+  .hero-bookmark:disabled {
+    cursor: default;
+  }
+
+  @media (hover: hover) {
+    .hero-bookmark:hover:not(:disabled) :global(svg) {
+      color: var(--font-link-color);
+      opacity: 1;
+    }
   }
 
   .hero-stats dt {
@@ -736,9 +828,12 @@
       padding-right: 8px;
     }
 
+    .hero-stats-row {
+      padding: 10px 12px;
+    }
+
     .hero-stats {
       gap: 8px 20px;
-      padding: 10px 12px;
     }
 
     .comic-hero :global(.rating-block) {

@@ -1,0 +1,74 @@
+---
+import FrontPageLayout from "../layouts/FrontPageLayout.astro";
+import BookmarksPage from "../components/BookmarksPage.svelte";
+import { resolveUser } from "../lib/userCache";
+import { bookmarkListQuery, toBookmarkListItems, type BookmarkListItem } from "../lib/comicBookmarks";
+
+// Private to the logged-in user - the CMS's Bookmarks access rules only ever
+// return the requester's own rows, so this just asks as them.
+const token = Astro.cookies.get("payload-token")?.value;
+if (!token) {
+  return Astro.redirect("/login");
+}
+
+const { source } = await resolveUser(Astro.cookies);
+if (source === "invalid") {
+  return Astro.redirect("/login");
+}
+
+// Opened from a page that should be one click away again (e.g. the archive's
+// Bookmarks button), so the page can offer a way back.
+const from = Astro.url.searchParams.get("from");
+
+let items: BookmarkListItem[] = [];
+let error: string | null = null;
+try {
+  const response = await fetch(`${import.meta.env.PAYLOAD_URL}/api/bookmarks?${bookmarkListQuery()}`, {
+    headers: { Cookie: `payload-token=${token}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.errors?.[0]?.message || "Could not load your bookmarks.");
+  items = toBookmarkListItems(data.docs ?? []);
+} catch (err) {
+  console.error("Error loading bookmarks:", err);
+  error = "Could not load your bookmarks.";
+}
+---
+
+<FrontPageLayout title="Bookmarks">
+  <div class="bookmarks-page-container">
+    <BookmarksPage client:load initialItems={items} initialError={error} {from} />
+  </div>
+</FrontPageLayout>
+
+<style>
+  .bookmarks-page-container {
+    width: 70%;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 50px 0px;
+  }
+
+  /* Below 1200px the navbar becomes a floating hamburger in the top-right
+     corner - start the page below it. */
+  @media (max-width: 1199px) {
+    .bookmarks-page-container {
+      padding-top: 68px;
+    }
+  }
+
+  @media (max-width: 940px) {
+    .bookmarks-page-container {
+      width: 90%;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .bookmarks-page-container {
+      width: 100%;
+      /* Same as the other pages' mobile layout - the big centered title
+         already clears the corner hamburger. */
+      padding: 20px 1rem;
+    }
+  }
+</style>

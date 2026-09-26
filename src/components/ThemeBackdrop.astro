@@ -1,0 +1,228 @@
+---
+// Each theme's scenery as fixed, compositor-animated layers (see
+// src/lib/themeBackdrops.ts for why). Every theme's backdrop is rendered and
+// CSS shows only the one matching <html data-theme>, so switching themes in
+// the navbar is instant with no JS here. Hidden backdrops are display: none,
+// so their images aren't downloaded until that theme is picked.
+import { THEME_BACKDROPS, DRIFT_SECONDS, type BackdropLayer } from '../lib/themeBackdrops';
+import { BACKDROP_SPRITES, BACKDROP_STILLS } from '../lib/backdropSprites';
+
+const mod = (n: number, m: number) => ((n % m) + m) % m;
+const secs = (s: number) => `${+s.toFixed(3)}s`;
+
+interface Rendered {
+  wrap?: string; // drift wrapper style
+  outer: string;
+  outerClass: string;
+  inner?: string; // falling inner layer style (snow), or a fly-by's sprite sheet
+  innerClass?: string;
+}
+
+function render(l: BackdropLayer): Rendered {
+  const repeat = l.repeat ?? 'x';
+  const edge = l.anchor ?? 'bottom';
+  const offset = l.offset ?? 0;
+  // Pre-rendered stand-ins for animated GIFs (scripts/generate-backdrop-sprites.mjs).
+  const bg = `background-image: url("${BACKDROP_STILLS[l.src] ?? l.src}");`;
+
+  if (repeat === 'none') {
+    return {
+      outerClass: 'bd',
+      outer: `${bg} background-repeat: no-repeat; left: ${l.x ?? 0}px; ${edge}: ${offset}px; width: ${l.w}px; height: ${l.h}px;`,
+    };
+  }
+
+  const speed = l.speed ?? 0;
+  // A moving layer is one tile wider than the screen and slides exactly one
+  // tile per loop (leftward from 0, rightward from one tile left of 0), so the
+  // loop point is seamless. steps() moves it a whole pixel at a time, keeping
+  // pixel art crisp on the compositor instead of resampled between pixels.
+  const x = speed
+    ? `left: ${speed > 0 ? -l.w : 0}px; width: calc(100% + ${l.w}px); --travel: ${speed > 0 ? l.w : -l.w}px; --dur: ${secs(l.w / Math.abs(speed))}; --steps: ${l.w};`
+    : 'left: 0; width: 100%;';
+  const phase = `background-position: ${mod(l.x ?? 0, l.w)}px 0;`;
+
+  if (repeat === 'both') {
+    if (!speed && !l.fall) {
+      return { outerClass: 'bd', outer: `${bg} background-repeat: repeat; background-position: ${l.pos ?? '0 0'}; inset: 0;` };
+    }
+    // Falling pattern: the outer layer loops sideways, the inner one down,
+    // each over one tile - two independent compositor animations.
+    return {
+      outerClass: `bd${speed ? ' bd-x' : ''}`,
+      outer: `${x} top: -${l.h}px; height: calc(100% + ${l.h}px);`,
+      inner: `${bg} background-repeat: repeat; ${phase} --fall-by: ${l.h}px; --fall-dur: ${secs(l.h / (l.fall ?? 1))}; --fall-steps: ${l.h};`,
+      innerClass: 'bd bd-fall',
+    };
+  }
+
+  const drift = {
+    wrap: l.drift
+      ? `--drift: ${-l.drift}px; --drift-dur: ${DRIFT_SECONDS}s; --drift-steps: ${Math.abs(l.drift)};`
+      : undefined,
+  };
+
+  // A fly-by: the character (its pre-rendered sprite sheet) in a box of its own
+  // size, instead of its GIF repeated along a 6000-12000px strip. The box loops over
+  // the same distance at the same speed, a pixel per step, jumping back round just
+  // off the left edge (lo) - off-screen at both ends on any display narrower than
+  // the strip - and the negative delay starts it where the character was. The sheet
+  // inside steps through the GIF's frames at the GIF's own frame rate.
+  const sprite = l.flyby && speed ? BACKDROP_SPRITES[l.src] : undefined;
+  if (sprite) {
+    const frames = sprite.delays.length;
+    const lo = -sprite.w - 1;
+    const loop = l.w / Math.abs(speed);
+    const start = (speed > 0 ? -l.w : 0) + mod(l.x ?? 0, l.w) + sprite.x; // where the character was at t = 0
+    const into = mod(start - lo, l.w) / l.w; // how far along [lo, lo + w) it starts
+    const elapsed = speed > 0 ? into : mod(1 - into, 1);
+    const fromEdge = edge === 'bottom' ? offset + (l.h - sprite.y - sprite.h) : offset + sprite.y;
+    return {
+      ...drift,
+      outerClass: 'bd bd-x bd-flyby',
+      outer: `left: ${speed > 0 ? lo : lo + l.w}px; ${edge}: ${fromEdge}px; width: ${sprite.w}px; height: ${sprite.h}px; --travel: ${speed > 0 ? l.w : -l.w}px; --dur: ${secs(loop)}; --steps: ${l.w}; animation-delay: ${secs(-elapsed * loop)};`,
+      inner: `width: ${sprite.w * frames}px; background-image: url("${sprite.sheet}"); --frames-travel: ${-sprite.w * frames}px; --frames-dur: ${sprite.delays.reduce((a, b) => a + b, 0)}ms; --frames: ${frames};`,
+      innerClass: 'bd-frames',
+    };
+  }
+
+  return {
+    ...drift,
+    outerClass: `bd${speed ? ' bd-x' : ''}`,
+    outer: `${bg} background-repeat: repeat-x; ${phase} ${x} ${edge}: ${offset}px; height: ${l.h}px;`,
+  };
+}
+
+const backdrops = Object.entries(THEME_BACKDROPS).map(([theme, b]) => ({
+  theme,
+  pixelated: b.pixelated,
+  layers: b.layers.map(render),
+}));
+
+// Show only the active theme's backdrop (and respect each theme's own
+// small-screen cutoff).
+const visibility = Object.entries(THEME_BACKDROPS)
+  .map(([theme, b]) => {
+    const sel = `:root[data-theme="${theme}"] .theme-backdrop[data-backdrop="${theme}"]`;
+    return `${sel} { display: block; }` + (b.hideBelow ? ` @media (max-width: ${b.hideBelow}px) { ${sel} { display: none; } }` : '');
+  })
+  .join('\n');
+---
+
+{backdrops.map((b) => (
+  <div class:list={['theme-backdrop', { pixelated: b.pixelated }]} data-backdrop={b.theme} aria-hidden="true">
+    {b.layers.map((l) =>
+      l.wrap ? (
+        <div class="bd-drift" style={l.wrap}>
+          <div class={l.outerClass} style={l.outer}>
+            {l.inner && <div class={l.innerClass} style={l.inner} />}
+          </div>
+        </div>
+      ) : (
+        <div class={l.outerClass} style={l.outer}>
+          {l.inner && <div class={l.innerClass} style={l.inner} />}
+        </div>
+      )
+    )}
+  </div>
+))}
+
+<style is:inline set:html={visibility}></style>
+
+<style is:global>
+  .theme-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+    contain: strict;
+  }
+
+  .theme-backdrop.pixelated {
+    image-rendering: pixelated;
+  }
+
+  .theme-backdrop .bd,
+  .theme-backdrop .bd-drift {
+    position: absolute;
+  }
+
+  .theme-backdrop .bd-drift {
+    inset: 0;
+    animation: bd-drift var(--drift-dur) steps(var(--drift-steps)) infinite;
+  }
+
+  .theme-backdrop .bd-x {
+    animation: bd-x var(--dur) steps(var(--steps)) infinite;
+  }
+
+  .theme-backdrop .bd-fall {
+    inset: 0;
+    animation: bd-fall var(--fall-dur) steps(var(--fall-steps)) infinite;
+  }
+
+  .theme-backdrop .bd-frames {
+    height: 100%;
+    animation: bd-frames var(--frames-dur) steps(var(--frames)) infinite;
+  }
+
+  .theme-backdrop .bd-x,
+  .theme-backdrop .bd-fall,
+  .theme-backdrop .bd-drift,
+  .theme-backdrop .bd-frames {
+    will-change: transform;
+  }
+
+  @keyframes bd-x {
+    from { transform: translateX(0); }
+    to { transform: translateX(var(--travel)); }
+  }
+
+  @keyframes bd-fall {
+    from { transform: translateY(0); }
+    to { transform: translateY(var(--fall-by)); }
+  }
+
+  @keyframes bd-drift {
+    from { transform: translateY(0); }
+    to { transform: translateY(var(--drift)); }
+  }
+
+  @keyframes bd-frames {
+    from { transform: translateX(0); }
+    to { transform: translateX(var(--frames-travel)); }
+  }
+
+  .theme-backdrop .bd-flyby {
+    overflow: hidden;
+  }
+
+  /* Small screens never got theme scenery. */
+  @media (max-width: 768px) {
+    .theme-backdrop {
+      display: none !important;
+    }
+  }
+
+  /* Keep the scenery, hold it still: the theme menu's "Motion: off" (for slower
+     computers - still scenery costs no more than a static theme like MFZ), or the
+     OS-level reduced-motion setting. Fly-bys rest off-screen. */
+  :root[data-motion='off'] .theme-backdrop .bd-x,
+  :root[data-motion='off'] .theme-backdrop .bd-fall,
+  :root[data-motion='off'] .theme-backdrop .bd-drift,
+  :root[data-motion='off'] .theme-backdrop .bd-frames {
+    animation: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .theme-backdrop .bd-x,
+    .theme-backdrop .bd-fall,
+    .theme-backdrop .bd-drift,
+    .theme-backdrop .bd-frames {
+      animation: none;
+    }
+  }
+</style>
+

@@ -1,3 +1,11 @@
+<script lang="ts" module>
+  // The uploaded-comics list, kept across client-side navigations (Astro's router
+  // keeps this module loaded), so coming back to the archive within a few minutes
+  // doesn't re-download all ~900 entries. Every visit still gets its own shuffle.
+  const ARCHIVE_CACHE_MS = 5 * 60 * 1000;
+  let archiveCache: { docs: unknown[]; at: number } | null = null;
+</script>
+
 <script lang="ts">
   import {
     type ColumnDef,
@@ -13,10 +21,19 @@
   import { createSvelteTable, renderComponent } from '$components/ui/data-table';
   import * as Tooltip from '$components/ui/tooltip';
   import { DataTable, Input, Button } from '$lib/components';
-  import { ChevronLeft, ChevronRight, LayoutGrid, SlidersHorizontal, Table, X } from 'lucide-svelte';
+  import { Bookmark, ChevronLeft, ChevronRight, LayoutGrid, SlidersHorizontal, Table, X } from 'lucide-svelte';
 
   import ArchiveComicCard from './archive/ArchiveComicCard.svelte';
   import ArchiveFilterSheet from './archive/ArchiveFilterSheet.svelte';
+  import { toast } from 'svelte-sonner';
+  import {
+    BOOKMARKS_CHANGED,
+    addArchiveBookmark,
+    fetchArchiveBookmarks,
+    removeBookmark,
+    type BookmarksChangedDetail,
+    type ComicBookmark,
+  } from '$lib/comicBookmarks';
 
   import PlainTextCell from './archive/cells/PlainTextCell.svelte';
   import LinkCell from './archive/cells/LinkCell.svelte';
@@ -43,12 +60,16 @@
     rating?: number | null;
     notes?: string | null;
     link?: string;
+    /** How many readers have bookmarked it (public; who is private). */
+    bookmarkCount?: number | null;
   }
 
   const SELECT_FIELDS = [
     'comicId', 'title', 'author', 'category', 'pagesMetadata',
-    'pagesFolder', 'percentSaved', 'quality', 'rating', 'notes', 'link',
+    'pagesFolder', 'percentSaved', 'quality', 'rating', 'notes', 'link', 'bookmarkCount',
   ];
+
+  let { loggedIn = false }: { loggedIn?: boolean } = $props();
 
   let comics = $state<ArchiveComic[]>([]);
   // Always fetches on mount, so start true - avoids a flash of the empty
@@ -69,20 +90,26 @@
     isLoading = true;
     error = '';
     try {
-      const params = new URLSearchParams({
-        'where[status][equals]': 'uploaded',
-        limit: '5000',
-        depth: '0',
-        sort: 'comicId',
-      });
-      for (const field of SELECT_FIELDS) params.set(`select[${field}]`, 'true');
+      let docs: ArchiveComic[];
+      if (archiveCache && Date.now() - archiveCache.at < ARCHIVE_CACHE_MS) {
+        docs = archiveCache.docs as ArchiveComic[];
+      } else {
+        const params = new URLSearchParams({
+          'where[status][equals]': 'uploaded',
+          limit: '5000',
+          depth: '0',
+          sort: 'comicId',
+        });
+        for (const field of SELECT_FIELDS) params.set(`select[${field}]`, 'true');
 
-      const response = await fetch(`/api/archive-entries?${params.toString()}`);
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.errors?.[0]?.message || data.message || 'Failed to load the archive.');
+        const response = await fetch(`/api/archive-entries?${params.toString()}`);
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.errors?.[0]?.message || data.message || 'Failed to load the archive.');
+        }
+        docs = data.docs || [];
+        archiveCache = { docs, at: Date.now() };
       }
-      const docs: ArchiveComic[] = data.docs || [];
       const saved = isReturnVisit('/smackjeeves') ? readSavedState() : null;
       if (saved) {
         restoreState(docs, saved);
@@ -110,6 +137,80 @@
 
   onMount(fetchComics);
 
+  // The viewer's private bookmarks (logged-in only): a toggle on each card,
+  // and a "Bookmarked" filter. The full list lives on /bookmarks.
+  let bookmarks = $state<ComicBookmark[]>([]);
+  let bookmarkBusy = $state(new Set<number>());
+  const bookmarkByEntry = $derived(new Map(bookmarks.map((b) => [b.entryId, b])));
+  // Only the ones still in the public archive, as /bookmarks lists them.
+  const archiveBookmarkCount = $derived(bookmarks.filter((b) => comics.some((c) => Number(c.id) === b.entryId)).length);
+
+  onMount(() => {
+    if (!loggedIn) return;
+    fetchArchiveBookmarks()
+      .then((result) => (bookmarks = result))
+      .catch((err) => console.error('Error loading bookmarks:', err));
+
+    // Every add/remove (including the cards' own toggles) lands here.
+    const onChange = (event: Event) => {
+      const { entryId, bookmark } = (event as CustomEvent<BookmarksChangedDetail>).detail;
+      const had = bookmarkByEntry.has(entryId);
+      if (!had && bookmark) adjustBookmarkCount(entryId, 1);
+      else if (had && !bookmark) adjustBookmarkCount(entryId, -1);
+      const others = bookmarks.filter((b) => b.entryId !== entryId);
+      bookmarks = bookmark ? [bookmark, ...others] : others;
+    };
+    window.addEventListener(BOOKMARKS_CHANGED, onChange);
+    return () => window.removeEventListener(BOOKMARKS_CHANGED, onChange);
+  });
+
+  function comicHref(comic: ArchiveComic) {
+    return comic.link || `/jeevespage?comic_id=${comic.comicId}`;
+  }
+
+  function readLocalProgress(comicId: number): number | null {
+    try {
+      const page = JSON.parse(localStorage.getItem('sgxp-jeeves-progress') || '{}')?.[comicId];
+      return typeof page === 'number' && page > 0 ? page : null;
+    } catch {
+      return null;
+    }
+  }
+
+  // Mirrors what the CMS's recount will store, so the viewer's own bookmark
+  // shows up in the count right away - here and in the cached list the next
+  // visit reuses.
+  function adjustBookmarkCount(entryId: number, delta: number) {
+    for (const list of [comics, (archiveCache?.docs ?? []) as ArchiveComic[]]) {
+      const comic = list.find((c) => Number(c.id) === entryId);
+      if (comic) comic.bookmarkCount = Math.max(0, (comic.bookmarkCount ?? 0) + delta);
+    }
+  }
+
+  async function toggleBookmark(comic: ArchiveComic) {
+    const entryId = Number(comic.id);
+    if (bookmarkBusy.has(entryId)) return;
+    bookmarkBusy = new Set(bookmarkBusy).add(entryId);
+    const existing = bookmarkByEntry.get(entryId);
+    try {
+      // The list itself updates from the BOOKMARKS_CHANGED event.
+      if (existing) {
+        await removeBookmark(existing);
+      } else {
+        // Carries over how far this browser already got (the reader's own
+        // localStorage progress), so bookmarking mid-read keeps the place.
+        await addArchiveBookmark(entryId, readLocalProgress(comic.comicId));
+      }
+    } catch (err) {
+      console.error('Error updating bookmark:', err);
+      toast.error(err instanceof Error ? err.message : 'Could not update the bookmark');
+    } finally {
+      const next = new Set(bookmarkBusy);
+      next.delete(entryId);
+      bookmarkBusy = next;
+    }
+  }
+
   // Coming back to the archive (browser back, or the "Smack Jeeves Archive"
   // buttons in the comic reader - see navIntent.ts) picks up exactly where it
   // was left: same shuffle order, page, sort, filters and scroll position. A
@@ -123,6 +224,7 @@
     search: string;
     categories: string[];
     ratings: string[];
+    bookmarkedOnly?: boolean;
     scrollY: number;
   }
   // Nothing is saved until the list is in place, so the initial empty state
@@ -148,6 +250,7 @@
     searchInput = saved.search ?? '';
     categoryFilterValues = saved.categories ?? [];
     ratingFilterValues = saved.ratings ?? [];
+    bookmarkedOnly = !!saved.bookmarkedOnly && loggedIn;
     pagination = { pageIndex: saved.pageIndex ?? 0, pageSize: saved.pageSize ?? BASE_PAGE_SIZE };
   }
 
@@ -161,6 +264,7 @@
       search: searchInput,
       categories: categoryFilterValues,
       ratings: ratingFilterValues,
+      bookmarkedOnly,
       scrollY,
     };
     try {
@@ -170,7 +274,7 @@
 
   $effect(() => {
     // Re-saved whenever any of these change.
-    comics; pagination; sorting; searchInput; categoryFilterValues; ratingFilterValues;
+    comics; pagination; sorting; searchInput; categoryFilterValues; ratingFilterValues; bookmarkedOnly;
     untrack(() => saveState());
   });
 
@@ -190,6 +294,7 @@
   let searchInput = $state('');
   let categoryFilterValues = $state<string[]>([]);
   let ratingFilterValues = $state<string[]>([]);
+  let bookmarkedOnly = $state(false);
 
   function resetPage() {
     pagination = { ...pagination, pageIndex: 0 };
@@ -202,15 +307,20 @@
     ratingFilterValues = values;
     resetPage();
   }
+  function setBookmarkedOnly(value: boolean) {
+    bookmarkedOnly = value;
+    resetPage();
+  }
 
   const hasActiveFilters = $derived(
-    !!searchInput.trim() || categoryFilterValues.length > 0 || ratingFilterValues.length > 0
+    !!searchInput.trim() || categoryFilterValues.length > 0 || ratingFilterValues.length > 0 || bookmarkedOnly
   );
 
   function clearFilters() {
     searchInput = '';
     categoryFilterValues = [];
     ratingFilterValues = [];
+    bookmarkedOnly = false;
     resetPage();
   }
 
@@ -251,6 +361,7 @@
       }
       if (categoryFilterValues.length > 0 && !categoryFilterValues.includes(c.category || '')) return false;
       if (ratingFilterValues.length > 0 && !ratingFilterValues.includes(String(c.rating ?? ''))) return false;
+      if (bookmarkedOnly && !bookmarkByEntry.has(Number(c.id))) return false;
       return true;
     });
   });
@@ -399,6 +510,17 @@
         }),
     },
     {
+      accessorKey: 'bookmarkCount',
+      header: sortableHeader('Bookmarks'),
+      sortUndefined: 'last',
+      cell: ({ row }) =>
+        renderComponent(PlainTextCell as any, {
+          value: row.original.bookmarkCount ? row.original.bookmarkCount.toLocaleString() : undefined,
+          fallback: '—',
+          class: 'entry-numeric',
+        }),
+    },
+    {
       accessorKey: 'rating',
       header: filterableHeader('Rating', () => RATING_OPTIONS, () => ratingFilterValues, setRatingFilter),
       cell: ({ row }) =>
@@ -475,6 +597,7 @@
     { value: 'rating:asc', label: 'Lowest rated' },
     { value: 'pagesFolder:desc', label: 'Most pages' },
     { value: 'percentSaved:desc', label: 'Best preserved' },
+    { value: 'bookmarkCount:desc', label: 'Most bookmarked' },
   ];
   const sortValue = $derived(sorting[0] ? `${sorting[0].id}:${sorting[0].desc ? 'desc' : 'asc'}` : 'random');
   const sortLabel = $derived(
@@ -502,7 +625,7 @@
     RATING_OPTIONS.map((o) => ({ ...o, count: ratingCounts.get(o.value) ?? 0 }))
   );
 
-  const activeFilterCount = $derived(categoryFilterValues.length + ratingFilterValues.length);
+  const activeFilterCount = $derived(categoryFilterValues.length + ratingFilterValues.length + (bookmarkedOnly ? 1 : 0));
   const ratingLabel = (value: string) => RATING_OPTIONS.find((o) => o.value === value)?.label ?? value;
 
   let filterSheetOpen = $state(false);
@@ -519,12 +642,19 @@
   // Matches the Navbar's own breakpoint for its floating hamburger (see the
   // 1200px notes in Navbar.svelte) - the floating filter button stacks under it.
   let hamburgerShown = $state(false);
+  // Only the view actually on screen is rendered (the table is 9 cell components
+  // per row, so building it hidden behind the cards, as the default card view used
+  // to, roughly doubled every page's render). Same breakpoint as the CSS below.
+  let tableFits = $state(false);
+  const showTable = $derived(tableFits && viewMode === 'table');
   onMount(() => {
     const stopPhone = watchMedia('(max-width: 768px)', (m) => (isPhone = m));
     const stopHamburger = watchMedia('(max-width: 1199px)', (m) => (hamburgerShown = m));
+    const stopTableFits = watchMedia('(min-width: 1400px)', (m) => (tableFits = m));
     return () => {
       stopPhone();
       stopHamburger();
+      stopTableFits();
     };
   });
 
@@ -617,6 +747,21 @@
         <Button themed variant="ghost" size="sm" class="clear-filters-btn" disabled={!hasActiveFilters} onclick={clearFilters}>
           <X size={14} /> Clear Filters
         </Button>
+        {#if loggedIn}
+          <!-- ?from= gives /bookmarks a link straight back here. -->
+          <a
+            href="/bookmarks?from=smackjeeves"
+            class="bookmarks-link no-theme-styles"
+            title="My bookmarks"
+            aria-label="My bookmarks ({archiveBookmarkCount})"
+          >
+            <Bookmark size={16} />
+            <span class="bookmarks-link-label">My Bookmarks</span>
+            {#if archiveBookmarkCount > 0}
+              <span class="bookmarks-link-count">{archiveBookmarkCount}</span>
+            {/if}
+          </a>
+        {/if}
         <!-- Only at 1400px+, where the table fits; narrower is always cards. -->
         <div class="view-toggle" role="group" aria-label="View as">
           <button
@@ -645,6 +790,11 @@
           {#if sortValue !== 'random'}
             <button type="button" class="active-chip active-chip--sort" onclick={() => setSort('random')}>
               Sort: {sortLabel} <X size={13} />
+            </button>
+          {/if}
+          {#if bookmarkedOnly}
+            <button type="button" class="active-chip" onclick={() => setBookmarkedOnly(false)}>
+              Bookmarked <X size={13} />
             </button>
           {/if}
           {#each ratingFilterValues as value (value)}
@@ -688,12 +838,12 @@
       <div class="loading-state">
         <p>Loading archive...</p>
       </div>
-    {:else}
+    {:else if showTable}
       <!-- Desktop Table -->
       <div class="table-view">
         <DataTable {table} themed showPagination class="archive-data-table" emptyMessage="No comics match your filters." />
       </div>
-
+    {:else}
       <!-- Mobile Cards -->
       <div class="card-view" bind:this={cardsTop}>
         <div class="cards-grid" bind:this={cardsGrid}>
@@ -709,7 +859,11 @@
               percentSaved={comic.percentSaved}
               rating={comic.rating}
               notes={comic.notes}
-              href={comic.link || `/jeevespage?comic_id=${comic.comicId}`}
+              bookmarkCount={comic.bookmarkCount ?? 0}
+              href={comicHref(comic)}
+              bookmarked={bookmarkByEntry.has(Number(comic.id))}
+              bookmarkBusy={bookmarkBusy.has(Number(comic.id))}
+              onToggleBookmark={loggedIn ? () => toggleBookmark(comic) : undefined}
             />
           {:else}
             <div class="loading-state cards-empty">
@@ -784,10 +938,14 @@
   categoryOptions={SHEET_CATEGORY_OPTIONS}
   categorySelected={categoryFilterValues}
   onCategoryChange={setCategoryFilter}
+  bookmarkCount={loggedIn ? archiveBookmarkCount : null}
+  {bookmarkedOnly}
+  onBookmarkedOnlyChange={setBookmarkedOnly}
   resultCount={filteredComics.length}
   onClearAll={() => {
     categoryFilterValues = [];
     ratingFilterValues = [];
+    bookmarkedOnly = false;
     resetPage();
   }}
 />
@@ -1153,6 +1311,41 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* Styled after the Cards/Table toggle's unpressed buttons. */
+  .bookmarks-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 42px;
+    padding: 0 14px;
+    background: color-mix(in srgb, var(--page-color) 60%, black);
+    border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white);
+    box-shadow: var(--box-shadow);
+    color: var(--font-color);
+    font-family: 'saira', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    text-shadow: none;
+    white-space: nowrap;
+  }
+
+  .bookmarks-link :global(svg) {
+    color: var(--font-link-color);
+  }
+
+  .bookmarks-link-count {
+    opacity: 0.6;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (hover: hover) {
+    .bookmarks-link:hover {
+      border-color: var(--font-link-color);
+    }
+  }
+
   .view-toggle {
     display: none;
     margin-left: auto;
@@ -1231,6 +1424,17 @@
     .toolbar :global(.clear-filters-btn) {
       height: 46px !important;
       min-height: 46px !important;
+    }
+
+    /* Icon (and count) only, to share the row with Filter & Sort and Clear. */
+    .bookmarks-link {
+      height: 46px;
+      padding: 0 12px;
+      gap: 6px;
+    }
+
+    .bookmarks-link-label {
+      display: none;
     }
 
     .cards-grid {

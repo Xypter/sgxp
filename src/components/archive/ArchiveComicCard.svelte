@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as Popover from '$components/ui/popover';
-  import { ArrowRight, ImageOff } from 'lucide-svelte';
+  import { ArrowRight, Bookmark, BookmarkCheck, ImageOff } from 'lucide-svelte';
 
   interface Props {
     comicId: number;
@@ -12,7 +12,14 @@
     percentSaved?: number | null;
     rating?: number | null;
     notes?: string | null;
+    /** How many readers have bookmarked it - shown to everyone. */
+    bookmarkCount?: number;
     href: string;
+    /** In the viewer's (private) bookmarks. */
+    bookmarked?: boolean;
+    bookmarkBusy?: boolean;
+    /** Only passed for logged-in viewers - no toggle is shown otherwise. */
+    onToggleBookmark?: () => void;
   }
 
   let {
@@ -25,7 +32,11 @@
     percentSaved,
     rating,
     notes,
+    bookmarkCount = 0,
     href,
+    bookmarked = false,
+    bookmarkBusy = false,
+    onToggleBookmark,
   }: Props = $props();
 
   // Some entries have more pages in the folder than the metadata claimed
@@ -40,6 +51,10 @@
   const PREVIEW_SIZE = 100;
   let previewLoaded = $state(false);
   let previewFailed = $state(false);
+
+  const bookmarkCountLabel = $derived(
+    `Bookmarked by ${bookmarkCount.toLocaleString()} ${bookmarkCount === 1 ? 'reader' : 'readers'}`
+  );
 
   const ratingLabel = $derived(rating !== null && rating !== undefined ? `Rated ${rating} out of 10` : 'Unrated');
 </script>
@@ -117,6 +132,29 @@
       >
         <span class="saved-meter-track"><span class="saved-meter-fill" style="width: {meterWidth}%"></span></span>
         <span class="stat-text">{savedPercent}% saved</span>
+      </span>
+    {/if}
+    {#if onToggleBookmark}
+      <!-- Quiet until used: a faint outline icon at the end of the stats row,
+           filled in the link color once bookmarked, with how many readers
+           have bookmarked it beside it. -->
+      <button
+        type="button"
+        class="comic-card-bookmark"
+        class:active={bookmarked}
+        onclick={onToggleBookmark}
+        disabled={bookmarkBusy}
+        aria-pressed={bookmarked}
+        title="{bookmarkCountLabel}. {bookmarked ? 'Remove your bookmark' : 'Bookmark it (only you can see your bookmarks)'}"
+        aria-label="{bookmarked ? `Remove bookmark for ${title || 'this comic'}` : `Bookmark ${title || 'this comic'}`} ({bookmarkCountLabel})"
+      >
+        {#if bookmarked}<BookmarkCheck size={17} />{:else}<Bookmark size={17} />{/if}
+        {#if bookmarkCount > 0}<span class="bookmark-count">{bookmarkCount.toLocaleString()}</span>{/if}
+      </button>
+    {:else if bookmarkCount > 0}
+      <span class="comic-card-bookmark comic-card-bookmark--static" title={bookmarkCountLabel}>
+        <Bookmark size={17} aria-hidden="true" />
+        <span class="bookmark-count" aria-label={bookmarkCountLabel}>{bookmarkCount.toLocaleString()}</span>
       </span>
     {/if}
   </div>
@@ -401,9 +439,64 @@
     }
   }
 
+  /* Sits at the end of the stats row (margin-left: auto), after the saved
+     meter. A 32px hit area around a 17px icon; the negative margin keeps it
+     from making the row any taller. */
+  .comic-card-bookmark {
+    flex-shrink: 0;
+    margin: -7px -7px -7px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 7px;
+    background: transparent;
+    border: none;
+    color: var(--font-color);
+    cursor: pointer;
+  }
+
+  /* The icon stays faint until used; the count reads like the other stats. */
+  .comic-card-bookmark :global(svg) {
+    opacity: 0.45;
+    transition: opacity 0.15s ease, color 0.15s ease;
+  }
+
+  .bookmark-count {
+    font-family: 'saira', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.8;
+  }
+
+  .comic-card-bookmark.active :global(svg) {
+    color: var(--font-link-color);
+    opacity: 1;
+  }
+
+  .comic-card-bookmark:disabled {
+    cursor: default;
+  }
+
+  /* Logged out: just the count, nothing to click. */
+  .comic-card-bookmark--static {
+    cursor: default;
+  }
+
+  @media (hover: hover) {
+    .comic-card-bookmark:hover:not(:disabled):not(.comic-card-bookmark--static) :global(svg) {
+      color: var(--font-link-color);
+      opacity: 1;
+    }
+  }
+
   @media (max-width: 768px) {
     .comic-card-cta {
       height: 46px;
     }
+
   }
 </style>

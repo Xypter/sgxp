@@ -8,9 +8,12 @@
 // Payload itself on every protected request. Tampering with this cookie only
 // changes what that same user sees rendered in their own browser.
 import type { AstroCookies } from 'astro';
+import { normalizeCanChoice } from './sodaCan';
 
 export const USER_COOKIE = 'sgxp-user';
-export const CACHE_VERSION = 1;
+// Bump whenever CachedUser gains a field, so existing cookies (which lack it)
+// are treated as a miss and refetched instead of trusted for 5 minutes.
+export const CACHE_VERSION = 2;
 
 // How long a cached snapshot is trusted before we re-verify with Payload.
 // Independent of the cookie's own maxAge (which mirrors the 7-day session) -
@@ -35,6 +38,7 @@ export interface CachedUser {
   archivistRequestedAt?: string | null;
   prestigeRole?: string;
   prestigeColor?: string;
+  sodaCan?: { body: string; eyes: string } | null;
 }
 
 export type ResolveSource = 'anon' | 'cache' | 'payload' | 'stale' | 'invalid';
@@ -53,6 +57,7 @@ export function toCachedUser(u: any): CachedUser {
     archivistRequestedAt: u.archivistRequestedAt,
     prestigeRole: u.prestigeRole,
     prestigeColor: u.prestigeColor,
+    sodaCan: normalizeCanChoice(u.sodaCan),
   };
 }
 

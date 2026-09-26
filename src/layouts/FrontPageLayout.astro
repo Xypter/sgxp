@@ -8,6 +8,7 @@ import "../styles/sprite_icon.css";
 
 // Correct import statement to the .tsx file
 import SGXPNavbar from "../components/Navbar.svelte";
+import ThemeBackdrop from "../components/ThemeBackdrop.astro";
 import Toaster from "../lib/components/ui/layout/Toaster.svelte";
 
 // Import types from the .tsx file
@@ -15,9 +16,16 @@ import ThemeValue from '../components/Navbar.svelte';
 import User from '../components/Navbar.svelte';
 
 import { resolveUser } from '../lib/userCache';
+import { createHash } from 'node:crypto';
+import { glyphStylesheet } from '../lib/spriteCardText';
+
+// Sprite-card glyph classes (src/pages/sprite-glyphs.css.ts), versioned by content.
+const glyphCssVersion = createHash('sha1').update(glyphStylesheet()).digest('hex').slice(0, 10);
 
 // Get the theme from the cookie during SSR to prevent flashing
 const themeFromCookie = (Astro.cookies.get('theme')?.value as ThemeValue) || "style_v7";
+// "Motion: off" in the theme menu holds the theme scenery still (see ThemeBackdrop.astro).
+const motionOff = Astro.cookies.get('motion')?.value === 'off';
 
 // Assumes logged-in as long as payload-token is present; only round-trips to
 // Payload when the display cache is missing/stale (see src/lib/userCache.ts).
@@ -33,7 +41,7 @@ const { title } = Astro.props;
 
 <!DOCTYPE html>
 <!-- Set the data-theme attribute on the server based on the cookie -->
-<html lang="en" class="dark" data-theme={themeFromCookie}>
+<html lang="en" class="dark" data-theme={themeFromCookie} data-motion={motionOff ? 'off' : undefined}>
 <head>
   <script
     src="https://stats.sgxp.me:7443/api/script.js"
@@ -47,6 +55,7 @@ const { title } = Astro.props;
 
   <!-- Load consolidated themes CSS -->
   <link rel="stylesheet" type="text/css" href="/themes.css">
+  <link rel="stylesheet" type="text/css" href={`/sprite-glyphs.css?v=${glyphCssVersion}`}>
 
   <!-- The theme loading script is no longer needed here as the theme is set on the server -->
 
@@ -54,8 +63,13 @@ const { title } = Astro.props;
   <ClientRouter />
 </head>
 <body>
+<!-- Theme scenery. Persisted so page navigations don't restart its animations;
+     display: contents keeps the wrapper out of body's flex layout. -->
+<div id="theme-backdrops" style="display: contents;" transition:persist>
+  <ThemeBackdrop />
+</div>
 <!-- IMPORTANT: Using client:load to ensure navbar is interactive immediately on all pages -->
-<SGXPNavbar client:load initialUser={user} baseURL={Astro.url.origin} initialTheme={themeFromCookie} transition:persist />
+<SGXPNavbar client:load initialUser={user} baseURL={Astro.url.origin} initialTheme={themeFromCookie} initialMotionOff={motionOff} transition:persist />
 
   <div class="sonic-trigger" title="Click me!"></div>
   <!-- <script is:inline src="/js/arkanimation.js"></script> -->

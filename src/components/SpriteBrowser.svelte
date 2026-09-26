@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, tick, untrack } from 'svelte';
-	import { fade, fly } from 'svelte/transition';
-	import { charMap, altNumberMap } from '../lib/charMap.js';
+	import { fly } from 'svelte/transition';
+	import { spriteCardText } from '../lib/spriteCardText';
 	import { getCardColorUrls } from '../lib/cardColors';
 	import { ensureGradientOverridesLoaded, getGradientOverrides } from '../lib/cardColorGradients.svelte';
 
@@ -9,7 +9,6 @@
 	import { Button, Input, Select, Combobox, Pagination } from '$lib/components';
 
 	import SpriteViewer from './SpriteViewer.svelte';
-	import type { Component } from 'svelte';
 	import { applySpriteListFieldParams } from '$lib/spriteListQuery';
 
 	// Updated interface to match your API structure
@@ -68,19 +67,6 @@
 		updatedAt: string;
 	}
 
-	// Extended interface with memoized sprite text conversions
-	interface SpriteWithMemoized extends Sprite {
-		_memoized?: {
-			spriteNumber: any[];
-			title: any[];
-			author: any[];
-			gameName: any[];
-			blockType: any[];
-			createdDate: any[];
-			fileSize: any[];
-		};
-	}
-
 	// Props for server-side initial data
 	interface Props {
 		initialSprites?: Sprite[];
@@ -110,8 +96,10 @@
 	}
 
 	// State using Svelte 5 runes
-	// OPTIMIZATION: Don't memoize synchronously - start with raw data
-	let sprites = $state<SpriteWithMemoized[]>(initialSprites as SpriteWithMemoized[]);
+	let sprites = $state<Sprite[]>(initialSprites as Sprite[]);
+	// Card upload dates are rendered in UTC on the server and in the viewer's own
+	// timezone once mounted (see spriteCardText).
+	let mounted = $state(false);
 	let totalResults = $state(initialTotalResults);
 	let currentPage = $state(1);
 	let sortBy = $state('newest');
@@ -125,8 +113,6 @@
 	let activeSearchTerm = $state(''); // The search term that triggers API call
 	let fetchAbortController: AbortController | null = null;
 
-	// OPTIMIZATION: Track if initial memoization is complete
-	let isMemoized = $state(false);
 	// OPTIMIZATION: Track if this is the first render to prevent double-fetch
 	let isInitialRender = true;
 
@@ -186,6 +172,12 @@
 		neutralizeNextAstroSwap = false;
 		const swapEvent = event as Event & { swap: () => void; viewTransition?: ViewTransition };
 		swapEvent.swap = () => {};
+		// The router still restores this entry's scroll position right after the (no-op)
+		// swap - with the global smooth scroll-behavior, i.e. animated, while the grid is
+		// still hidden. showBrowserAgain's own instant scroll lands mid-animation, and
+		// Chrome keeps applying the rest of the smooth scroll on top of it (ending 100-250px
+		// too far down). Make the router's scroll instant; showBrowserAgain restores this.
+		document.documentElement.style.scrollBehavior = 'auto';
 		// Nothing changes, so skip the page-level view transition too - otherwise its
 		// snapshot of the viewer would cross-fade over the grid sliding back in. Skipping
 		// rejects the transition's promises with an AbortError that nothing else handles,
@@ -198,27 +190,6 @@
 			vt.skipTransition();
 		}
 	}
-
-	// The 3D Three.js logo was previously always mounted and just hidden with CSS on
-	// mobile - it still paid for a WebGL context, a font fetch, and a full geometry
-	// build there for a canvas nobody could see. Only mount it once we actually know
-	// we're on a desktop-width viewport, matching the .desktop-logo/.mobile-logo
-	// breakpoint below.
-	let isDesktopViewport = $state(false);
-
-	// Logo3D (and with it all of three.js, several hundred KB) is loaded with a dynamic
-	// import rather than a static one, so it's split into its own chunk: the grid's own
-	// code downloads/parses/hydrates without waiting on it, and mobile never downloads it
-	// at all. The .desktop-logo box is always rendered at the logo's height so the page
-	// doesn't jump when the canvas arrives.
-	let Logo3D = $state<Component | null>(null);
-	$effect(() => {
-		if (isDesktopViewport && !Logo3D) {
-			import('./Logo3D.svelte').then((m) => {
-				Logo3D = m.default;
-			});
-		}
-	});
 
 	// Derived values for select triggers (updated to match Payload CMS search API)
 	const sortOptions = [
@@ -250,246 +221,6 @@
 	const SPRITES_PER_PAGE = 100;
 	// Derived values
 	const pageCount = $derived(Math.ceil(totalResults / SPRITES_PER_PAGE));
-
-	// Helper function to create individual character sprite
-	function createCharacterSprite(char: string, characterMap: any, isAltNumberMap: boolean, index: number) {
-		if (characterMap[char]) {
-			const charData = characterMap[char];
-			const width = charData.width;
-			const height = charData.height;
-			const offsetX = charData.offsetX || 0;
-			const offsetY = charData.offsetY || 0;
-			const marginRight = isAltNumberMap ? '0px' : '1px';
-			
-			return {
-				key: `${char}-${index}`,
-				style: `display: inline-block; width: ${width}px; height: ${height}px; background-image: url('https://cdn.sgxp.me/media/general/35/DFC6vib-1766650806712.png');
- background-size: 400px 14px; background-position: ${charData.x}px ${charData.y}px; margin-left: ${offsetX}px; margin-right: ${marginRight}; margin-top: ${offsetY}px;`
-			};
-		}
-		return null;
-	}
-
-	// Helper function to generate sprite for a string of text
-	function textToSprite(text: string | null | undefined) {
-		if (!text || typeof text !== 'string') {
-			return [];
-		}
-		const characters = text.toUpperCase().split('');
-		return characters
-			.map((char, index) => createCharacterSprite(char, charMap, false, index))
-			.filter((item): item is NonNullable<ReturnType<typeof createCharacterSprite>> => item !== null);
-	}
-
-	// Helper function to generate sprite for a number
-	function numberToAltSprite(num: number | string | null | undefined) {
-		if (num === null || num === undefined) {
-			return [];
-		}
-		const numToProcess = (typeof num === 'string' || typeof num === 'number') ? Number(num) : NaN;
-		if (isNaN(numToProcess)) {
-			return [];
-		}
-		const numbers = String(numToProcess).split('');
-		return numbers
-			.map((digit, index) => createCharacterSprite(digit, altNumberMap, true, index))
-			.filter((item): item is NonNullable<ReturnType<typeof createCharacterSprite>> => item !== null);
-	}
-
-	// Function to add leading zeros to numbers for stylistic purposes
-	function count(number: number) {
-		if (number <= 9) {
-			return '0000' + number;
-		} else if (number > 9 && number <= 99) {
-			return '000' + number;
-		} else if (number > 99 && number <= 999) {
-			return '00' + number;
-		} else if (number > 999 && number <= 9999) {
-			return '0' + number;
-		} else {
-			return number.toString();
-		}
-	}
-
-	// Helper function to generate sprite for a formatted number string (preserves leading zeros)
-	function formattedNumberToAltSprite(numString: string | null | undefined) {
-		if (!numString || typeof numString !== 'string') {
-			return [];
-		}
-		const digits = numString.split('');
-		return digits
-			.map((digit, index) => createCharacterSprite(digit, altNumberMap, true, index))
-			.filter((item): item is NonNullable<ReturnType<typeof createCharacterSprite>> => item !== null);
-	}
-
-	// Enhanced text to sprite with word wrapping and truncation
-	function textToSpriteWithWrapping(text: string | null | undefined, characterMap: any, maxWidth: number | null = null, maxLines: number | null = null) {
-		if (!text || typeof text !== 'string') {
-			return [];
-		}
-		const input = text.toString().toUpperCase();
-		const isAltNumberMap = characterMap === altNumberMap;
-		// If no maxWidth specified, use simple behavior
-		if (!maxWidth) {
-			const characters = input.split('');
-			return characters
-				.map((char, index) => createCharacterSprite(char, characterMap, isAltNumberMap, index))
-				.filter((item): item is NonNullable<ReturnType<typeof createCharacterSprite>> => item !== null);
-		}
-		
-		// Split text into words
-		const words = input.split(' ');
-		let currentLineWidth = 0;
-		let currentLine = 0;
-		let elements: any[] = [];
-		let charIndex = 0;
-		for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
-			const word = words[wordIndex];
-			// Calculate word width
-			let wordWidth = 0;
-			for (let i = 0; i < word.length; i++) {
-				const char = word[i];
-				if (characterMap[char]) {
-					wordWidth += characterMap[char].width;
-					if (!isAltNumberMap && i < word.length - 1) {
-						wordWidth += 1; // Add margin-right spacing
-					}
-				} else {
-					wordWidth += 4;
-					// Unknown character width
-					if (i < word.length - 1) {
-						wordWidth += 1;
-						// Add margin-right spacing
-					}
-				}
-			}
-			
-			// Add space width if not the first word on the line
-			let spaceWidth = 0;
-			if (currentLineWidth > 0) {
-				spaceWidth = characterMap[' '] ? characterMap[' '].width : 3;
-				if (!isAltNumberMap) {
-					spaceWidth += 1;
-					// Add margin-right spacing
-				}
-			}
-			
-			// Check if word fits on current line
-			if (currentLineWidth > 0 && currentLineWidth + spaceWidth + wordWidth > maxWidth) {
-				// Word doesn't fit, start new line
-				currentLine++;
-				// Check if we've exceeded max lines, add ellipsis if so
-				if (maxLines && currentLine >= maxLines) {
-					// Add ellipsis
-					const ellipsis = '...';
-					for (let i = 0; i < ellipsis.length; i++) {
-						const char = ellipsis[i];
-						const sprite = createCharacterSprite(char, characterMap, isAltNumberMap, charIndex++);
-						if (sprite) elements.push(sprite);
-					}
-					break;
-				}
-				elements.push({
-					key: `newline-${currentLine}`,
-					isNewline: true
-				});
-				currentLineWidth = 0;
-			}
-			
-			// Add space if not at beginning of line
-			if (currentLineWidth > 0) {
-				const spaceSprite = createCharacterSprite(' ', characterMap, isAltNumberMap, charIndex++);
-				if (spaceSprite) elements.push(spaceSprite);
-				currentLineWidth += spaceWidth;
-			}
-			
-			// Add word characters
-			for (let i = 0; i < word.length; i++) {
-				const char = word[i];
-				const sprite = createCharacterSprite(char, characterMap, isAltNumberMap, charIndex++);
-				if (sprite) elements.push(sprite);
-				if (characterMap[char]) {
-					currentLineWidth += characterMap[char].width;
-					if (!isAltNumberMap && i < word.length - 1) {
-						currentLineWidth += 1; // Add margin-right spacing
-					}
-				} else {
-					currentLineWidth += 4;
-					// Unknown character width
-					if (i < word.length - 1) {
-						currentLineWidth += 1; // Add margin-right spacing
-					}
-				}
-			}
-		}
-		
-		return elements;
-	}
-
-	// Sprite Card size labeler for sprite sheets
-	function formatBytes(bytes: number, decimals: number = 2) {
-		if (!+bytes) return '0 Bytes';
-		const k = 1024;
-		const dm = decimals < 0 ? 0 : decimals;
-		const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-		const i = Math.floor(Math.log(bytes) / Math.log(k));
-		return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
-	}
-
-	// Memoize text-to-sprite conversions for performance
-	function memoizeSpriteText(sprite: SpriteWithMemoized): void {
-		if (sprite._memoized) return; // Already memoized
-
-		sprite._memoized = {
-			spriteNumber: formattedNumberToAltSprite(count(sprite.id)),
-			title: textToSpriteWithWrapping(sprite.title || '', charMap, 100, 2),
-			author: textToSprite(sprite.author?.displayName || sprite.author?.username || ''),
-			gameName: textToSpriteWithWrapping(sprite.section?.name || '', charMap, 150, 1),
-			blockType: textToSprite(sprite.image?.width && sprite.image?.height ? `${sprite.image.width} X ${sprite.image.height}` : ''),
-			createdDate: textToSprite(sprite.createdAt ? new Date(sprite.createdAt).toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' }) : ''),
-			fileSize: textToSprite(sprite.image?.filesize ? formatBytes(sprite.image.filesize) : '0 Bytes')
-		};
-	}
-
-	// OPTIMIZATION: Deferred memoization using requestIdleCallback or setTimeout fallback
-	function memoizeSpritesDeferred(spritesToMemoize: SpriteWithMemoized[], onComplete?: () => void): void {
-		// Increased batch size for faster processing (process full page at once)
-		const BATCH_SIZE = SPRITES_PER_PAGE;
-		let index = 0;
-
-		function processBatch(deadline?: IdleDeadline) {
-			// Process sprites while we have time (or in batches if no IdleDeadline)
-			const endIndex = Math.min(index + BATCH_SIZE, spritesToMemoize.length);
-
-			while (index < endIndex) {
-				memoizeSpriteText(spritesToMemoize[index]);
-				index++;
-			}
-
-			// If there are more sprites to process, schedule the next batch
-			if (index < spritesToMemoize.length) {
-				if ('requestIdleCallback' in window) {
-					requestIdleCallback(processBatch);
-				} else {
-					setTimeout(() => processBatch(), 0);
-				}
-			} else {
-				// All done - trigger reactivity update
-				isMemoized = true;
-				// Trigger sprites update to ensure reactivity
-				sprites = [...spritesToMemoize];
-				// Call completion callback if provided
-				onComplete?.();
-			}
-		}
-
-		// Start processing
-		if ('requestIdleCallback' in window) {
-			requestIdleCallback(processBatch);
-		} else {
-			setTimeout(() => processBatch(), 0);
-		}
-	}
 
 	// Fetch dropdown filter options from API using the new /api/sprites/filters endpoint
 	async function fetchFilterOptions() {
@@ -662,7 +393,7 @@
 			const response = await fetch(url, { signal });
 			const data = await response.json();
 
-			let fetchedSprites: SpriteWithMemoized[];
+			let fetchedSprites: Sprite[];
 
 			// Check if the API call was successful
 			// Standard Payload endpoint returns { docs, totalDocs, ... }
@@ -692,9 +423,7 @@
 					totalResults = data.totalDocs;
 				}
 
-				// OPTIMIZATION: Memoize in deferred batches after fetch
 				sprites = fetchedSprites;
-				memoizeSpritesDeferred(fetchedSprites);
 			} else {
 				sprites = [];
 				totalResults = 0;
@@ -736,23 +465,66 @@
 	}
 
 
+	// The grid stays mounted while a sprite is open - just hidden (.browser-hidden) - so
+	// closing the viewer re-shows the same cards instead of rebuilding ~7k elements and
+	// re-running the card-text setup. The slide in/out is a Web Animation on the grid
+	// (transform + opacity, so it runs on the compositor), matching the old
+	// fly={{ x: -100, duration: 200 }} transition it replaced.
+	const SLIDE_MS = 200;
+	let browserEl: HTMLDivElement | undefined = $state();
+
+	function slideBrowser(direction: 'in' | 'out'): Promise<unknown> {
+		if (!browserEl || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+			return Promise.resolve();
+		}
+		const hidden = { transform: 'translateX(-100px)', opacity: 0 };
+		const shown = { transform: 'none', opacity: 1 };
+		return browserEl
+			.animate(direction === 'in' ? [hidden, shown] : [shown, hidden], {
+				duration: SLIDE_MS,
+				easing: direction === 'in' ? 'cubic-bezier(0.33, 1, 0.68, 1)' : 'cubic-bezier(0.32, 0, 0.67, 0)',
+			})
+			.finished.catch(() => {});
+	}
+
+	// Bring the grid back after the viewer's 200ms out-transition, restoring the scroll
+	// position it was left at. The viewer's content stays in the document while it
+	// animates out, so restoring scroll any earlier would be measured against the wrong
+	// (viewer-height) document.
+	//
+	function showBrowserAgain() {
+		setTimeout(async () => {
+			showBrowser = true;
+			await tick();
+			// Instant, not the global smooth scroll-behavior - see openSpriteViewer.
+			window.scrollTo({ top: savedScrollY, left: 0, behavior: 'instant' });
+			// Undo handleAstroBeforeSwap's temporary instant scrolling, if it applied.
+			document.documentElement.style.scrollBehavior = '';
+			slideBrowser('in');
+		}, SLIDE_MS);
+	}
+
+	let openingViewer = false;
+
 	// Viewer functions - replacing modal functions
 	async function openSpriteViewer(sprite: Sprite, event?: MouseEvent) {
 		// If this is from a click event, prevent default navigation
 		if (event) {
 			event.preventDefault();
 		}
+		// The grid stays clickable while it slides out - ignore a second card click.
+		if (openingViewer) return;
+		openingViewer = true;
 
 		transitioningCardId = sprite.id;
 
 		// Remember where the user was browsing so we can restore it on back/close
 		savedScrollY = window.scrollY;
 
-		// Slide out browser
+		// Slide out browser, then hide it
+		await slideBrowser('out');
 		showBrowser = false;
-
-		// Wait for slide out animation
-		await new Promise(resolve => setTimeout(resolve, 200));
+		openingViewer = false;
 
 		// Set viewing sprite and show viewer
 		viewingSprite = sprite;
@@ -773,24 +545,9 @@
 	}
 
 	function closeSpriteViewer() {
-		// Fade out viewer. viewer-container has out:fly with a 200ms duration, and Svelte
-		// keeps its (potentially very tall, for a big sprite page) content mounted in the
-		// document for that full duration while it animates out. Restoring scroll before
-		// that finishes targets a pixel offset that's still measured against a document
-		// with the old tall viewer content still in flow, which lands in the wrong place
-		// (usually the top) once that content is actually removed and the grid re-shown.
+		// Fade out viewer (viewer-container's out:fly), then bring the grid back.
 		viewingSprite = null;
-
-		// Wait for the out-transition to fully finish before bringing the grid back,
-		// so the restore below is measured against the grid-only document layout.
-		setTimeout(() => {
-			showBrowser = true;
-			// One more frame for the grid's own layout to settle before restoring scroll.
-			requestAnimationFrame(() => {
-				// Instant, not the global smooth scroll-behavior - see openSpriteViewer.
-				window.scrollTo({ top: savedScrollY, left: 0, behavior: 'instant' });
-			});
-		}, 200);
+		showBrowserAgain();
 
 		// Navigate back in history
 		if (history.state?.spriteViewer) {
@@ -807,15 +564,9 @@
 		}
 
 		if (viewingSprite && !event.state?.spriteViewer) {
-			// User pressed back button - same reasoning as closeSpriteViewer above.
+			// User pressed back button - same as closeSpriteViewer above.
 			viewingSprite = null;
-			setTimeout(() => {
-				showBrowser = true;
-				requestAnimationFrame(() => {
-					// Instant, not the global smooth scroll-behavior - see openSpriteViewer.
-					window.scrollTo({ top: savedScrollY, left: 0, behavior: 'instant' });
-				});
-			}, 200);
+			showBrowserAgain();
 		}
 	}
 
@@ -905,11 +656,11 @@
 		// Fetch filter options for dropdowns
 		fetchFilterOptions();
 
-		// If we have server data, start deferred memoization
-		if (hasServerData && sprites.length > 0) {
-			memoizeSpritesDeferred(sprites);
-		} else {
-			// No server data, fetch immediately
+		// Server-rendered dates are UTC; now show them in the viewer's timezone.
+		mounted = true;
+
+		// No server data, fetch immediately
+		if (!hasServerData || sprites.length === 0) {
 			fetchSprites();
 		}
 
@@ -919,19 +670,10 @@
 		window.addEventListener('astro:before-preparation', handleAstroBeforePreparation, true);
 		document.addEventListener('astro:before-swap', handleAstroBeforeSwap);
 
-		// Only mount the 3D logo on desktop-width viewports (see isDesktopViewport above).
-		const desktopLogoQuery = window.matchMedia('(min-width: 769px)');
-		isDesktopViewport = desktopLogoQuery.matches;
-		const handleDesktopLogoQueryChange = (e: MediaQueryListEvent) => {
-			isDesktopViewport = e.matches;
-		};
-		desktopLogoQuery.addEventListener('change', handleDesktopLogoQueryChange);
-
 		return () => {
 			window.removeEventListener('popstate', handlePopState);
 			window.removeEventListener('astro:before-preparation', handleAstroBeforePreparation, true);
 			document.removeEventListener('astro:before-swap', handleAstroBeforeSwap);
-			desktopLogoQuery.removeEventListener('change', handleDesktopLogoQueryChange);
 		};
 	});
 </script>
@@ -962,14 +704,11 @@
 </svelte:head>
 
 <div class="sprite-page-wrapper">
-	{#if showBrowser && !viewingSprite}
-		<div class="browser-container" in:fly={{ x: -100, duration: 200 }} out:fly={{ x: -100, duration: 200 }}>
-			<!-- 3D Logo Effect - only mounted on desktop-width viewports, not just
-			     hidden with CSS, so mobile never pays for the WebGL context/font/geometry -->
+	<div class="browser-container" bind:this={browserEl} class:browser-hidden={!showBrowser || !!viewingSprite}>
+			<!-- Desktop logo, colored by the theme (see .sprites-logo below). Hidden on
+			     phones, which never fetch its masks and show the text logo instead. -->
 			<div class="desktop-logo">
-				{#if isDesktopViewport && Logo3D}
-					<Logo3D />
-				{/if}
+				<div class="sprites-logo" role="img" aria-label="Sprites"></div>
 			</div>
 
 			<!-- Mobile Logo - simple text -->
@@ -1198,6 +937,7 @@
 							</div>
 						{:else if sprites.length > 0}
 							{#each sprites as sprite (sprite.id)}
+								{@const text = spriteCardText(sprite, { localDate: mounted })}
 								<a
 									href={`/sprites/${sprite.id}`}
 									class="sprite-box sprite-glow"
@@ -1212,23 +952,10 @@
 										{/each}
 									</div>
 
-									<div class="sprite-number">
-										{#each sprite._memoized?.spriteNumber || [] as item (item.key)}
-											<span style={item.style}></span>
-										{/each}
-									</div>
+									<div class="sprite-number">{@html text.number}</div>
 
 									<div class="sprite-title">
-										<div id="author" class="sprite-text">
-											{#each sprite._memoized?.title || [] as item (item.key)}
-												{#if item.isNewline}
-													<div class="sprite-newline" style="display: block;
-													width: 100%;"></div>
-												{:else}
-													<span style={item.style}></span>
-												{/if}
-											{/each}
-										</div>
+										<div id="author" class="sprite-text">{@html text.title}</div>
 									</div>
 
 									<div class="sprite-image">
@@ -1239,48 +966,23 @@
 									</div>
 
 									<div class="sprite-author">
-										<div class="sprite-text">
-											{#each sprite._memoized?.author || [] as item (item.key)}
-												<span style={item.style}></span>
-											{/each}
-										</div>
+										<div class="sprite-text">{@html text.author}</div>
 									</div>
 
 									<div class="sprite-stats">
-										<div class="sprite-text">
-											{#each sprite._memoized?.gameName || [] as item (item.key)}
-												{#if item.isNewline}
-													<div class="sprite-newline" style="display: block;
-													width: 100%;"></div>
-												{:else}
-													<span style={item.style}></span>
-												{/if}
-											{/each}
-										</div>
+										<div class="sprite-text">{@html text.gameName}</div>
 									</div>
 
 									<div class="sprite-stats">
-										<div class="sprite-text">
-											{#each sprite._memoized?.blockType || [] as item (item.key)}
-												<span style={item.style}></span>
-											{/each}
-										</div>
+										<div class="sprite-text">{@html text.dimensions}</div>
 									</div>
 
 									<div class="sprite-stats">
-										<div class="sprite-text">
-											{#each sprite._memoized?.createdDate || [] as item (item.key)}
-												<span style={item.style}></span>
-											{/each}
-										</div>
+										<div class="sprite-text">{@html text.createdDate}</div>
 									</div>
 
 									<div class="sprite-stats">
-										<div class="sprite-text">
-											{#each sprite._memoized?.fileSize || [] as item (item.key)}
-												<span style={item.style}></span>
-											{/each}
-										</div>
+										<div class="sprite-text">{@html text.fileSize}</div>
 									</div>
 								</a>
 							{/each}
@@ -1306,7 +1008,6 @@
 				</div>
 			</div>
 		</div>
-	{/if}
 
 	{#if viewingSprite}
 		<div class="viewer-container" in:fly={{ x: 100, duration: 200 }} out:fly={{ x: 100, duration: 200 }}>
@@ -1332,6 +1033,14 @@
 		width: 100%;
 	}
 
+	/* The grid while a sprite is open. content-visibility: hidden (not display: none)
+	   skips its rendering but keeps its styles and layout, so bringing it back doesn't
+	   re-style and re-lay-out every card. Size containment collapses it to 0 height;
+	   its content is also left out of tab order, find-in-page and the accessibility tree. */
+	.browser-hidden {
+		content-visibility: hidden;
+	}
+
 	.viewer-container {
 		display: flex;
 		flex-direction: column;
@@ -1341,9 +1050,49 @@
 
 	/* Logo visibility control */
 	.desktop-logo {
-		display: block;
-		/* Reserve Logo3D's .three-container height before it (lazily) mounts. */
-		min-height: 200px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 200px;
+		overflow: hidden;
+	}
+
+	/* A pre-rendered still of the old three.js logo, which redrew WebGL every frame on
+	   the main thread and so also forced the theme backdrop and the whole grid through
+	   a main-thread frame 60 times a second. It's two alpha masks - the logo's light
+	   and dark parts, made by scripts/generate-sprites-logo.mjs - painted in the
+	   theme's font color and a darkened header color; stacked dark-then-light they
+	   composite exactly like the two-tone render.
+	   Full size (946x200) from a 900px-wide column, shrinking with it down to 55%, the
+	   same scaling the three.js logo used before the mobile breakpoint. */
+	.sprites-logo {
+		position: relative;
+		flex: none;
+		width: clamp(calc(946px * 0.55), calc(100% * 946 / 900), 946px);
+		aspect-ratio: 946 / 200;
+	}
+
+	.sprites-logo::before,
+	.sprites-logo::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		-webkit-mask-size: 100% 100%;
+		mask-size: 100% 100%;
+		-webkit-mask-repeat: no-repeat;
+		mask-repeat: no-repeat;
+	}
+
+	.sprites-logo::before {
+		background-color: color-mix(in srgb, var(--page-color) 60%, black);
+		-webkit-mask-image: -webkit-image-set(url('/img/sprites-logo-dark-1x.png') 1x, url('/img/sprites-logo-dark-2x.png') 2x);
+		mask-image: image-set(url('/img/sprites-logo-dark-1x.png') 1x, url('/img/sprites-logo-dark-2x.png') 2x);
+	}
+
+	.sprites-logo::after {
+		background-color: var(--font-color);
+		-webkit-mask-image: -webkit-image-set(url('/img/sprites-logo-light-1x.png') 1x, url('/img/sprites-logo-light-2x.png') 2x);
+		mask-image: image-set(url('/img/sprites-logo-light-1x.png') 1x, url('/img/sprites-logo-light-2x.png') 2x);
 	}
 
 	.mobile-logo {

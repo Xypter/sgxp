@@ -1,11 +1,15 @@
 ---
 import FrontPageLayout from "../layouts/FrontPageLayout.astro";
 import SmackJeevesArchiveTable from "../components/SmackJeevesArchiveTable.svelte";
+import { resolveUser } from "../lib/userCache";
+
+// Bookmarks are for logged-in readers only.
+const { user } = await resolveUser(Astro.cookies);
 ---
 
 <FrontPageLayout title="Smack Jeeves Archive">
   <div class="archive-page">
-    <SmackJeevesArchiveTable client:load />
+    <SmackJeevesArchiveTable client:load loggedIn={!!user} />
   </div>
 </FrontPageLayout>
 

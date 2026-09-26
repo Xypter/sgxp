@@ -1,158 +1,94 @@
-import { charMap, altNumberMap } from './charMap';
+import { charMap, altNumberMap, type CharacterMap } from './charMap';
 
-// Extracted from SpriteBrowser.svelte so the same bitmap-font "sprite text" rendering
-// can be reused by SpriteCard.svelte for the "More By This Artist" recommendations.
+// The sprite cards' bitmap-font "sprite text" (card number, title, author, game, size,
+// date, file size), shared by every card grid: SpriteBrowser, SpriteCard ("More By This
+// Artist"), and the profile page's ProfileSprites/ProfileFavorites.
+//
+// Each character is an empty <span> showing its cell of the glyph atlas. The spans only
+// carry a class (`sg-<code point>` for charMap, `sn-<code point>` for altNumberMap); the
+// cell sizes and atlas offsets live once in a stylesheet generated from charMap by
+// glyphStylesheet(), served as /sprite-glyphs.css. (They used to be ~250-character inline
+// styles on every one of the ~7,500 spans on /sprites - most of the page's HTML, and slow
+// to parse and style.) The text is built as an HTML string and rendered with {@html}, so
+// it comes with the server-rendered page, and hydrating a card doesn't mean hydrating
+// ~100 spans one by one.
 
-export interface SpriteTextItem {
-	key: string;
-	style?: string;
-	isNewline?: boolean;
+const ATLAS_URL = 'https://cdn.sgxp.me/media/general/35/DFC6vib-1766650806712.png';
+const ATLAS_SIZE = '400px 14px';
+
+const classPrefix = (characterMap: CharacterMap) => (characterMap === altNumberMap ? 'sn' : 'sg');
+
+// Only characters in the map produce markup - which is what makes the {@html} output safe
+// for any text: nothing from the input ever reaches the HTML except as a known class name.
+function glyph(char: string, characterMap: CharacterMap): string {
+	if (!characterMap[char]) return '';
+	const prefix = classPrefix(characterMap);
+	return `<span class="${prefix} ${prefix}-${char.codePointAt(0)}"></span>`;
 }
 
-function createCharacterSprite(char: string, characterMap: any, isAltNumberMap: boolean, index: number): SpriteTextItem | null {
-	if (characterMap[char]) {
-		const charData = characterMap[char];
-		const width = charData.width;
-		const height = charData.height;
-		const offsetX = charData.offsetX || 0;
-		const offsetY = charData.offsetY || 0;
-		const marginRight = isAltNumberMap ? '0px' : '1px';
+const NEWLINE = '<div class="sprite-newline"></div>';
 
-		return {
-			key: `${char}-${index}`,
-			style: `display: inline-block; width: ${width}px; height: ${height}px; background-image: url('https://cdn.sgxp.me/media/general/35/DFC6vib-1766650806712.png');
- background-size: 400px 14px; background-position: ${charData.x}px ${charData.y}px; margin-left: ${offsetX}px; margin-right: ${marginRight}; margin-top: ${offsetY}px;`
-		};
-	}
-	return null;
+export function textToSprite(text: string | null | undefined, characterMap: CharacterMap = charMap): string {
+	if (!text || typeof text !== 'string') return '';
+	let html = '';
+	for (const char of text.toUpperCase()) html += glyph(char, characterMap);
+	return html;
 }
 
-export function textToSprite(text: string | null | undefined): SpriteTextItem[] {
-	if (!text || typeof text !== 'string') {
-		return [];
+export function formattedNumberToAltSprite(numString: string | null | undefined): string {
+	if (!numString || typeof numString !== 'string') return '';
+	return textToSprite(numString, altNumberMap);
+}
+
+// Width in atlas pixels, including the 1px gap between charMap letters (altNumberMap has none).
+function wordWidth(word: string, characterMap: CharacterMap, gap: number): number {
+	let width = 0;
+	for (let i = 0; i < word.length; i++) {
+		width += characterMap[word[i]]?.width ?? 4; // unknown characters count as 4px
+		if (i < word.length - 1) width += characterMap[word[i]] ? gap : 1;
 	}
-	const characters = text.toUpperCase().split('');
-	return characters
-		.map((char, index) => createCharacterSprite(char, charMap, false, index))
-		.filter((item): item is SpriteTextItem => item !== null);
+	return width;
+}
+
+// Word-wraps to maxWidth pixels, ending with "..." if the text needs more than maxLines.
+export function textToSpriteWithWrapping(
+	text: string | null | undefined,
+	characterMap: CharacterMap,
+	maxWidth: number | null = null,
+	maxLines: number | null = null
+): string {
+	if (!text || typeof text !== 'string') return '';
+	if (!maxWidth) return textToSprite(text, characterMap);
+
+	const gap = characterMap === altNumberMap ? 0 : 1;
+	let html = '';
+	let lineWidth = 0;
+	let line = 0;
+	for (const word of text.toUpperCase().split(' ')) {
+		const width = wordWidth(word, characterMap, gap);
+		const spaceWidth = lineWidth > 0 ? (characterMap[' ']?.width ?? 3) + gap : 0;
+
+		if (lineWidth > 0 && lineWidth + spaceWidth + width > maxWidth) {
+			line++;
+			if (maxLines && line >= maxLines) {
+				html += textToSprite('...', characterMap);
+				break;
+			}
+			html += NEWLINE;
+			lineWidth = 0;
+		}
+		if (lineWidth > 0) {
+			html += glyph(' ', characterMap);
+			lineWidth += spaceWidth;
+		}
+		html += textToSprite(word, characterMap);
+		lineWidth += width;
+	}
+	return html;
 }
 
 export function count(number: number): string {
-	if (number <= 9) {
-		return '0000' + number;
-	} else if (number > 9 && number <= 99) {
-		return '000' + number;
-	} else if (number > 99 && number <= 999) {
-		return '00' + number;
-	} else if (number > 999 && number <= 9999) {
-		return '0' + number;
-	} else {
-		return number.toString();
-	}
-}
-
-export function formattedNumberToAltSprite(numString: string | null | undefined): SpriteTextItem[] {
-	if (!numString || typeof numString !== 'string') {
-		return [];
-	}
-	const digits = numString.split('');
-	return digits
-		.map((digit, index) => createCharacterSprite(digit, altNumberMap, true, index))
-		.filter((item): item is SpriteTextItem => item !== null);
-}
-
-export function textToSpriteWithWrapping(
-	text: string | null | undefined,
-	characterMap: any,
-	maxWidth: number | null = null,
-	maxLines: number | null = null
-): SpriteTextItem[] {
-	if (!text || typeof text !== 'string') {
-		return [];
-	}
-	const input = text.toString().toUpperCase();
-	const isAltNumberMap = characterMap === altNumberMap;
-	if (!maxWidth) {
-		const characters = input.split('');
-		return characters
-			.map((char, index) => createCharacterSprite(char, characterMap, isAltNumberMap, index))
-			.filter((item): item is SpriteTextItem => item !== null);
-	}
-
-	const words = input.split(' ');
-	let currentLineWidth = 0;
-	let currentLine = 0;
-	let elements: SpriteTextItem[] = [];
-	let charIndex = 0;
-	for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
-		const word = words[wordIndex];
-		let wordWidth = 0;
-		for (let i = 0; i < word.length; i++) {
-			const char = word[i];
-			if (characterMap[char]) {
-				wordWidth += characterMap[char].width;
-				if (!isAltNumberMap && i < word.length - 1) {
-					wordWidth += 1;
-				}
-			} else {
-				wordWidth += 4;
-				if (i < word.length - 1) {
-					wordWidth += 1;
-				}
-			}
-		}
-
-		let spaceWidth = 0;
-		if (currentLineWidth > 0) {
-			spaceWidth = characterMap[' '] ? characterMap[' '].width : 3;
-			if (!isAltNumberMap) {
-				spaceWidth += 1;
-			}
-		}
-
-		if (currentLineWidth > 0 && currentLineWidth + spaceWidth + wordWidth > maxWidth) {
-			currentLine++;
-			if (maxLines && currentLine >= maxLines) {
-				const ellipsis = '...';
-				for (let i = 0; i < ellipsis.length; i++) {
-					const char = ellipsis[i];
-					const sprite = createCharacterSprite(char, characterMap, isAltNumberMap, charIndex++);
-					if (sprite) elements.push(sprite);
-				}
-				break;
-			}
-			elements.push({
-				key: `newline-${currentLine}`,
-				isNewline: true
-			});
-			currentLineWidth = 0;
-		}
-
-		if (currentLineWidth > 0) {
-			const spaceSprite = createCharacterSprite(' ', characterMap, isAltNumberMap, charIndex++);
-			if (spaceSprite) elements.push(spaceSprite);
-			currentLineWidth += spaceWidth;
-		}
-
-		for (let i = 0; i < word.length; i++) {
-			const char = word[i];
-			const sprite = createCharacterSprite(char, characterMap, isAltNumberMap, charIndex++);
-			if (sprite) elements.push(sprite);
-			if (characterMap[char]) {
-				currentLineWidth += characterMap[char].width;
-				if (!isAltNumberMap && i < word.length - 1) {
-					currentLineWidth += 1;
-				}
-			} else {
-				currentLineWidth += 4;
-				if (i < word.length - 1) {
-					currentLineWidth += 1;
-				}
-			}
-		}
-	}
-
-	return elements;
+	return String(number).padStart(5, '0');
 }
 
 export function formatBytes(bytes: number, decimals: number = 2): string {
@@ -162,6 +98,62 @@ export function formatBytes(bytes: number, decimals: number = 2): string {
 	const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
 	const i = Math.floor(Math.log(bytes) / Math.log(k));
 	return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+}
+
+export interface SpriteCardText {
+	number: string;
+	title: string;
+	author: string;
+	gameName: string;
+	dimensions: string;
+	createdDate: string;
+	fileSize: string;
+}
+
+// Built once: toLocaleDateString() constructs a new formatter on every call, which was
+// most of the grid's hydration time (~330ms of it at 6x CPU throttling, for 73 cards
+// formatted twice - server UTC, then local once mounted).
+const DATE_OPTIONS: Intl.DateTimeFormatOptions = { year: '2-digit', month: '2-digit', day: '2-digit' };
+let localDateFormat: Intl.DateTimeFormat | undefined;
+let utcDateFormat: Intl.DateTimeFormat | undefined;
+
+// All of a card's text fields as glyph HTML. The upload date is shown in the viewer's
+// own timezone, which the server can't know - server renders pass localDate: false to
+// get UTC, and components switch to local once mounted (only dates near midnight differ).
+export function spriteCardText(sprite: any, { localDate = true }: { localDate?: boolean } = {}): SpriteCardText {
+	const format = localDate
+		? (localDateFormat ??= new Intl.DateTimeFormat('en-US', DATE_OPTIONS))
+		: (utcDateFormat ??= new Intl.DateTimeFormat('en-US', { ...DATE_OPTIONS, timeZone: 'UTC' }));
+	const date = sprite.createdAt ? format.format(new Date(sprite.createdAt)) : '';
+	return {
+		number: formattedNumberToAltSprite(count(sprite.id)),
+		title: textToSpriteWithWrapping(sprite.title || '', charMap, 100, 2),
+		author: textToSprite(sprite.author?.displayName || sprite.author?.username || ''),
+		gameName: textToSpriteWithWrapping(sprite.section?.name || '', charMap, 150, 1),
+		dimensions: textToSprite(sprite.image?.width && sprite.image?.height ? `${sprite.image.width} X ${sprite.image.height}` : ''),
+		createdDate: textToSprite(date),
+		fileSize: textToSprite(sprite.image?.filesize ? formatBytes(sprite.image.filesize) : '0 Bytes'),
+	};
+}
+
+// The stylesheet for the glyph classes above (served by src/pages/sprite-glyphs.css.ts).
+export function glyphStylesheet(): string {
+	const rules = [
+		`.sg,.sn{display:inline-block;background-image:url('${ATLAS_URL}');background-size:${ATLAS_SIZE}}`,
+		'.sg{margin-right:1px}',
+		'.sn{margin-right:0}',
+		'.sprite-newline{display:block;width:100%}',
+	];
+	for (const characterMap of [charMap, altNumberMap]) {
+		const prefix = classPrefix(characterMap);
+		for (const [char, g] of Object.entries(characterMap)) {
+			let rule = `width:${g.width}px;height:${g.height}px;background-position:${g.x}px ${g.y}px`;
+			if (g.offsetX) rule += `;margin-left:${g.offsetX}px`;
+			if (g.offsetY) rule += `;margin-top:${g.offsetY}px`;
+			rules.push(`.${prefix}-${char.codePointAt(0)}{${rule}}`);
+		}
+	}
+	return rules.join('\n') + '\n';
 }
 
 export { charMap };

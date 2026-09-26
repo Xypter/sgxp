@@ -7,6 +7,7 @@ import {
   leavePresence,
   getPresenceSnapshot,
 } from '../../../lib/presenceHub';
+import { normalizeCanChoice, type SodaCanChoice } from '../../../lib/sodaCan';
 
 export const prerender = false;
 
@@ -48,11 +49,14 @@ export const GET: APIRoute = async ({ request, cookies, url }) => {
   let identityId: string;
   let isMember: boolean;
   let displayName: string | null;
+  let can: SodaCanChoice | null = null;
 
   if (user) {
     identityId = `user:${user.id}`;
     isMember = true;
-    displayName = user.username ?? user.name ?? null;
+    // Public display name first (what profiles show), handle as fallback
+    displayName = user.displayName || user.username || user.name || null;
+    can = normalizeCanChoice(user.sodaCan);
   } else {
     let anonId = cookies.get(ANON_COOKIE)?.value;
     if (!anonId) {
@@ -90,7 +94,7 @@ export const GET: APIRoute = async ({ request, cookies, url }) => {
       }, HEARTBEAT_MS);
 
       const doJoin = () => {
-        joinPresence(identityId, isMember, displayName);
+        joinPresence(identityId, isMember, displayName, can);
         hasJoined = true;
         try {
           controller.enqueue(

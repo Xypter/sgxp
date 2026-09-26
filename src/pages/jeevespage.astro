@@ -1,11 +1,15 @@
 ---
 import FrontPageLayout from "../layouts/FrontPageLayout.astro";
 import JeevesViewer from "../components/jeeves/JeevesViewer.svelte";
+import { resolveUser } from "../lib/userCache";
+
+// Bookmarks are for logged-in readers only.
+const { user } = await resolveUser(Astro.cookies);
 ---
 
 <FrontPageLayout title="Jeeves Archive">
   <div class="jeeves-page-container">
-    <JeevesViewer client:load />
+    <JeevesViewer client:load loggedIn={!!user} />
   </div>
 </FrontPageLayout>
 

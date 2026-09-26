@@ -6,6 +6,7 @@
   import ProfileSocialLinks from './ProfileSocialLinks.svelte';
   import ProfileFavorites from './ProfileFavorites.svelte';
   import EditProfileModal from './EditProfileModal.svelte';
+  import ProfileSodaCan from './ProfileSodaCan.svelte';
 
   // Props
   let {
@@ -25,6 +26,10 @@
   let loading = $state(!initialUser && !initialError);
   let error = $state(initialError);
   let editModalOpen = $state(false);
+  // Bumped after each save to remount the edit modal, so it starts from the
+  // saved profile instead of keeping stale form state (picked files, pending
+  // deletes) from the last edit.
+  let editModalKey = $state(0);
 
   const API_BASE_URL = "https://cms.sgxp.me/api";
 
@@ -88,13 +93,13 @@
     // Handle both response formats: { doc: {...} } or direct user object
     const updatedUser = updatedUserData.doc || updatedUserData;
 
-    // Update the local state
+    // Update in place - no reload. The update API returns the user at the
+    // same depth as the page's own fetch (media populated) and has already
+    // invalidated the server-side profile cache, so there's nothing a reload
+    // would add besides refetching every section.
     user = updatedUser;
-
-    console.log('[ProfileViewer] Updated local user state:', user);
-
-    // Force page reload to ensure all caches are cleared and fresh data is loaded
-    window.location.href = `/profile?id=${user.id}&refresh=1`;
+    editModalOpen = false;
+    editModalKey++;
   }
 
   $effect(() => {
@@ -161,6 +166,9 @@
     <div class="profile-content-grid">
       <!-- Left Column: Info & Stats -->
       <div class="profile-left-column">
+        <!-- Soda-Kan (their can in the live "who's online" bar) -->
+        <ProfileSodaCan can={user.sodaCan} onCustomize={isOwnProfile ? () => (editModalOpen = true) : null} />
+
         <!-- User Info Section -->
         <div class="profile-content-title">
           <Shield class="w-5 h-5 inline-block mr-2" />
@@ -223,7 +231,9 @@
 
     <!-- Edit Profile Modal -->
     {#if isOwnProfile}
-      <EditProfileModal bind:open={editModalOpen} {user} onSave={handleProfileSave} />
+      {#key editModalKey}
+        <EditProfileModal bind:open={editModalOpen} {user} onSave={handleProfileSave} />
+      {/key}
     {/if}
   {:else}
     <div class="profile-content-title">Not Found</div>

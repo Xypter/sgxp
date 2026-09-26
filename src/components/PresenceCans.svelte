@@ -1,138 +1,101 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { SvelteMap } from 'svelte/reactivity';
+  import { FRAME_SIZE, canSpriteUrl, type SodaCanChoice } from '../lib/sodaCan';
+  import { MIN_BAR, STAGE_MAX, type CanLayer, type CanScale } from '../lib/presenceStage';
+  import PixelText from './PixelText.svelte';
+
+  // The server (presenceHub.ts / presenceStage.ts) owns the whole scene: where
+  // every can stands, which layer and size it's in, and when it hops. This
+  // component only maps that onto this screen's play area and animates it, so
+  // every viewer sees the same stage.
 
   interface PresenceEntry {
     id: string;
     isMember: boolean;
     displayName: string | null;
-    joinedAt: number;
+    can: SodaCanChoice | null;
+    x: number; // bar units; see presenceStage.ts
+    dir: 1 | -1;
+    layer: CanLayer;
+    scale: CanScale;
   }
 
-  // Native sprite frame sizes - idle is the resting pose, hop is the
-  // wind-up/thrust pose (wider + squashed down).
-  const SCALE = 2;
-  const IDLE_SIZE = { w: 5 * SCALE, h: 8 * SCALE };
-  const HOP_SIZE = { w: 7 * SCALE, h: 6 * SCALE };
-  const FRAME_BOX = {
-    w: Math.max(IDLE_SIZE.w, HOP_SIZE.w),
-    h: Math.max(IDLE_SIZE.h, HOP_SIZE.h),
-  };
+  interface PresenceSnapshot {
+    total: number;
+    hidden: number;
+    entries: PresenceEntry[];
+  }
 
-  // One shared stage, sized to whatever space it's actually given in the
-  // navbar (measured via bind:clientWidth below) rather than a hardcoded
-  // width - it never grows with the number of cans present, only with the
-  // available layout space.
-  let stageWidth = $state(200); // fallback until the real width is measured
-  let travelRange = $derived(Math.max(20, stageWidth - FRAME_BOX.w));
+  interface CanView extends PresenceEntry {
+    phase: 'rest' | 'crouch' | 'leap';
+    restX: number; // where it's standing right now (x is where it's headed)
+    fromX: number; // leap start
+    until: number; // performance.now() when the current phase ends
+  }
 
-  const DRIVER_MS = 50; // how often we check whether any can's phase should advance
+  const MAX_SPRITE_H = FRAME_SIZE.idle.h * 2; // tallest frame at 2x
+  const ARC: Record<CanScale, number> = { 2: 10, 1: 5 }; // leap height per scale
   const CROUCH_MS = 180; // wind-up pose duration, planted in place
   const LEAP_MS = 270; // airborne duration, arcing from the old spot to the new one
-  const HOP_STEP = 14; // px advanced per landed hop
-  const ARC_HEIGHT = 10; // px peak height of the leap above resting position
-  const MIN_REST_MS = 1000; // shortest wait between a can's hops
-  const MAX_REST_MS = 5000; // longest wait between a can's hops
-  const SPAWN_MIN_SPACING = FRAME_BOX.w * 1.5; // desired px gap from other cans when spawning
-  const SPAWN_ATTEMPTS = 20; // random candidates tried before settling for the least-bad one
+  const DRIVER_MS = 50; // how often we check whether any can's phase should advance
+  // Headroom for the "you" arrow riding above the can at the top of a leap:
+  // 2px gap + 4px arrow + 2px bob. The bar is vertically centered in the
+  // navbar, so it grows by twice this and the cans sit this much higher off
+  // its bottom - net effect, the cans stay exactly where they were.
+  const MARKER_SPACE = 8;
+  const MORE_ID = '__more'; // tooltip target id for the "+N" chip
 
-  type Phase = 'crouch' | 'leap' | 'rest';
+  let barWidth = $state(0);
+  let stageW = $derived(Math.min(barWidth, STAGE_MAX));
 
-  interface CanState {
-    phase: Phase;
-    x: number; // authoritative resting position
-    fromX: number; // leap start (only meaningful mid-leap)
-    toX: number; // leap target (only meaningful mid-leap)
-    dir: 1 | -1;
-    until: number; // performance.now() timestamp when the current phase should end
-  }
-
-  let presences = $state<PresenceEntry[]>([]);
+  let total = $state(0);
+  let hidden = $state(0);
   let selfId = $state<string | null>(null);
-  // Plain `$state(new Map())` does NOT get Svelte's reactive instrumentation
-  // - only Map/Set imported from 'svelte/reactivity' do. Random per-hop wait
-  // times mean each can's schedule is now genuinely stateful (not derivable
-  // from a shared clock tick the way the old fixed-cadence version was), so
-  // this needs to actually be reactive for the UI to see new/removed cans.
-  const canStates = new SvelteMap<string, CanState>();
+  // Only Map/Set from 'svelte/reactivity' are reactive; every change below
+  // replaces a can's object rather than mutating it, which SvelteMap tracks.
+  const cans = new SvelteMap<string, CanView>();
+  let reducedMotion = false;
 
-  function randomRestMs(): number {
-    return MIN_REST_MS + Math.random() * (MAX_REST_MS - MIN_REST_MS);
-  }
-
-  // Pure independent Math.random() per can (the old approach) has a real
-  // chance of dropping two or more cans within a few px of each other,
-  // especially with several cans crammed into a narrow navbar - on a page
-  // refresh every can spawns in the same synchronous pass, so that
-  // collision is common, not rare. Instead of one random draw, try several
-  // candidates and keep whichever lands furthest from every already-placed
-  // can - still a different layout every refresh, but spread out.
-  function pickSpawnX(occupiedX: number[]): number {
-    if (occupiedX.length === 0) return Math.random() * travelRange;
-    let best = Math.random() * travelRange;
-    let bestMinDist = -Infinity;
-    for (let i = 0; i < SPAWN_ATTEMPTS; i++) {
-      const candidate = Math.random() * travelRange;
-      const minDist = Math.min(...occupiedX.map((x) => Math.abs(x - candidate)));
-      if (minDist > bestMinDist) {
-        bestMinDist = minDist;
-        best = candidate;
-      }
-      if (bestMinDist >= SPAWN_MIN_SPACING) break;
-    }
-    return best;
-  }
-
-  function createCanState(occupiedX: number[]): CanState {
-    const x = pickSpawnX(occupiedX);
-    return {
-      phase: 'rest',
-      x,
-      fromX: x,
-      toX: x,
-      dir: Math.random() < 0.5 ? 1 : -1,
-      until: performance.now() + randomRestMs(),
-    };
-  }
-
-  function syncCanStates(ids: string[]) {
-    const idSet = new Set(ids);
-    for (const id of idSet) {
-      if (!canStates.has(id)) {
-        const occupiedX = [...canStates.values()].map((s) => s.x);
-        canStates.set(id, createCanState(occupiedX));
+  function applySnapshot(snapshot: PresenceSnapshot) {
+    total = snapshot.total;
+    hidden = snapshot.hidden;
+    const seen = new Set<string>();
+    for (const entry of snapshot.entries) {
+      seen.add(entry.id);
+      const prev = cans.get(entry.id);
+      if (prev) {
+        // A resting can slides to its (possibly nudged) spot; one mid-hop
+        // just lands wherever the server now says.
+        cans.set(entry.id, { ...prev, ...entry, restX: prev.phase === 'rest' ? entry.x : prev.restX });
+      } else {
+        cans.set(entry.id, { ...entry, phase: 'rest', restX: entry.x, fromX: entry.x, until: 0 });
       }
     }
-    for (const id of [...canStates.keys()]) {
-      if (!idSet.has(id)) canStates.delete(id);
-    }
+    for (const id of [...cans.keys()]) if (!seen.has(id)) cans.delete(id);
   }
 
-  // `$state(...)` is only valid as a variable-declaration initializer or a
-  // class field, so it can't be returned from createCanState() to make each
-  // stored value independently reactive. Instead every transition below
-  // writes a brand-new object back via canStates.set() - SvelteMap tracks a
-  // key's value being *replaced*, just not a stored object being mutated in
-  // place, so we replace rather than mutate.
-  function advanceCanStates() {
+  function applyHops(hops: { id: string; x: number; dir: 1 | -1 }[]) {
     const now = performance.now();
+    for (const hop of hops) {
+      const c = cans.get(hop.id);
+      if (!c) continue;
+      if (reducedMotion) {
+        cans.set(hop.id, { ...c, x: hop.x, restX: hop.x, dir: hop.dir });
+      } else {
+        const from = c.phase === 'rest' ? c.restX : c.x;
+        cans.set(hop.id, { ...c, x: hop.x, dir: hop.dir, fromX: from, restX: from, phase: 'crouch', until: now + CROUCH_MS });
+      }
+    }
+  }
 
-    for (const [id, state] of canStates) {
-      if (state.phase === 'rest' && now >= state.until) {
-        canStates.set(id, { ...state, phase: 'crouch', until: now + CROUCH_MS });
-      } else if (state.phase === 'crouch' && now >= state.until) {
-        let toX = state.x + state.dir * HOP_STEP;
-        let dir = state.dir;
-        if (toX >= travelRange) {
-          toX = travelRange;
-          dir = -1;
-        } else if (toX <= 0) {
-          toX = 0;
-          dir = 1;
-        }
-        canStates.set(id, { ...state, fromX: state.x, toX, dir, phase: 'leap', until: now + LEAP_MS });
-      } else if (state.phase === 'leap' && now >= state.until) {
-        canStates.set(id, { ...state, x: state.toX, phase: 'rest', until: now + randomRestMs() });
+  function advancePhases() {
+    const now = performance.now();
+    for (const [id, c] of cans) {
+      if (c.phase === 'crouch' && now >= c.until) {
+        cans.set(id, { ...c, phase: 'leap', until: now + LEAP_MS });
+      } else if (c.phase === 'leap' && now >= c.until) {
+        cans.set(id, { ...c, phase: 'rest', restX: c.x });
       }
     }
   }
@@ -153,10 +116,15 @@
       // paying the join delay, same as a first-time visitor.
     }
 
+    reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const source = new EventSource(trusted ? '/api/presence/stream?fast=1' : '/api/presence/stream');
 
     source.addEventListener('presence-update', (event: MessageEvent) => {
-      presences = JSON.parse(event.data);
+      applySnapshot(JSON.parse(event.data));
+    });
+
+    source.addEventListener('presence-hops', (event: MessageEvent) => {
+      applyHops(JSON.parse(event.data));
     });
 
     source.addEventListener('presence-self', (event: MessageEvent) => {
@@ -169,94 +137,172 @@
       }
     });
 
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const driver = prefersReducedMotion ? null : setInterval(advanceCanStates, DRIVER_MS);
+    const driver = reducedMotion ? null : setInterval(advancePhases, DRIVER_MS);
 
     return () => {
-      source?.close();
+      source.close();
       if (driver) clearInterval(driver);
     };
   });
 
-  $effect(() => {
-    syncCanStates(presences.map((p) => p.id));
-  });
-
-  // bind:clientWidth only reports the real measured width *after* the first
-  // render (it starts at the 200px fallback), but cans can already exist by
-  // then - their starting x was randomized against that stale, much-smaller
-  // range, and hopping only nudges a can 14px at a time, so they'd take
-  // minutes to visibly reach the real width on their own. Rescale everyone
-  // proportionally whenever the measured range actually changes (first
-  // real measurement, or a later navbar resize) so they redistribute
-  // immediately instead of crawling there hop by hop.
-  let lastTravelRange = travelRange;
-  $effect(() => {
-    const tr = travelRange;
-    if (tr !== lastTravelRange && lastTravelRange > 0) {
-      const ratio = tr / lastTravelRange;
-      for (const [id, state] of canStates) {
-        canStates.set(id, {
-          ...state,
-          x: Math.min(tr, state.x * ratio),
-          fromX: Math.min(tr, state.fromX * ratio),
-          toX: Math.min(tr, state.toX * ratio),
-        });
-      }
-    }
-    lastTravelRange = tr;
-  });
-
-  // Pairs each presence with its can state, skipping the one-tick window
-  // between a presence appearing and its state being created by the
-  // syncCanStates effect below.
+  // Everything on stage, background layer first so members draw on top.
+  // Folded cans stay off the stage - except your own, which you always see
+  // (drawn like a background visitor).
   let visibleCans = $derived(
-    presences
-      .map((presence) => ({ presence, state: canStates.get(presence.id) }))
-      .filter((entry): entry is { presence: PresenceEntry; state: CanState } => !!entry.state)
+    [...cans.values()]
+      .filter((c) => c.layer !== 'hidden' || c.id === selfId)
+      .sort((a, b) => Number(a.layer === 'front') - Number(b.layer === 'front'))
   );
+
+  const toPx = (u: number) => Math.round((u / MIN_BAR) * stageW);
+
+  function canStyle(c: CanView, scale: CanScale): string {
+    const frame = c.phase === 'crouch' ? 'hop' : 'idle';
+    const half = Math.round((FRAME_SIZE[frame].w * scale) / 2);
+    const idleHalf = Math.round((FRAME_SIZE.idle.w * scale) / 2);
+    const from = toPx(c.fromX) - idleHalf;
+    const to = toPx(c.x) - idleHalf;
+    return `
+      --leap-from-x: ${from}px;
+      --leap-mid-x: ${Math.round((from + to) / 2)}px;
+      --leap-to-x: ${to}px;
+      --leap-arc-height: ${ARC[scale]}px;
+      --leap-duration: ${LEAP_MS}ms;
+      --px: ${scale}px;
+      transform: translate(${toPx(c.restX) - half}px, 0px);
+    `;
+  }
+
+  const nameOf = (c: PresenceEntry) => (c.isMember ? (c.displayName ?? 'A member') : 'Visitor');
+
+  // Hover tooltip (styled like the Jeeves activity chart's). The bar clips
+  // its overflow, so the tooltip is portaled to <body> as position: fixed and
+  // follows the hovered can every frame while it hops.
+  const TIP_GAP = 6; // px between the can's feet and the tooltip
+  const TIP_EDGE = 8; // px the tooltip keeps from the viewport edges
+  let hoveredId = $state<string | null>(null);
+  let hoveredEl: HTMLElement | null = null;
+  let tipPos = $state<{ x: number; y: number } | null>(null);
+  let tipWidth = $state(0);
+  let tipFrame = 0;
+
+  function trackTip() {
+    if (!hoveredEl) return;
+    const r = hoveredEl.getBoundingClientRect();
+    tipPos = { x: r.left + r.width / 2, y: r.bottom + TIP_GAP };
+    tipFrame = requestAnimationFrame(trackTip);
+  }
+
+  function showTip(id: string, el: HTMLElement) {
+    cancelAnimationFrame(tipFrame);
+    hoveredId = id;
+    hoveredEl = el;
+    trackTip();
+  }
+
+  function hideTip(id?: string) {
+    if (id && id !== hoveredId) return;
+    cancelAnimationFrame(tipFrame);
+    hoveredId = null;
+    hoveredEl = null;
+    tipPos = null;
+  }
+
+  // The hovered can can vanish mid-hover (that person left, or got folded
+  // into "+N") - drop its tip.
+  $effect(() => {
+    if (!hoveredId) return;
+    const gone = hoveredId === MORE_ID ? hidden === 0 : !visibleCans.some((c) => c.id === hoveredId);
+    if (gone) hideTip();
+  });
+
+  let hoveredCan = $derived(hoveredId && hoveredId !== MORE_ID ? (cans.get(hoveredId) ?? null) : null);
+  let tipLeft = $derived(
+    tipPos
+      ? Math.min(Math.max(tipPos.x - tipWidth / 2, TIP_EDGE), window.innerWidth - tipWidth - TIP_EDGE)
+      : 0
+  );
+
+  function portal(node: HTMLElement) {
+    document.body.appendChild(node);
+    return { destroy: () => node.remove() };
+  }
 </script>
 
-{#if presences.length > 0}
+{#if total > 0}
   <div
     class="presence-bar"
-    bind:clientWidth={stageWidth}
-    style="height: {FRAME_BOX.h + ARC_HEIGHT + 4}px;"
-    title="{presences.length} browsing SGXP right now"
+    bind:clientWidth={barWidth}
+    style="height: {MAX_SPRITE_H + ARC[2] + 4 + MARKER_SPACE * 2}px; --can-bottom: {3 + MARKER_SPACE}px;"
+    aria-label="{total} browsing SGXP right now"
   >
-    {#each visibleCans as { presence, state } (presence.id)}
-      {#if state}
+    <div class="presence-stage" style="width: {stageW}px;">
+      <div class="presence-floor"></div>
+
+      {#each visibleCans as c (c.id)}
+        {@const scale = c.layer === 'hidden' ? 1 : c.scale}
+        {@const frame = c.phase === 'crouch' ? 'hop' : 'idle'}
         <span
           class="presence-can"
-          class:presence-can--member={presence.isMember}
-          class:presence-can--self={presence.id === selfId}
-          class:presence-can--crouch={state.phase === 'crouch'}
-          class:presence-can--leap={state.phase === 'leap'}
-          style="
-            --leap-from-x: {state.fromX}px;
-            --leap-mid-x: {(state.fromX + state.toX) / 2}px;
-            --leap-to-x: {state.toX}px;
-            --leap-arc-height: {ARC_HEIGHT}px;
-            --leap-duration: {LEAP_MS}ms;
-            transform: translate({state.x}px, 0px);
-          "
-          title={presence.id === selfId
-            ? 'You'
-            : presence.isMember
-              ? (presence.displayName ?? 'A member')
-              : 'A visitor'}
+          class:presence-can--member={c.isMember}
+          class:presence-can--back={c.layer !== 'front'}
+          class:presence-can--rest={c.phase === 'rest'}
+          class:presence-can--leap={c.phase === 'leap'}
+          style={canStyle(c, scale)}
+          role="img"
+          aria-label={c.id === selfId ? 'You' : nameOf(c)}
+          onpointerenter={(e) => showTip(c.id, e.currentTarget)}
+          onpointerleave={() => hideTip(c.id)}
         >
           <img
             class="presence-can-img"
-            class:presence-can-img--flip={state.dir === -1}
-            src={state.phase === 'crouch' ? '/sprites/presence/hop-1.png' : '/sprites/presence/idle-1.png'}
-            width={state.phase === 'crouch' ? HOP_SIZE.w : IDLE_SIZE.w}
-            height={state.phase === 'crouch' ? HOP_SIZE.h : IDLE_SIZE.h}
+            class:presence-can-img--flip={c.dir === -1}
+            src={canSpriteUrl(frame, c.can)}
+            width={FRAME_SIZE[frame].w * scale}
+            height={FRAME_SIZE[frame].h * scale}
             alt=""
           />
+          {#if c.id === selfId}
+            <!-- 3x2 sprite-pixel arrow, drawn at the can's own scale -->
+            <svg class="presence-you-marker" width={3 * scale} height={2 * scale} viewBox="0 0 3 2" shape-rendering="crispEdges" aria-hidden="true">
+              <path d="M0 0h3v1h-1v1h-1v-1h-1z" />
+            </svg>
+          {/if}
+        </span>
+      {/each}
+
+      {#if hidden > 0}
+        <span
+          class="presence-more"
+          role="img"
+          aria-label="{hidden} more browsing"
+          onpointerenter={(e) => showTip(MORE_ID, e.currentTarget)}
+          onpointerleave={() => hideTip(MORE_ID)}
+        >
+          <PixelText text={`+${hidden}`} />
         </span>
       {/if}
-    {/each}
+    </div>
+  </div>
+{/if}
+
+{#if hoveredId && tipPos && (hoveredCan || hoveredId === MORE_ID)}
+  <div
+    class="presence-tooltip"
+    use:portal
+    bind:offsetWidth={tipWidth}
+    style="left: {tipLeft}px; top: {tipPos.y}px;"
+    role="tooltip"
+  >
+    {#if hoveredCan}
+      <div class="presence-tooltip-name">{nameOf(hoveredCan)}</div>
+      {#if hoveredCan.id === selfId}
+        <div class="presence-tooltip-note">That's you!</div>
+      {/if}
+    {:else}
+      <div class="presence-tooltip-name">{hidden} more browsing</div>
+    {/if}
+    <div class="presence-tooltip-note">{total} browsing now</div>
   </div>
 {/if}
 
@@ -269,29 +315,55 @@
     overflow-y: visible;
   }
 
+  /* The shared play area: capped at STAGE_MAX and centered in the bar. */
+  .presence-stage {
+    position: relative;
+    height: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  /* The floor the cans stand on: the same outline every content box uses. */
+  .presence-floor {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--can-bottom, 3px) - var(--border-width, 1px));
+    height: var(--border-width, 1px);
+    background: color-mix(in srgb, var(--page-color, #393e43) 80%, white);
+  }
+
   .presence-can {
     position: absolute;
     left: 0;
-    bottom: 3px;
+    bottom: var(--can-bottom, 3px);
+    z-index: 2;
+    cursor: default;
+    /* Visitors in the front row: the slight gray-out they've always had. */
     filter: grayscale(0.35) brightness(0.9);
-    /* No transition here on purpose - entering/leaving the crouch changes
-       only which sprite frame is shown (idle <-> hop-1), never the
-       transform, so there's nothing to animate outside of the leap. */
-  }
-
-  .presence-can--leap {
-    /* Explicit up-then-down arch from the old spot to the new one, decoupled
-       from the crouch's transition entirely so the peak height is a fixed,
-       tunable constant (ARC_HEIGHT) rather than an incidental overshoot. */
-    animation: presence-leap-arc var(--leap-duration, 270ms) ease-out forwards;
   }
 
   .presence-can--member {
     filter: none;
   }
 
-  .presence-can--self {
-    filter: drop-shadow(0 0 3px var(--accent-color, gold));
+  /* Background visitors are scenery: deeper gray, behind every member. */
+  .presence-can--back {
+    z-index: 1;
+    filter: grayscale(0.6) brightness(0.62);
+  }
+
+  /* Resting cans slide when the server nudges them (someone joined or left).
+     Only while resting: crouch/leap switch frames and positions instantly. */
+  .presence-can--rest {
+    transition: transform 300ms ease;
+  }
+
+  .presence-can--leap {
+    /* Explicit up-then-down arch from the old spot to the new one, decoupled
+       from the crouch's transition entirely so the peak height is a fixed,
+       tunable constant (ARC) rather than an incidental overshoot. */
+    animation: presence-leap-arc var(--leap-duration, 270ms) ease-out forwards;
   }
 
   @keyframes presence-leap-arc {
@@ -306,11 +378,86 @@
     }
   }
 
+  /* "+N": everyone folded away once the stage is full. */
+  .presence-more {
+    position: absolute;
+    right: 0;
+    bottom: var(--can-bottom, 3px);
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    color: var(--font-color);
+    background: color-mix(in srgb, var(--page-color, #222) 70%, black);
+    border: 1px solid color-mix(in srgb, var(--page-color, #222) 70%, white);
+    cursor: default;
+  }
+
+  /* "You" arrow. A child of the can, so it follows every hop and leap and
+     re-centers itself over the wider crouch frame. The bob moves in whole
+     sprite pixels (steps) to stay on the pixel-art grid. It animates
+     `transform`, not the `translate` property: Chrome kept ticking the
+     `translate` version on the main thread every frame, dragging the theme
+     backdrop and the rest of the page through a main-thread frame with it. */
+  .presence-you-marker {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 2px);
+    transform: translateX(-50%);
+    fill: var(--font-color, #fcfcfc);
+    animation: presence-you-bob 1.2s steps(1, end) infinite;
+  }
+
+  @keyframes presence-you-bob {
+    0% {
+      transform: translate(-50%, 0);
+    }
+    50% {
+      transform: translate(-50%, calc(-1 * var(--px, 2px)));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .presence-you-marker {
+      animation: none;
+    }
+
+    .presence-can--rest {
+      transition: none;
+    }
+  }
+
+  /* Mirrors .activity-tooltip in JeevesActivityChart.svelte, a size smaller,
+     with the site's stacked black box shadow like every content box. */
+  .presence-tooltip {
+    position: fixed;
+    z-index: 10000;
+    pointer-events: none;
+    padding: 5px 8px;
+    background: color-mix(in srgb, var(--page-color) 60%, black);
+    border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white);
+    box-shadow: var(--box-shadow);
+    color: var(--font-color);
+    font-family: 'saira', sans-serif;
+    white-space: nowrap;
+  }
+
+  .presence-tooltip-name {
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .presence-tooltip-note {
+    font-size: 11px;
+    opacity: 0.75;
+  }
+
+  /* Turning around is an instant flip, like a sprite swapping facing - no
+     squash transition, which also kept the main thread busy each time a can
+     changed direction. */
   .presence-can-img {
     display: block;
     image-rendering: pixelated;
-    transform: scaleX(1);
-    transition: transform 150ms ease;
   }
 
   .presence-can-img--flip {
