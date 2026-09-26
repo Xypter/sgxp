@@ -141,10 +141,7 @@
           {/if}
         </div>
         {#if isOwnProfile}
-          <button class="edit-profile-btn" onclick={() => editModalOpen = true}>
-            <Pencil class="w-4 h-4" />
-            <span>Edit Profile</span>
-          </button>
+          <Button variant="secondary" icon={Pencil} class="edit-profile-btn" onclick={() => editModalOpen = true}>Edit Profile</Button>
         {/if}
       </div>
 
@@ -339,32 +336,9 @@
       calc(1px * var(--multiply-factor)) calc(-1px * var(--multiply-factor)) 1px var(--bg-color);
   }
 
-  .edit-profile-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
+  .profile-top-section :global(.edit-profile-btn) {
     margin-left: auto;
-    font-family: 'saira';
-    cursor: pointer;
-    transition: all 0.2s ease;
-    height: fit-content;
-
-    font-size: 14px !important;
-    padding: 8px 16px !important;
-    font-weight: 700 !important;
-    background: var(--page-color) !important;
-    color: var(--font-color) !important;
-    border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 60%, white) !important;
-    border-radius: 0px !important;
-    box-shadow: var(--box-shadow) !important;
-    transition: all 0.2s ease !important;
-    cursor: url('/img/Sonic_Cursor.png'), pointer !important;
-  }
-
-  .edit-profile-btn:hover {
-    border-color: var(--font-link-color) !important;
-    cursor: url('/img/Sonic_Cursor_Spin.gif'), progress !important;
-    background: color-mix(in srgb, var(--page-color) 90%, white) !important;
+    flex-shrink: 0;
   }
 
   /* Profile Header (Banner Section) */
@@ -410,10 +384,6 @@
     opacity: 0.4;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-  }
-
-  :global(.edit-profile-btn) {
-    flex-shrink: 0;
   }
 
   /* Content Grid */
@@ -591,10 +561,9 @@
       margin: -3px 0 0px 0px;
     }
 
-    .edit-profile-btn {
+    .profile-top-section :global(.edit-profile-btn) {
       margin-left: 0;
       width: 100%;
-      justify-content: center;
     }
 
     .profile-header {

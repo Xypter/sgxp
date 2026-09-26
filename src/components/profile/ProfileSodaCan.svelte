@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { Pencil } from 'lucide-svelte';
+  import { Button } from '$lib/components';
   import { FRAME_SIZE, canSpriteUrl, getBodyPreset, getEyePreset, type SodaCanChoice } from '../../lib/sodaCan';
 
   let {
@@ -47,10 +48,7 @@
   <img class="title-can" src={canSpriteUrl('idle', can)} width={FRAME_SIZE.idle.w * 2} height={FRAME_SIZE.idle.h * 2} alt="" />
   Soda-Kan
   {#if onCustomize}
-    <button class="customize-btn" onclick={onCustomize} title="Customize your Soda-Kan">
-      <Pencil class="w-3 h-3" />
-      Customize
-    </button>
+    <Button variant="secondary" size="mini" icon={Pencil} class="customize-btn" onclick={onCustomize} title="Customize your Soda-Kan">Customize</Button>
   {/if}
 </div>
 <div class="profile-content-box soda-can-box">
@@ -105,25 +103,8 @@
     margin-right: 2px;
   }
 
-  .customize-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
+  .profile-content-title :global(.customize-btn) {
     margin-left: auto;
-    padding: 2px 8px;
-    font-family: 'saira';
-    font-weight: 700;
-    font-size: 12px;
-    text-shadow: none;
-    color: var(--font-color);
-    background: var(--page-color);
-    border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 60%, white);
-    cursor: url('/img/Sonic_Cursor.png'), pointer;
-  }
-
-  .customize-btn:hover {
-    border-color: var(--font-link-color);
-    background: color-mix(in srgb, var(--page-color) 90%, white);
   }
 
   .profile-content-box {

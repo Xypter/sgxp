@@ -1,7 +1,6 @@
 <script lang="ts">
   import { Button, Input, Label, Textarea, Select } from '$lib/components';
-  import { X, Upload, Plus, Trash2 } from 'lucide-svelte';
-  import Spinner from '../Spinner.svelte';
+  import { X, Upload, Plus, Trash2, Save } from 'lucide-svelte';
   import { fade, scale } from 'svelte/transition';
   import SodaCanPicker from './SodaCanPicker.svelte';
   import { getBodyPreset, getEyePreset } from '../../lib/sodaCan';
@@ -355,9 +354,7 @@
       <!-- Modal Header -->
       <div class="modal-header">
         <h2 class="modal-title">Edit Profile</h2>
-        <Button variant="ghost" size="icon" onclick={closeModal} disabled={saving} class="modal-close-btn">
-          <X class="w-5 h-5" />
-        </Button>
+        <Button variant="tool" size="icon" icon={X} onclick={closeModal} disabled={saving} aria-label="Close" title="Close" />
       </div>
 
       <!-- Modal Body -->
@@ -411,13 +408,11 @@
                 class="file-input"
               />
               <div class="button-group">
-                <Button themed disabled={saving} onclick={triggerProfilePictureUpload}>
-                  <Upload class="w-4 h-4 mr-2" />
+                <Button variant="secondary" icon={Upload} disabled={saving} onclick={triggerProfilePictureUpload}>
                   {profilePicturePreview ? 'Change Picture' : 'Upload Picture'}
                 </Button>
                 {#if profilePicturePreview}
-                  <Button variant="ghost" disabled={saving} onclick={handleDeleteProfilePicture} class="delete-image-btn">
-                    <Trash2 class="w-4 h-4 mr-2" />
+                  <Button variant="danger" icon={Trash2} disabled={saving} onclick={handleDeleteProfilePicture}>
                     Delete Picture
                   </Button>
                 {/if}
@@ -450,13 +445,11 @@
               class="file-input"
             />
             <div class="button-group">
-              <Button themed disabled={saving} onclick={triggerBannerUpload}>
-                <Upload class="w-4 h-4 mr-2" />
+              <Button variant="secondary" icon={Upload} disabled={saving} onclick={triggerBannerUpload}>
                 {bannerPreview ? 'Change Banner' : 'Upload Banner'}
               </Button>
               {#if bannerPreview}
-                <Button variant="ghost" disabled={saving} onclick={handleDeleteBanner} class="delete-image-btn">
-                  <Trash2 class="w-4 h-4 mr-2" />
+                <Button variant="danger" icon={Trash2} disabled={saving} onclick={handleDeleteBanner}>
                   Delete Banner
                 </Button>
               {/if}
@@ -482,8 +475,7 @@
         <div class="form-section">
           <div class="section-header">
             <h3 class="section-title">Social Links</h3>
-            <Button themed size="sm" onclick={addSocialLink} disabled={saving}>
-              <Plus class="w-4 h-4 mr-1" />
+            <Button variant="secondary" icon={Plus} onclick={addSocialLink} disabled={saving}>
               Add Link
             </Button>
           </div>
@@ -514,15 +506,14 @@
                     </div>
                   </div>
                   <Button
-                    variant="ghost"
+                    variant="danger"
                     size="icon"
+                    icon={Trash2}
                     onclick={() => removeSocialLink(link.id)}
                     disabled={saving}
                     title="Remove link"
-                    class="remove-link-btn-themed"
-                  >
-                    <Trash2 class="w-4 h-4" />
-                  </Button>
+                    aria-label="Remove link"
+                  />
                 </div>
               {/each}
             </div>
@@ -536,16 +527,9 @@
 
       <!-- Modal Footer -->
       <div class="modal-footer">
-        <Button variant="ghost" onclick={closeModal} disabled={saving}>
-          Cancel
-        </Button>
-        <Button themed onclick={handleSave} disabled={saving}>
-          {#if saving}
-            <Spinner size={16} label={null} class="mr-2" />
-            Saving...
-          {:else}
-            Save Changes
-          {/if}
+        <Button variant="secondary" icon={X} onclick={closeModal} disabled={saving}>Cancel</Button>
+        <Button variant="primary" icon={Save} onclick={handleSave} loading={saving}>
+          {saving ? 'Saving...' : 'Save Changes'}
         </Button>
       </div>
     </div>
@@ -598,10 +582,6 @@
       calc(1px * var(--multiply-factor)) calc(0px * var(--multiply-factor)) 0 var(--bg-color),
       calc(1px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 0 var(--bg-color),
       calc(0px * var(--multiply-factor)) calc(1px * var(--multiply-factor)) 0 var(--bg-color);
-  }
-
-  :global(.modal-close-btn) {
-    padding: 4px !important;
   }
 
   .modal-body {
@@ -744,15 +724,6 @@
     flex-wrap: wrap;
   }
 
-  :global(.delete-image-btn) {
-    color: #ff4444 !important;
-  }
-
-  :global(.delete-image-btn:hover) {
-    color: #ff6666 !important;
-    background: rgba(255, 68, 68, 0.1) !important;
-  }
-
   /* Bio */
   .char-count {
     font-family: 'saira';
@@ -790,15 +761,6 @@
 
   .flex-1 {
     flex: 1;
-  }
-
-  :global(.remove-link-btn-themed) {
-    color: #ff4444 !important;
-    align-self: flex-end;
-  }
-
-  :global(.remove-link-btn-themed:hover) {
-    color: #ff6666 !important;
   }
 
   .no-social-links {
