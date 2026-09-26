@@ -2,7 +2,9 @@
 	import { onMount } from 'svelte';
 	
 	// Shadcn-Svelte Component Imports
-	import { Button } from '../components/ui/button/index.ts';
+	import { Button } from '$lib/components';
+	import { sgxpButtonClass } from '$components/ui/button';
+	import { ArrowLeft, LogIn, UserPlus } from 'lucide-svelte';
 	import { Input } from '../components/ui/input/index.ts';
 	import { Label } from '../components/ui/label/index.ts';
 	import * as Alert from '../components/ui/alert/index.ts';
@@ -262,9 +264,7 @@
 						We've sent you a verification email. Please check your inbox and click the verification link
                         to activate your account before you can log in.
 					</Card.Description>
-					<Button onclick={handleSwitchToLogin} class="theme-button">
-						Back to Login
-					</Button>
+					<Button variant="secondary" icon={ArrowLeft} onclick={handleSwitchToLogin}>Back to Login</Button>
 				</div>
 			</Card.Content>
 		</Card.Root>
@@ -272,9 +272,9 @@
 {:else}
 	<div class="theme-compatible-login">
 		<Tabs.Root bind:value={activeTab} class="login-tabs">
-			<Tabs.List class="grid w-full grid-cols-2">
-				<Tabs.Trigger value="login" class="theme-tab-trigger">Login</Tabs.Trigger>
-				<Tabs.Trigger value="register" class="theme-tab-trigger">Register</Tabs.Trigger>
+			<Tabs.List class="sgxp-btn-group login-tab-list">
+				<Tabs.Trigger value="login" class={sgxpButtonClass({ variant: 'toggle' })}>Login</Tabs.Trigger>
+				<Tabs.Trigger value="register" class={sgxpButtonClass({ variant: 'toggle' })}>Register</Tabs.Trigger>
 			</Tabs.List>
 			<Tabs.Content value="login">
 				<Card.Root class="login-card">
@@ -320,13 +320,8 @@
 									<Alert.Description class="theme-alert-text">{loginError}</Alert.Description>
 								</Alert.Root>
 							{/if}
-							<Button type="submit" class="w-full theme-button" disabled={isLoginLoading}>
-								{#if isLoginLoading}
-									<Spinner size={16} label={null} class="mr-2" />
-									Signing in...
-								{:else}
-									Sign in
-								{/if}
+							<Button variant="primary" type="submit" icon={LogIn} class="w-full" loading={isLoginLoading}>
+								{isLoginLoading ? 'Signing in...' : 'Sign in'}
 							</Button>
 						</form>
 						<div class="text-center mt-4">
@@ -440,13 +435,8 @@
 									<Alert.Description class="theme-alert-text">{registerError}</Alert.Description>
 								</Alert.Root>
 							{/if}
-							<Button type="submit" class="w-full theme-button" disabled={isRegisterLoading || !!usernameValidationError || !!displayNameValidationError}>
-								{#if isRegisterLoading}
-									<Spinner size={16} label={null} class="mr-2" />
-									Creating account...
-								{:else}
-									Create Account
-								{/if}
+							<Button variant="primary" type="submit" icon={UserPlus} class="w-full" loading={isRegisterLoading} disabled={!!usernameValidationError || !!displayNameValidationError}>
+								{isRegisterLoading ? 'Creating account...' : 'Create Account'}
 							</Button>
 						</form>
 						<div class="text-center mt-4">
@@ -474,36 +464,23 @@
 		width: 100%;
 	}
 
+	/* The tabs are standard toggles joined as a group; they share the card's width. */
+	.theme-compatible-login :global(.login-tab-list) {
+		display: flex;
+		width: 100%;
+		margin-bottom: 8px;
+	}
+
+	.theme-compatible-login :global(.login-tab-list > *) {
+		flex: 1;
+	}
+
 	.theme-compatible-login :global(.login-card) {
 		background: var(--page-color);
 		border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
 		border-radius: 0px;
 		box-shadow: var(--box-shadow);
 		width: 100%;
-	}
-	
-	.theme-compatible-login :global(.theme-tab-trigger) {
-		background: var(--page-color);
-		color: var(--font-color);
-		border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
-		border-radius: 0px;
-		font-family: 'saira', monospace;
-		font-weight: 600;
-		transition: all var(--transition-speed, 200ms) ease-in-out;
-	}
-
-	.theme-compatible-login :global(.theme-tab-trigger[data-state='active']) {
-		background: var(--font-link-color);
-		color: var(--page-color);
-		border-color: var(--font-link-color);
-	}
-
-	.theme-compatible-login :global(.theme-tab-trigger:first-child) {
-		border-right: none;
-	}
-
-	.theme-compatible-login :global(.theme-tab-trigger:last-child) {
-		border-left: none;
 	}
 
 	.theme-compatible-login :global(.theme-title) {
@@ -548,30 +525,6 @@
 		color: color-mix(in srgb, var(--font-color) 60%, transparent);
 	}
 	
-	.theme-compatible-login :global(.theme-button) {
-		background: var(--font-link-color);
-		color: var(--page-color);
-		border: none;
-		border-radius: 0px;
-		font-family: 'saira', monospace;
-		font-weight: 700;
-		font-size: 14px;
-		transition: all var(--transition-speed, 200ms) ease-in-out;
-		cursor: url('/img/Sonic_Cursor.png'), pointer;
-		box-shadow: var(--box-shadow);
-		text-shadow: none !important;
-	}
-	
-	.theme-compatible-login :global(.theme-button:hover:not(:disabled)) {
-		background: color-mix(in srgb, var(--font-link-color) 80%, white);
-		cursor: url('/img/Sonic_Cursor_Spin.gif'), progress;
-	}
-	
-	.theme-compatible-login :global(.theme-button:disabled) {
-		opacity: 0.6;
-		cursor: not-allowed;
-		transform: none;
-	}
 	
 	.theme-compatible-login :global(.theme-alert) {
 		background: color-mix(in srgb, var(--font-link-color) 20%, var(--page-color));
@@ -619,18 +572,6 @@
 			border: none;
 			box-shadow: none;
 			background: transparent;
-		}
-
-		.theme-compatible-login :global(.theme-tab-trigger) {
-			border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
-		}
-
-		.theme-compatible-login :global(.theme-tab-trigger:first-child) {
-			border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
-		}
-
-		.theme-compatible-login :global(.theme-tab-trigger:last-child) {
-			border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
 		}
 	}
 </style>

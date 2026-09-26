@@ -2,7 +2,8 @@
 	import { onMount } from 'svelte';
 
 	// Shadcn-Svelte Component Imports
-	import { Button } from '../components/ui/button/index.ts';
+	import { Button } from '$lib/components';
+	import { KeyRound, Mail } from 'lucide-svelte';
 	import { Input } from '../components/ui/input/index.ts';
 	import { Label } from '../components/ui/label/index.ts';
 	import * as Alert from '../components/ui/alert/index.ts';
@@ -88,9 +89,7 @@
 					<Card.Description class="theme-description">
 						This password reset link is invalid or missing. Please request a new password reset.
 					</Card.Description>
-					<Button href="/forgot-password" class="theme-button">
-						Request New Reset Link
-					</Button>
+					<Button variant="secondary" icon={Mail} href="/forgot-password">Request New Reset Link</Button>
 				</div>
 			</Card.Content>
 		</Card.Root>
@@ -153,13 +152,8 @@
 							<Alert.Description class="theme-alert-text">{error}</Alert.Description>
 						</Alert.Root>
 					{/if}
-					<Button type="submit" class="w-full theme-button" disabled={isLoading}>
-						{#if isLoading}
-							<Spinner size={16} label={null} class="mr-2" />
-							Resetting...
-						{:else}
-							Reset Password
-						{/if}
+					<Button variant="primary" type="submit" icon={KeyRound} class="w-full" loading={isLoading}>
+						{isLoading ? 'Resetting...' : 'Reset Password'}
 					</Button>
 				</form>
 				<div class="text-center mt-4">
@@ -231,30 +225,6 @@
 		color: color-mix(in srgb, var(--font-color) 60%, transparent);
 	}
 
-	.theme-compatible-login :global(.theme-button) {
-		background: var(--font-link-color);
-		color: var(--page-color);
-		border: none;
-		border-radius: 0px;
-		font-family: 'saira', monospace;
-		font-weight: 700;
-		font-size: 14px;
-		transition: all var(--transition-speed, 200ms) ease-in-out;
-		cursor: url('/img/Sonic_Cursor.png'), pointer;
-		box-shadow: var(--box-shadow);
-		text-shadow: none;
-	}
-
-	.theme-compatible-login :global(.theme-button:hover:not(:disabled)) {
-		background: color-mix(in srgb, var(--font-link-color) 80%, white);
-		cursor: url('/img/Sonic_Cursor_Spin.gif'), progress;
-	}
-
-	.theme-compatible-login :global(.theme-button:disabled) {
-		opacity: 0.6;
-		cursor: not-allowed;
-		transform: none;
-	}
 
 	.theme-compatible-login :global(.theme-alert) {
 		background: color-mix(in srgb, var(--font-link-color) 20%, var(--page-color));

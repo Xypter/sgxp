@@ -8,7 +8,9 @@
  *   primary    main action: accent fill, 3D block shadow, presses down
  *   secondary  supporting action: the dark "black box" with a border
  *   danger     deletes/removes something: the dark box in red
- *   toggle     on/off or selected state (aria-pressed / data-state=on)
+ *   toggle     on/off or selected state (aria-pressed / data-state=on);
+ *              also tab triggers (bits-ui sets data-state=active), with the
+ *              tab list as a .sgxp-btn-group
  *   tool       boxed icon button (reader tools, zoom)
  *   subtle     unboxed icon button that stays faint until used
  *   quiet      low-emphasis uppercase text action (e.g. accordion toggles)
@@ -281,7 +283,7 @@
     box-shadow var(--btn-press-out) var(--btn-ease);
 }
 
-.sgxp-btn--toggle:not([aria-pressed='true']):not([data-state='on']):not([aria-current='page']) {
+.sgxp-btn--toggle:not([aria-pressed='true']):not([data-state='on']):not([data-state='active']):not([aria-current='page']) {
   color: color-mix(in srgb, var(--font-color) 75%, transparent);
 }
 
@@ -298,6 +300,7 @@
 
 .sgxp-btn--toggle[aria-pressed='true'],
 .sgxp-btn--toggle[data-state='on'],
+.sgxp-btn--toggle[data-state='active'],
 .sgxp-btn--toggle[aria-current='page'] {
   background: var(--font-link-color);
   border-color: var(--font-link-color);
@@ -313,7 +316,7 @@
   box-shadow: var(--btn-shadow);
 }
 
-.sgxp-btn--toggle.sgxp-btn--mini:not([aria-pressed='true']):not([data-state='on']) {
+.sgxp-btn--toggle.sgxp-btn--mini:not([aria-pressed='true']):not([data-state='on']):not([data-state='active']) {
   color: var(--font-color);
 }
 
@@ -336,6 +339,13 @@
 .sgxp-btn-group {
   display: inline-flex;
   box-shadow: var(--btn-shadow);
+  /* Reset what a wrapping primitive brings along (shadcn's Tabs.List has a
+     muted pill background, padding and a fixed height). */
+  height: auto;
+  padding: 0;
+  gap: 0;
+  background: none;
+  border-radius: 0;
 }
 
 .sgxp-btn-group > .sgxp-btn + .sgxp-btn {

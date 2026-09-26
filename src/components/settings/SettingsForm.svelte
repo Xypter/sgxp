@@ -3,7 +3,6 @@
   import { Toaster } from '$lib/components';
   import { toast } from 'svelte-sonner';
   import { Settings, Lock, Save, Eye, EyeOff, Shield } from 'lucide-svelte';
-  import Spinner from '../Spinner.svelte';
 
   // Props
   let {
@@ -177,17 +176,17 @@
             placeholder="Enter your new password"
             class="settings-input"
           />
-          <button
-            type="button"
+          <Button
+            variant="subtle"
+            size="icon-mini"
+            icon={showNewPassword ? EyeOff : Eye}
             class="password-toggle"
+            data-icon-fill="false"
+            aria-pressed={showNewPassword}
+            aria-label="Show new password"
+            title={showNewPassword ? 'Hide new password' : 'Show new password'}
             onclick={() => showNewPassword = !showNewPassword}
-          >
-            {#if showNewPassword}
-              <EyeOff class="w-4 h-4" />
-            {:else}
-              <Eye class="w-4 h-4" />
-            {/if}
-          </button>
+          />
         </div>
       </div>
 
@@ -202,33 +201,23 @@
             onkeydown={handlePasswordKeydown}
             class="settings-input"
           />
-          <button
-            type="button"
+          <Button
+            variant="subtle"
+            size="icon-mini"
+            icon={showConfirmPassword ? EyeOff : Eye}
             class="password-toggle"
+            data-icon-fill="false"
+            aria-pressed={showConfirmPassword}
+            aria-label="Show confirmed password"
+            title={showConfirmPassword ? 'Hide confirmed password' : 'Show confirmed password'}
             onclick={() => showConfirmPassword = !showConfirmPassword}
-          >
-            {#if showConfirmPassword}
-              <EyeOff class="w-4 h-4" />
-            {:else}
-              <Eye class="w-4 h-4" />
-            {/if}
-          </button>
+          />
         </div>
       </div>
 
       <div class="form-actions">
-        <Button
-          themed
-          onclick={updatePassword}
-          disabled={savingPassword}
-        >
-          {#if savingPassword}
-            <Spinner size={16} label={null} class="mr-2" />
-            Updating...
-          {:else}
-            <Lock class="w-4 h-4 mr-2" />
-            Update Password
-          {/if}
+        <Button variant="primary" icon={Lock} onclick={updatePassword} loading={savingPassword}>
+          {savingPassword ? 'Updating...' : 'Update Password'}
         </Button>
       </div>
     </div>
@@ -254,18 +243,8 @@
       </div>
 
       <div class="form-actions">
-        <Button
-          themed
-          onclick={updatePrivacySettings}
-          disabled={savingPrivacy}
-        >
-          {#if savingPrivacy}
-            <Spinner size={16} label={null} class="mr-2" />
-            Saving...
-          {:else}
-            <Save class="w-4 h-4 mr-2" />
-            Save Privacy Settings
-          {/if}
+        <Button variant="primary" icon={Save} onclick={updatePrivacySettings} loading={savingPrivacy}>
+          {savingPrivacy ? 'Saving...' : 'Save Privacy Settings'}
         </Button>
       </div>
     </div>
@@ -399,33 +378,16 @@
     padding-right: 45px !important;
   }
 
-  .password-toggle {
+  /* Sits inside the input's right edge. */
+  .password-input-wrapper :global(.password-toggle) {
     position: absolute;
-    right: 12px;
-    background: none;
-    border: none;
-    color: var(--font-color);
-    opacity: 0.6;
-    cursor: pointer;
-    padding: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: opacity 0.2s ease;
-  }
-
-  .password-toggle:hover {
-    opacity: 1;
+    right: 9px;
   }
 
   .form-actions {
     margin-top: 20px;
     padding-top: 20px;
     border-top: 1px solid color-mix(in srgb, var(--page-color) 70%, white);
-  }
-
-  :global(.save-btn) {
-    flex-shrink: 0;
   }
 
   /* Privacy Settings */
@@ -474,12 +436,4 @@
     color: #ff4444;
   }
 
-  /* Spin animation */
-  /* Responsive */
-  @media (max-width: 600px) {
-    :global(.save-btn) {
-      width: 100%;
-      justify-content: center;
-    }
-  }
 </style>

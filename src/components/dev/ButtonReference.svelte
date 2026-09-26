@@ -5,6 +5,7 @@
     SlidersHorizontal, Table, Trash2, Upload, X, ZoomIn, ZoomOut, ChevronDown, Heart,
   } from 'lucide-svelte';
   import { sgxpButtonClass } from '$components/ui/button';
+  import * as Tabs from '$components/ui/tabs';
 
   // Live demo state
   let view = $state<'cards' | 'table'>('cards');
@@ -116,6 +117,8 @@
     <p class="ref-note">
       Anything with an on/off or selected state. Set <code>aria-pressed</code> (or <code>data-state="on"</code>);
       the selected one fills with the accent. Group side-by-side toggles with <code>ButtonGroup</code>.
+      Tabs use it too: <code>sgxpButtonClass(&#123; variant: 'toggle' &#125;)</code> on each <code>Tabs.Trigger</code>
+      (the active one is <code>data-state="active"</code>) and <code>sgxp-btn-group</code> on the <code>Tabs.List</code>.
     </p>
     <div class="ref-grid">
       <div class="ref-cell ref-cell--wide">
@@ -135,6 +138,15 @@
           <Button variant="secondary" size="icon" icon={ChevronRight} aria-label="Next page" disabled={page === 4} onclick={() => page++} />
         </div>
       </div>
+      <div class="ref-cell ref-cell--wide">
+        <span class="ref-label">Tabs (Login / Register)</span>
+        <Tabs.Root value="login">
+          <Tabs.List class="sgxp-btn-group">
+            <Tabs.Trigger value="login" class={sgxpButtonClass({ variant: 'toggle' })}>Login</Tabs.Trigger>
+            <Tabs.Trigger value="register" class={sgxpButtonClass({ variant: 'toggle' })}>Register</Tabs.Trigger>
+          </Tabs.List>
+        </Tabs.Root>
+      </div>
       <div class="ref-cell">
         <span class="ref-label">Mini (24px)</span>
         <Button variant="toggle" size="mini" icon={Table} aria-pressed={showTable} onclick={() => (showTable = !showTable)}>Table</Button>
@@ -149,7 +161,12 @@
   <Button variant="toggle" icon={Table} aria-pressed={view === 'table'}>Table</Button>
 </ButtonGroup>
 
-<Button variant="toggle" size="mini" aria-pressed={showTable}>Table</Button>`}</code></pre>
+<Button variant="toggle" size="mini" aria-pressed={showTable}>Table</Button>
+
+<Tabs.List class="sgxp-btn-group">
+  <Tabs.Trigger value="login" class={sgxpButtonClass({ variant: 'toggle' })}>Login</Tabs.Trigger>
+  <Tabs.Trigger value="register" class={sgxpButtonClass({ variant: 'toggle' })}>Register</Tabs.Trigger>
+</Tabs.List>`}</code></pre>
   </section>
 
   <section class="ref-section">
