@@ -2,7 +2,8 @@
   import { Axis, Bars, Chart, Grid, Highlight, Layer, Spline, Tooltip } from 'layerchart';
   import { scaleBand } from 'd3-scale';
   import { curveMonotoneX } from 'd3-shape';
-  import { Activity, Table as TableIcon, ChartColumn } from 'lucide-svelte';
+  import { Activity, Table as TableIcon } from 'lucide-svelte';
+  import { Button } from '$lib/components';
   import * as ChartUI from '@/components/ui/chart';
   import { archiveTime, type ArchiveChapter } from '$lib/jeevesArchive';
 
@@ -147,15 +148,18 @@
   <section class="jeeves-panel activity-panel">
     <h3 class="jeeves-panel-title">
       <Activity size={18} /> Activity
-      <button
-        type="button"
+      <!-- A standard mini toggle: lit when the table is showing. -->
+      <Button
+        variant="toggle"
+        size="mini"
+        icon={TableIcon}
         class="view-switch"
         onclick={() => (showTable = !showTable)}
         aria-pressed={showTable}
         title={showTable ? 'Show as chart' : 'Show as table'}
       >
-        {#if showTable}<ChartColumn size={15} /> Chart{:else}<TableIcon size={15} /> Table{/if}
-      </button>
+        Table
+      </Button>
     </h3>
 
     <div class="jeeves-panel-body">
@@ -264,26 +268,10 @@
     justify-content: flex-start;
   }
 
-  .view-switch {
+  /* Pushed to the end of the panel title; the look is the standard mini
+     toggle. */
+  .jeeves-panel-title :global(.view-switch) {
     margin-left: auto;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 2px 8px;
-    background: transparent;
-    border: 1px solid color-mix(in srgb, var(--page-color) 60%, white);
-    color: var(--font-color);
-    font-family: 'saira', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    text-shadow: none;
-    cursor: pointer;
-  }
-
-  @media (hover: hover) {
-    .view-switch:hover {
-      border-color: var(--font-link-color);
-    }
   }
 
   .activity-head {

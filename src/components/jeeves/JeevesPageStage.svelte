@@ -2,6 +2,7 @@
   import { onMount, tick, untrack, type Snippet } from 'svelte';
   import { ImageOff, Maximize2, Minimize2, ZoomIn, ZoomOut } from 'lucide-svelte';
   import Spinner from '../Spinner.svelte';
+  import { Button } from '$lib/components';
 
   // One comic page, shown pixel-perfect and pannable - the reader's take on
   // SpriteImageViewer. Pages are never scaled by a fractional amount (that's
@@ -228,42 +229,26 @@
     {#if lead}<div class="stage-lead">{@render lead()}</div>{/if}
     <div class="stage-info">{@render info?.()}</div>
     <div class="stage-tools">
-      <button
-        type="button"
-        class="tool-btn"
-        onclick={() => setZoom(devicePx - 1)}
-        disabled={devicePx <= 1}
-        aria-label="Zoom out"
-      >
-        <ZoomOut size={18} />
-      </button>
-      <button
-        type="button"
-        class="tool-btn zoom-label"
+      <Button variant="tool" size="icon" icon={ZoomOut} onclick={() => setZoom(devicePx - 1)} disabled={devicePx <= 1} aria-label="Zoom out" />
+      <Button
+        variant="tool"
+        size="icon"
+        class="zoom-label"
         onclick={() => setZoom(defaultDevicePx)}
         title="Screen pixels per comic pixel - click to reset"
         aria-label="Zoom {zoomLabel}, reset"
       >
         {zoomLabel}
-      </button>
-      <button
-        type="button"
-        class="tool-btn"
-        onclick={() => setZoom(devicePx + 1)}
-        disabled={devicePx >= maxDevicePx}
-        aria-label="Zoom in"
-      >
-        <ZoomIn size={18} />
-      </button>
-      <button
-        type="button"
-        class="tool-btn"
+      </Button>
+      <Button variant="tool" size="icon" icon={ZoomIn} onclick={() => setZoom(devicePx + 1)} disabled={devicePx >= maxDevicePx} aria-label="Zoom in" />
+      <Button
+        variant="tool"
+        size="icon"
+        icon={immersive ? Minimize2 : Maximize2}
         onclick={() => (immersive = !immersive)}
         aria-label={immersive ? 'Exit fullscreen' : 'Fullscreen'}
         title={immersive ? 'Exit fullscreen (Esc)' : 'Fullscreen'}
-      >
-        {#if immersive}<Minimize2 size={18} />{:else}<Maximize2 size={18} />{/if}
-      </button>
+      />
     </div>
   </div>
 
@@ -357,12 +342,14 @@
     box-shadow: var(--box-shadow);
   }
 
+  /* Right and bottom padding leave room for the tool buttons' block
+     shadows. */
   .stage-toolbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: 6px;
+    padding: 6px 13px 13px 6px;
     border-bottom: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 75%, white);
     font-family: 'saira', sans-serif;
     color: var(--font-color);
@@ -370,7 +357,7 @@
 
   .stage-lead {
     display: flex;
-    gap: 4px;
+    gap: 10px;
     flex-shrink: 0;
   }
 
@@ -383,43 +370,26 @@
   .stage-tools {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 10px;
     flex-shrink: 0;
   }
 
-  .tool-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 40px;
-    height: 40px;
-    padding: 0 6px;
-    background: color-mix(in srgb, var(--page-color) 80%, black);
-    border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 65%, white);
-    color: var(--font-color);
-    cursor: pointer;
-    transition: border-color 0.15s ease, color 0.15s ease;
-  }
-
-  /* Hover only where there's a real hover pointer - on touchscreens a tap
-     leaves it stuck "hovered" until something else is tapped. */
-  @media (hover: hover) {
-    .tool-btn:hover:not(:disabled) {
-      border-color: var(--font-link-color);
-      color: var(--font-link-color);
+  /* Narrow phones (360px): tighter gaps so the last button's block shadow
+     stays on screen. */
+  @media (max-width: 400px) {
+    .stage-lead,
+    .stage-tools {
+      gap: 6px;
     }
   }
 
-  .tool-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
-  .zoom-label {
-    min-width: 48px;
-    font-family: 'saira', sans-serif;
+  /* The zoom level is a standard tool button showing text ("2x"): square
+     until a wider level needs more room. */
+  .stage-tools :global(.zoom-label) {
+    width: auto;
+    min-width: var(--control-height);
+    padding: 0 6px;
     font-size: 13px;
-    font-weight: 700;
     font-variant-numeric: tabular-nums;
   }
 

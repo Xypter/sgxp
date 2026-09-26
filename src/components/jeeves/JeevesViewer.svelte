@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, tick, untrack } from 'svelte';
   import { toast } from 'svelte-sonner';
-  import { ArrowLeft, ArrowUp, Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Library } from 'lucide-svelte';
+  import { ArrowLeft, ArrowUp, Bookmark, ChevronLeft, ChevronRight, Library } from 'lucide-svelte';
   import Spinner from '../Spinner.svelte';
   import { Button, Select } from '$lib/components';
   import {
@@ -291,14 +291,15 @@
 {#snippet pageNav()}
   <nav class="page-nav" aria-label="Page navigation">
     <Button
-      themed
+      variant="secondary"
+      icon={ChevronLeft}
       class="page-nav-btn"
       onclick={() => setPage(currentPage - 1)}
       disabled={currentPage <= 1}
       title="Previous page (Left Arrow)"
       aria-label="Previous page"
     >
-      <ChevronLeft size={18} /><span class="page-nav-btn-label">Prev</span>
+      <span class="page-nav-btn-label">Prev</span>
     </Button>
 
     <div class="page-select">
@@ -313,14 +314,15 @@
     </div>
 
     <Button
-      themed
+      variant="secondary"
       class="page-nav-btn"
       onclick={() => setPage(currentPage + 1)}
       disabled={currentPage >= pageCount}
       title="Next page (Right Arrow)"
       aria-label="Next page"
     >
-      <span class="page-nav-btn-label">Next</span><ChevronRight size={18} />
+      <!-- Arrow after the label (the icon prop always leads). -->
+      <span class="page-nav-btn-label">Next</span><ChevronRight />
     </Button>
   </nav>
 {/snippet}
@@ -345,9 +347,9 @@
       onToggleBookmark={toggleBookmark}
     />
 
-    <button class="back-to-top" onclick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-      <ArrowUp size={16} /> Top
-    </button>
+    <Button variant="secondary" icon={ArrowUp} class="back-to-top" onclick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+      Top
+    </Button>
   {:else if chapter}
     <div class="reader" bind:this={readerEl}>
       <JeevesPageStage
@@ -356,31 +358,37 @@
         bind:immersive
       >
         {#snippet lead()}
-          <button
-            type="button"
-            class="side-btn"
+          <Button
+            variant="tool"
+            size="icon"
+            icon={ArrowLeft}
             onclick={() => setPage(0)}
             title="Comic info & page list"
             aria-label="Back to comic info and page list"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <a href="/smackjeeves" class="side-btn no-theme-styles" data-restore-state title="Smack Jeeves Archive" aria-label="Back to the Smack Jeeves archive">
-            <Library size={20} />
-          </a>
+          />
+          <Button
+            variant="tool"
+            size="icon"
+            icon={Library}
+            href="/smackjeeves"
+            data-restore-state
+            title="Smack Jeeves Archive"
+            aria-label="Back to the Smack Jeeves archive"
+          />
           {#if entry}
-            <button
-              type="button"
-              class="side-btn"
-              class:side-btn--active={!!bookmark}
+            <!-- Two-state: the icon fills in when bookmarked. Not disabled
+                 while saving (that fade reads as a flicker); toggleBookmark
+                 ignores repeat taps. -->
+            <Button
+              variant="tool"
+              size="icon"
+              icon={Bookmark}
               onclick={toggleBookmark}
-              disabled={bookmarkBusy}
+              aria-busy={bookmarkBusy || undefined}
               aria-pressed={!!bookmark}
               title={bookmark ? 'Remove bookmark' : 'Bookmark this comic'}
               aria-label={bookmark ? 'Remove bookmark' : 'Bookmark this comic'}
-            >
-              {#if bookmark}<BookmarkCheck size={20} />{:else}<Bookmark size={20} />{/if}
-            </button>
+            />
           {/if}
         {/snippet}
         {#snippet info()}
@@ -491,39 +499,6 @@
     display: inline-block;
   }
 
-  /* Reader */
-  .side-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    background: color-mix(in srgb, var(--page-color) 80%, black);
-    border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 65%, white);
-    color: var(--font-color);
-    cursor: pointer;
-    transition: border-color 0.15s ease, color 0.15s ease;
-  }
-
-  /* Hover only where there's a real hover pointer - on touchscreens a tap
-     leaves it stuck "hovered" until something else is tapped. */
-  @media (hover: hover) {
-    .side-btn:hover {
-      border-color: var(--font-link-color);
-      color: var(--font-link-color);
-    }
-  }
-
-  .side-btn--active {
-    border-color: var(--font-link-color);
-    color: var(--font-link-color);
-  }
-
-  .side-btn:disabled {
-    opacity: 0.6;
-    cursor: default;
-  }
-
   .stage-comic-title {
     font-size: 16px;
     font-weight: 800;
@@ -565,21 +540,26 @@
     box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.35);
   }
 
+  /* Right and bottom padding leave room for the buttons' block shadows. */
   .page-nav {
     display: flex;
-    align-items: stretch;
+    align-items: center;
     gap: 10px;
-    padding: 8px;
+    padding: 8px 15px 15px 8px;
     background: color-mix(in srgb, var(--page-color) 70%, black);
   }
 
-  /* Colors, font and shadow come from the themed Button (.theme-button),
-     same as the archive's Filter & Sort; this only sizes it. */
+  /* Standard secondary buttons. Their arrows are plain and bold like the
+     pagination arrows (the standard tints labelled buttons' icons with the
+     accent). */
   .page-nav :global(.page-nav-btn) {
-    height: 44px;
-    min-width: 48px;
     padding: 0 14px;
     gap: 4px;
+  }
+
+  .page-nav :global(.page-nav-btn > svg) {
+    color: inherit;
+    stroke-width: 3;
   }
 
   .page-select {
@@ -588,13 +568,11 @@
     display: flex;
   }
 
-  /* Themed Select (.theme-select-trigger) sized to sit level with the
-     Prev/Next buttons. */
+  /* Themed Select (.theme-select-trigger) - already the shared control
+     height, so it sits level with the Prev/Next buttons. */
   .page-select :global(.page-select-trigger) {
     width: 100%;
     min-width: 0;
-    height: 44px !important;
-    min-height: 44px !important;
     overflow: hidden;
   }
 
@@ -613,29 +591,13 @@
     white-space: nowrap;
   }
 
-  .back-to-top {
+  /* A standard secondary button, pinned to the corner. Two classes so
+     `fixed` outranks the standard's `position: relative`. */
+  :global(.sgxp-btn.back-to-top) {
     position: fixed;
     bottom: 20px;
     right: 20px;
     z-index: 100;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 10px 14px;
-    background: color-mix(in srgb, var(--page-color) 80%, black);
-    border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 70%, white);
-    box-shadow: var(--box-shadow);
-    color: var(--font-link-color);
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-  }
-
-  @media (hover: hover) {
-    .back-to-top:hover {
-      border-color: var(--font-link-color);
-    }
   }
 
   @media (max-width: 768px) {
@@ -659,9 +621,9 @@
       padding: 0 10px;
     }
 
-    .back-to-top {
-      bottom: 12px;
-      right: 12px;
+    :global(.sgxp-btn.back-to-top) {
+      bottom: 16px;
+      right: 16px;
     }
   }
 

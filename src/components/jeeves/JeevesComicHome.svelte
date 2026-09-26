@@ -2,7 +2,8 @@
   import * as Popover from '$components/ui/popover';
   import { Button } from '$lib/components';
   import JeevesActivityChart from './JeevesActivityChart.svelte';
-  import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, ImageOff, Info, Library, List, MessageSquare, RotateCcw, Users } from 'lucide-svelte';
+  import { sgxpButtonClass } from '$components/ui/button';
+  import { ArrowLeft, BookOpen, Bookmark, ImageOff, Info, List, MessageSquare, RotateCcw, Users } from 'lucide-svelte';
   import {
     archiveAssetUrl,
     archiveTime,
@@ -72,14 +73,17 @@
 </script>
 
 <section class="comic-hero">
-  <!-- A breadcrumb-style eyebrow above the preview on desktop; on phones it
-       becomes a boxed button in the empty band beside the hamburger. -->
+  <!-- A breadcrumb-style text link above the preview on desktop; on phones a
+       standard tool button in the empty band beside the hamburger instead
+       (CSS shows one or the other). -->
   <nav class="hero-nav" aria-label="Archive">
     <a href="/smackjeeves" class="hero-back no-theme-styles" data-restore-state>
       <ArrowLeft size={14} />
-      <span class="hero-back-icon"><Library size={16} /></span>
       Smack Jeeves Archive
     </a>
+    <Button variant="tool" icon={ArrowLeft} href="/smackjeeves" class="hero-back-btn" data-restore-state>
+      Smack Jeeves Archive
+    </Button>
   </nav>
   <div class="hero-top">
     <!-- Same pre-cropped 1:1 preview as the archive's cards. -->
@@ -133,7 +137,10 @@
     {#if entry}
       {#if entry.notes}
         <Popover.Root>
-          <Popover.Trigger class="rating-block rating-block--notes" aria-label="{ratingLabel}. Show Xypter's notes">
+          <Popover.Trigger
+            class="{sgxpButtonClass({ variant: 'secondary', size: 'icon' })} rating-block rating-block--notes"
+            aria-label="{ratingLabel}. Show Xypter's notes"
+          >
             {@render ratingContent()}
           </Popover.Trigger>
           <Popover.Content side="bottom" align="end" sideOffset={6} class="theme-card-notes-popover">
@@ -164,32 +171,32 @@
       {/if}
     </dl>
     {#if entry && onToggleBookmark}
-      <!-- Same quiet toggle + reader count as the archive cards' (end of the
-           stats row). -->
-      <button
-        type="button"
+      <!-- Same subtle two-state toggle + reader count as the archive cards'
+           (end of the stats row). Not disabled while saving - fading it for
+           the request reads as a flicker; the handler ignores repeat taps. -->
+      <Button
+        variant="subtle"
+        icon={Bookmark}
         class="hero-bookmark"
-        class:active={bookmarked}
         onclick={onToggleBookmark}
-        disabled={bookmarkBusy}
+        aria-busy={bookmarkBusy || undefined}
         aria-pressed={bookmarked}
         title="{bookmarkCountLabel}. {bookmarked ? 'Remove your bookmark' : 'Bookmark it (only you can see your bookmarks)'}"
         aria-label="{bookmarked ? 'Remove bookmark' : 'Bookmark this comic'} ({bookmarkCountLabel})"
       >
-        {#if bookmarked}<BookmarkCheck size={20} />{:else}<Bookmark size={20} />{/if}
         {#if bookmarkCount > 0}<span class="hero-bookmark-count">{bookmarkCount.toLocaleString()}</span>{/if}
-      </button>
+      </Button>
     {/if}
   </div>
 
   <div class="hero-actions">
     {#if chapters.length > 0}
-      <Button themed class="hero-cta" onclick={() => onOpenPage(1)}>
-        <BookOpen size={17} /> Start reading
+      <Button variant="primary" icon={BookOpen} class="hero-cta" onclick={() => onOpenPage(1)}>
+        Start reading
       </Button>
       {#if resumePage && resumePage > 1 && resumePage <= chapters.length}
-        <Button themed class="hero-cta" onclick={() => onOpenPage(resumePage)}>
-          <RotateCcw size={16} /> Continue from page {resumePage}
+        <Button variant="secondary" icon={RotateCcw} class="hero-cta" onclick={() => onOpenPage(resumePage)}>
+          Continue from page {resumePage}
         </Button>
       {/if}
     {/if}
@@ -302,14 +309,15 @@
     text-shadow: none;
   }
 
-  .hero-back-icon {
-    display: none;
-  }
-
   @media (hover: hover) {
     .hero-back:hover {
       text-decoration: underline;
     }
+  }
+
+  /* The phone version; hidden on desktop. */
+  .hero-nav :global(.hero-back-btn) {
+    display: none;
   }
 
   .hero-top {
@@ -427,7 +435,9 @@
     background: color-mix(in srgb, var(--font-link-color) 15%, transparent);
   }
 
-  /* Same rating square as ArchiveComicCard. */
+  /* Same secondary-look rating square as ArchiveComicCard, a size up for the
+     page's headline rating. With notes it IS a standard secondary button;
+     without, a plain box drawn from the same tokens. */
   .comic-hero :global(.rating-block) {
     position: relative;
     flex-shrink: 0;
@@ -436,19 +446,25 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 0;
     width: 52px;
     height: 52px;
     padding: 0;
-    border: none;
-    background: var(--font-link-color);
-    /* Same as the themed buttons' text (.theme-button), e.g. Start reading. */
-    color: var(--page-color);
-    font-family: inherit;
+    font-family: 'saira', sans-serif;
     line-height: 1;
   }
 
-  .comic-hero :global(.rating-block--notes) {
-    cursor: pointer;
+  /* The plain box only - the notes button gets these (plus its hover and
+     pressed states) from the standard classes, which this would outrank. */
+  .comic-hero :global(.rating-block:not(.sgxp-btn)) {
+    background: color-mix(in srgb, var(--page-color) 60%, black);
+    border: var(--border-width, 1px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 60%, white);
+    box-shadow: var(--btn-shadow);
+    color: var(--font-color);
+  }
+
+  .comic-hero :global(.rating-block--notes[data-state="open"]) {
+    border-color: var(--font-link-color);
   }
 
   /* The eyebrow row above the preview pushes this row down; pull the rating
@@ -459,16 +475,6 @@
     .comic-hero :global(.rating-block) {
       margin-top: -22px;
     }
-  }
-
-  .comic-hero :global(.rating-block--notes)::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    border-style: solid;
-    border-width: 0 10px 10px 0;
-    border-color: transparent var(--page-color) color-mix(in srgb, var(--font-link-color) 60%, black) transparent;
   }
 
   .rating-number {
@@ -501,52 +507,21 @@
     margin: 0;
   }
 
-  /* A 36px hit area around the icon, pulled into the row's padding so it
-     doesn't make the row taller. */
-  .hero-bookmark {
-    flex-shrink: 0;
+  /* The standard subtle button, its 42px hit area pulled into the row's
+     padding so it doesn't make the row taller. */
+  .hero-stats-row :global(.hero-bookmark) {
     align-self: center;
-    margin: -8px -8px -8px 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    margin: -10px -10px -10px 0;
+    padding: 0 10px;
     gap: 5px;
-    min-width: 36px;
-    height: 36px;
-    padding: 0 8px;
-    background: transparent;
-    border: none;
-    color: var(--font-color);
-    cursor: pointer;
   }
 
-  /* The icon stays faint until used; the count reads like the stats. */
-  .hero-bookmark :global(svg) {
-    opacity: 0.45;
-    transition: opacity 0.15s ease, color 0.15s ease;
-  }
-
+  /* The count reads like the stats. */
   .hero-bookmark-count {
     font-family: 'saira', sans-serif;
     font-size: 15px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
-  }
-
-  .hero-bookmark.active :global(svg) {
-    color: var(--font-link-color);
-    opacity: 1;
-  }
-
-  .hero-bookmark:disabled {
-    cursor: default;
-  }
-
-  @media (hover: hover) {
-    .hero-bookmark:hover:not(:disabled) :global(svg) {
-      color: var(--font-link-color);
-      opacity: 1;
-    }
   }
 
   .hero-stats dt {
@@ -595,11 +570,9 @@
     border-top: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 85%, white);
   }
 
-  /* Look comes from the themed Button (.theme-button); this only sizes it. */
+  /* Standard buttons; this only shares out the row between them. */
   .hero-actions :global(.hero-cta) {
     flex: 1 1 200px;
-    height: 46px;
-    gap: 8px;
   }
 
   /* Even columns however many creators there are (group comics list 14+). */
@@ -787,18 +760,13 @@
       padding: 0;
     }
 
-    /* Same look as the reader toolbar's square nav buttons. */
+    /* Phones swap the text link for the standard tool button (same family
+       as the reader toolbar's buttons). */
     .hero-back {
-      gap: 6px;
-      height: 42px;
-      padding: 0 12px 0 10px;
-      background: color-mix(in srgb, var(--page-color) 80%, black);
-      border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 65%, white);
-      color: var(--font-color);
-      transition: border-color 0.15s ease, color 0.15s ease;
+      display: none;
     }
 
-    .hero-back-icon {
+    .hero-nav :global(.hero-back-btn) {
       display: inline-flex;
     }
 
