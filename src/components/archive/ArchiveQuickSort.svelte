@@ -1,7 +1,7 @@
 <script lang="ts">
   import { toast } from 'svelte-sonner';
   import { fade } from 'svelte/transition';
-  import { X, ChevronLeft, ChevronRight, RotateCw, CircleCheck, CircleX } from 'lucide-svelte';
+  import { X, ChevronLeft, ChevronRight, RotateCw, CircleCheck, CircleX, ZoomIn, ZoomOut, Shrink } from 'lucide-svelte';
   import Spinner from '../Spinner.svelte';
   import { Button, ToggleGroup } from '$lib/components';
   import { applyArchiveFilters } from '$lib/archiveFilterQuery';
@@ -167,6 +167,16 @@
   // Mobile shows one preview image at a time (three side by side don't fit)
   // with dots to switch between them - resets whenever the comic changes.
   let mobileImageIndex = $state(0);
+
+  // Phones: one fixed set of zoom buttons, acting on the image showing.
+  let imageViews = $state<ReturnType<typeof QuickSortImage>[]>([]);
+  let imageScales = $state<number[]>([]);
+  const mobileScale = $derived(imageScales[mobileImageIndex] ?? 1);
+  const mobileZoomed = $derived(mobileScale > 1.001);
+  const mobileCanZoomIn = $derived(mobileScale < 8);
+  const mobileZoomIn = () => imageViews[mobileImageIndex]?.zoomIn();
+  const mobileZoomOut = () => imageViews[mobileImageIndex]?.zoomOut();
+  const mobileFit = () => imageViews[mobileImageIndex]?.fit();
   $effect(() => {
     current?.id;
     mobileImageIndex = 0;
@@ -682,12 +692,30 @@
             <div class="qs-images-column">
               <div class="qs-images-viewport">
                 <div class="qs-images-track" style="transform: translateX(-{mobileImageIndex * 100}%)">
-                  {#each currentImages as img (img.n)}
+                  {#each currentImages as img, i (img.n)}
                     <div class="qs-image-wrapper">
-                      <QuickSortImage comicId={current.comicId} n={img.n} ext={img.ext} />
+                      <QuickSortImage
+                        bind:this={imageViews[i]}
+                        comicId={current.comicId}
+                        n={img.n}
+                        ext={img.ext}
+                        onScaleChange={(s) => (imageScales[i] = s)}
+                      />
                     </div>
                   {/each}
                 </div>
+                {#if imageScales.length}
+                  <!-- Phones: one set of zoom buttons that stays put, acting on the
+                       image showing. Fit comes first so it appears without moving
+                       the other two. -->
+                  <div class="qs-mobile-zoom">
+                    {#if mobileZoomed}
+                      <Button variant="tool" size="icon-mini" icon={Shrink} onclick={mobileFit} aria-label="Fit image" title="Fit image" />
+                    {/if}
+                    <Button variant="tool" size="icon-mini" icon={ZoomOut} disabled={!mobileZoomed} onclick={mobileZoomOut} aria-label="Zoom out" title="Zoom out" />
+                    <Button variant="tool" size="icon-mini" icon={ZoomIn} disabled={!mobileCanZoomIn} onclick={mobileZoomIn} aria-label="Zoom in" title="Zoom in" />
+                  </div>
+                {/if}
               </div>
               {#if currentImages.length > 1}
                 <div class="qs-mobile-dots">
@@ -989,6 +1017,12 @@
     overscroll-behavior: contain;
   }
 
+  /* Phones only (see the media query): fixed in the viewer's corner rather
+     than riding along with each image as the strip slides. */
+  .qs-mobile-zoom {
+    display: none;
+  }
+
   .qs-images-track {
     display: flex;
     gap: 0.5rem;
@@ -1072,9 +1106,18 @@
        determined the wrapped row's height regardless of the shorter text
        inside it, pushing the second line down after the button's full
        height instead of right after the text). */
+    /* Too short a screen for the image, its dots, Previous/Next and the
+       sorting controls all at once (e.g. a phone with its browser toolbars
+       showing): the overlay scrolls rather than squeezing the image area,
+       which used to let the image and dots slide under Previous/Next. */
+    .qs-overlay {
+      overflow-y: auto;
+    }
+
+    /* Room below the close button for its block shadow. */
     .qs-top-bar {
       align-items: flex-start;
-      padding: 0.35rem 0.75rem;
+      padding: 0.5rem 0.75rem 0.85rem;
     }
 
     .qs-top-bar-text {
@@ -1130,6 +1173,15 @@
          controls below. */
       padding: 0 0 0.5rem;
       gap: 0;
+      /* Never shorter than its own content (see .qs-overlay above). */
+      flex: 1 0 auto;
+      min-height: auto;
+      overflow: visible;
+    }
+
+    .qs-images-column {
+      flex: 1 0 auto;
+      height: auto;
     }
 
     /* The modal locks body scroll and is a fixed full-viewport overlay
@@ -1138,10 +1190,23 @@
        percentages depending on ancestor flex-grow having already
        resolved) is what actually stops the box rendering thin for a
        frame before settling to full width while an image is loading. */
+    .qs-mobile-zoom {
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      display: flex;
+      gap: 8px;
+      z-index: 1;
+    }
+
     .qs-images-viewport {
+      position: relative;
+      flex: 1 0 auto;
       overflow: hidden;
       width: 100vw;
-      min-height: 45vh;
+      /* Fills whatever the controls leave, but never below a size that's
+         still useful to look at (zoom in for detail). */
+      height: 220px;
     }
 
     .qs-images-track {
