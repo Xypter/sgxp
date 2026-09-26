@@ -1,12 +1,11 @@
 <script lang="ts">
 	import { Pagination as PaginationPrimitive } from "bits-ui";
 	import { cn } from "@/lib/utils.js";
-	import { type Props, buttonVariants } from "@/components/ui/button/index.js";
+	import { type Props, sgxpButtonClass } from "@/components/ui/button/index.js";
 
 	let {
 		ref = $bindable(null),
 		class: className,
-		size = "icon",
 		isActive,
 		page,
 		children,
@@ -21,19 +20,15 @@
 	{page.value}
 {/snippet}
 
+<!-- SGXP standard: secondary page buttons; aria-current fills the current page
+     with the accent (src/styles/buttons.css). -->
 <PaginationPrimitive.Page
 	bind:ref
 	{page}
 	aria-current={isActive ? "page" : undefined}
 	data-slot="pagination-link"
 	data-active={isActive}
-	class={cn(
-		buttonVariants({
-			variant: isActive ? "outline" : "ghost",
-			size,
-		}),
-		className
-	)}
+	class={cn(sgxpButtonClass({ variant: "secondary", size: "icon" }), className)}
 	children={children || Fallback}
 	{...restProps}
 />

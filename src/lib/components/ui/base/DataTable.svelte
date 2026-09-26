@@ -4,8 +4,7 @@
   import { fade } from 'svelte/transition';
   import * as Table from '$components/ui/table';
   import { FlexRender } from '$components/ui/data-table';
-  import { Button } from '$lib/components';
-  import { ChevronLeft, ChevronRight } from 'lucide-svelte';
+  import NumberedPagination from './NumberedPagination.svelte';
 
   interface DataTableProps<TData> {
     table: TableType<TData>;
@@ -62,7 +61,6 @@
             data-state={row.getIsSelected() && "selected"}
             onclick={() => onRowClick?.(row.original)}
             in:fade={{ duration: 200 }}
-            out:fade={{ duration: 150 }}
           >
             {#each row.getVisibleCells() as cell (cell.id)}
               <Table.Cell>
@@ -92,28 +90,12 @@
       <div class="pagination-info">
         Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
       </div>
-      <div class="pagination-buttons">
-        <Button
-          themed={themed}
-          variant="outline"
-          size="sm"
-          onclick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          <ChevronLeft class="h-4 w-4" />
-          Previous
-        </Button>
-        <Button
-          themed={themed}
-          variant="outline"
-          size="sm"
-          onclick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          Next
-          <ChevronRight class="h-4 w-4" />
-        </Button>
-      </div>
+      <NumberedPagination
+        count={table.getRowCount()}
+        perPage={table.getState().pagination.pageSize}
+        page={table.getState().pagination.pageIndex + 1}
+        onPageChange={(page) => table.setPageIndex(page - 1)}
+      />
     </div>
   {/if}
 </div>
@@ -130,6 +112,7 @@
 
   .pagination-controls {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     padding: 16px 0;
@@ -139,11 +122,6 @@
   .pagination-info {
     font-size: 14px;
     color: var(--font-color, #888);
-  }
-
-  .pagination-buttons {
-    display: flex;
-    gap: 8px;
   }
 
   /* Themed styles */

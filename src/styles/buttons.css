@@ -217,6 +217,14 @@
 }
 
 /* Pagination uses secondary buttons; the current page fills with the accent. */
+
+/* Page numbers are square until a 3+ digit page needs more room. */
+[data-slot='pagination-link'].sgxp-btn--icon {
+  width: auto;
+  min-width: var(--control-height);
+  padding: 0 10px;
+}
+
 .sgxp-btn--secondary[aria-current='page'] {
   background: var(--font-link-color);
   border-color: var(--font-link-color);

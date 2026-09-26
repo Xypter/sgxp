@@ -6,7 +6,7 @@
 	import { ensureGradientOverridesLoaded, getGradientOverrides } from '../lib/cardColorGradients.svelte';
 
 	// Import from component library
-	import { Button, Input, Select, Combobox, Pagination } from '$lib/components';
+	import { Button, Input, Select, Combobox, NumberedPagination } from '$lib/components';
 
 	import SpriteViewer from './SpriteViewer.svelte';
 	import { applySpriteListFieldParams } from '$lib/spriteListQuery';
@@ -905,29 +905,9 @@
 						style="background-color: var(--page-color);
 						border-left: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white); border-right: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white); box-shadow: var(--box-shadow); position: relative; z-index: 1;"
 					>
-						<Pagination.Root bind:page={currentPage} count={totalResults} perPage={SPRITES_PER_PAGE} siblingCount={2}>
-							{#snippet children({ pages, range })}
-								<Pagination.Content>
-									<Pagination.Item>
-										<Pagination.PrevButton disabled={isFetchingInProgress || pageCount <= 1} />
-									</Pagination.Item>
-									{#each pages as page (page.key)}
-										{#if page.type === 'ellipsis'}
-											<Pagination.Item>
-												<Pagination.Ellipsis />
-											</Pagination.Item>
-										{:else}
-											<Pagination.Item>
-												<Pagination.Link {page} isActive={page.value === currentPage} disabled={isFetchingInProgress || pageCount <= 1} />
-											</Pagination.Item>
-										{/if}
-									{/each}
-									<Pagination.Item>
-										<Pagination.NextButton disabled={isFetchingInProgress || pageCount <= 1} />
-									</Pagination.Item>
-								</Pagination.Content>
-							{/snippet}
-						</Pagination.Root>
+						<!-- No disabling while a page loads: fetchSprites aborts the previous
+						     request, and fading the buttons for each fetch read as a flicker. -->
+						<NumberedPagination bind:page={currentPage} count={totalResults} perPage={SPRITES_PER_PAGE} siblingCount={2} />
 					</div>
 
 					<div id="hello" class="sprite-container">

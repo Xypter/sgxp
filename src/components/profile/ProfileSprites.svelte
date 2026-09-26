@@ -1,6 +1,8 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import { Image } from 'lucide-svelte';
   import Spinner from '../Spinner.svelte';
+  import { NumberedPagination } from '$lib/components';
   import { spriteCardText } from '../../lib/spriteCardText';
   import { getCardColorUrls } from '../../lib/cardColors';
   import { ensureGradientOverridesLoaded, getGradientOverrides } from '../../lib/cardColorGradients.svelte';
@@ -63,10 +65,26 @@
   const columns = $derived(Math.max(1, Math.floor((boxWidth - BOX_PADDING + CARD_GAP) / (CARD_WIDTH + CARD_GAP))));
   const visibleCount = $derived(columns * ROWS_SHOWN);
 
+  // Two rows per page. A column-count change (resize, rotating a phone)
+  // moves every page boundary, so stay on whichever page now holds the first
+  // card that was showing rather than jumping back to page 1.
+  let page = $state(1);
+  let lastVisibleCount = 0;
+  $effect.pre(() => {
+    if (visibleCount === lastVisibleCount) return;
+    if (lastVisibleCount) page = Math.floor(((untrack(() => page) - 1) * lastVisibleCount) / visibleCount) + 1;
+    lastVisibleCount = visibleCount;
+  });
+
   const API_BASE_URL = "https://cms.sgxp.me/api/sprites";
 
   // Fetch user's sprites
+  // Only the newest request's result is used, so paging quickly can't
+  // leave an older page's cards on screen.
+  let latestRequest = 0;
+
   async function loadSprites() {
+    const request = ++latestRequest;
     loading = true;
     error = null;
 
@@ -74,11 +92,13 @@
       // Fetch only as many sprites as will actually be shown (two rows at the
       // current column count) - see visibleCount above.
       const response = await fetch(
-        `${API_BASE_URL}?where[author][equals]=${userId}&depth=1&limit=${visibleCount}&sort=-createdAt`
+        `${API_BASE_URL}?where[author][equals]=${userId}&depth=1&limit=${visibleCount}&page=${page}&sort=-createdAt`
       );
 
+      if (request !== latestRequest) return;
       if (response.ok) {
         const data = await response.json();
+        if (request !== latestRequest) return;
         sprites = data.docs || [];
         totalSprites = data.totalDocs || 0;
       } else {
@@ -88,7 +108,7 @@
       console.error('Error fetching sprites:', err);
       error = 'Failed to load sprites';
     } finally {
-      loading = false;
+      if (request === latestRequest) loading = false;
     }
   }
 
@@ -97,6 +117,7 @@
   // column-count thresholds.
   $effect(() => {
     visibleCount;
+    page;
     loadSprites();
   });
 </script>
@@ -113,7 +134,17 @@
   </div>
 
   <div class="profile-sprites-box" bind:clientWidth={boxWidth}>
-    {#if loading}
+    <!-- At the top, like the sprites page's pagination. -->
+    {#if totalSprites > visibleCount}
+      <div class="profile-pagination">
+        <NumberedPagination count={totalSprites} perPage={visibleCount} bind:page />
+      </div>
+    {/if}
+
+    <!-- Only the first load shows the loading message; changing pages keeps
+         the current cards in place until the next page arrives, so the box
+         doesn't collapse and regrow. -->
+    {#if loading && sprites.length === 0}
       <div class="sprites-loading">
         <Spinner size={24} label={null} />
         <span>Loading sprites...</span>
@@ -192,6 +223,13 @@
 </div>
 
 <style>
+  /* Bottom padding leaves room for the buttons' block shadows. */
+  .profile-pagination {
+    display: flex;
+    justify-content: center;
+    padding: 0 0 20px;
+  }
+
   .profile-sprites-section {
     margin-bottom: var(--gap);
   }

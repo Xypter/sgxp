@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Pagination as PaginationPrimitive } from "bits-ui";
 	import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
-	import { buttonVariants } from "@/components/ui/button/index.js";
+	import { sgxpButtonClass } from "@/components/ui/button/index.js";
 	import { cn } from "@/lib/utils.js";
 
 	let {
@@ -13,21 +13,14 @@
 </script>
 
 {#snippet Fallback()}
-	<span>Next</span>
-	<ChevronRightIcon class="size-4" />
+	<ChevronRightIcon />
 {/snippet}
 
+<!-- SGXP standard: an icon-only secondary arrow, labelled for screen readers. -->
 <PaginationPrimitive.NextButton
 	bind:ref
 	aria-label="Go to next page"
-	class={cn(
-		buttonVariants({
-			size: "default",
-			variant: "ghost",
-			class: "gap-1 px-2.5 sm:pr-2.5",
-		}),
-		className
-	)}
+	class={cn(sgxpButtonClass({ variant: "secondary", size: "icon" }), className)}
 	children={children || Fallback}
 	{...restProps}
 />

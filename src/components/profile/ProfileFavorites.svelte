@@ -1,6 +1,8 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import { Heart, Image } from 'lucide-svelte';
   import Spinner from '../Spinner.svelte';
+  import { NumberedPagination } from '$lib/components';
   import { spriteCardText } from '../../lib/spriteCardText';
   import { getCardColorUrls } from '../../lib/cardColors';
   import { ensureGradientOverridesLoaded, getGradientOverrides } from '../../lib/cardColorGradients.svelte';
@@ -64,10 +66,26 @@
   const columns = $derived(Math.max(1, Math.floor((boxWidth - BOX_PADDING + CARD_GAP) / (CARD_WIDTH + CARD_GAP))));
   const visibleCount = $derived(columns * ROWS_SHOWN);
 
+  // Two rows per page. A column-count change (resize, rotating a phone)
+  // moves every page boundary, so stay on whichever page now holds the first
+  // card that was showing rather than jumping back to page 1.
+  let page = $state(1);
+  let lastVisibleCount = 0;
+  $effect.pre(() => {
+    if (visibleCount === lastVisibleCount) return;
+    if (lastVisibleCount) page = Math.floor(((untrack(() => page) - 1) * lastVisibleCount) / visibleCount) + 1;
+    lastVisibleCount = visibleCount;
+  });
+
   const API_BASE_URL = "https://cms.sgxp.me/api";
 
   // Fetch user's favorite sprites
+  // Only the newest request's result is used, so paging quickly can't
+  // leave an older page's cards on screen.
+  let latestRequest = 0;
+
   async function loadFavorites() {
+    const request = ++latestRequest;
     loading = true;
     error = null;
 
@@ -75,11 +93,13 @@
       // Fetch only as many favorites as will actually be shown (two rows at
       // the current column count) - see visibleCount above.
       const response = await fetch(
-        `${API_BASE_URL}/favorites?where[user][equals]=${userId}&where[favoritedItem.relationTo][equals]=sprites&depth=3&limit=${visibleCount}&sort=-createdAt`
+        `${API_BASE_URL}/favorites?where[user][equals]=${userId}&where[favoritedItem.relationTo][equals]=sprites&depth=3&limit=${visibleCount}&page=${page}&sort=-createdAt`
       );
 
+      if (request !== latestRequest) return;
       if (response.ok) {
         const data = await response.json();
+        if (request !== latestRequest) return;
         const favoriteDocs = data.docs || [];
 
         // Extract sprites from favorites (favoritedItem is polymorphic)
@@ -98,7 +118,7 @@
       console.error('Error fetching favorites:', err);
       error = 'Failed to load favorites';
     } finally {
-      loading = false;
+      if (request === latestRequest) loading = false;
     }
   }
 
@@ -107,6 +127,7 @@
   // column-count thresholds.
   $effect(() => {
     visibleCount;
+    page;
     loadFavorites();
   });
 </script>
@@ -123,7 +144,17 @@
   </div>
 
   <div class="profile-favorites-box" bind:clientWidth={boxWidth}>
-    {#if loading}
+    <!-- At the top, like the sprites page's pagination. -->
+    {#if totalFavorites > visibleCount}
+      <div class="profile-pagination">
+        <NumberedPagination count={totalFavorites} perPage={visibleCount} bind:page />
+      </div>
+    {/if}
+
+    <!-- Only the first load shows the loading message; changing pages keeps
+         the current cards in place until the next page arrives, so the box
+         doesn't collapse and regrow. -->
+    {#if loading && favorites.length === 0}
       <div class="favorites-loading">
         <Spinner size={24} label={null} />
         <span>Loading favorites...</span>
@@ -203,6 +234,13 @@
 </div>
 
 <style>
+  /* Bottom padding leaves room for the buttons' block shadows. */
+  .profile-pagination {
+    display: flex;
+    justify-content: center;
+    padding: 0 0 20px;
+  }
+
   .profile-favorites-section {
     margin-bottom: var(--gap);
   }

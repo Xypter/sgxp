@@ -76,8 +76,9 @@
     font-family: 'saira', monospace !important;
     font-size: 14px !important;
     padding: 8px 12px !important;
-    min-height: 42px !important;
-    height: 42px !important;
+    /* Shared with buttons and inputs (src/styles/buttons.css). */
+    min-height: var(--control-height) !important;
+    height: var(--control-height) !important;
     transition: all var(--transition-speed, 200ms) ease-in-out !important;
     text-shadow: 1px 0px 0 var(--bg-color), 1px 1px 0 var(--bg-color), 0px 1px 0 var(--bg-color) !important;
     min-width: 150px;

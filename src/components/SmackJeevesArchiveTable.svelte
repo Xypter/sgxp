@@ -21,8 +21,8 @@
   import { createSvelteTable, renderComponent } from '$components/ui/data-table';
   import * as Tooltip from '$components/ui/tooltip';
   import * as Accordion from '$components/ui/accordion';
-  import { DataTable, Input, Button } from '$lib/components';
-  import { Bookmark, ChevronLeft, ChevronRight, LayoutGrid, SlidersHorizontal, Table, X } from 'lucide-svelte';
+  import { DataTable, Input, Button, NumberedPagination } from '$lib/components';
+  import { Bookmark, LayoutGrid, SlidersHorizontal, Table, X } from 'lucide-svelte';
 
   import ArchiveComicCard from './archive/ArchiveComicCard.svelte';
   import ArchiveFilterSheet from './archive/ArchiveFilterSheet.svelte';
@@ -696,9 +696,8 @@
   }
 
   let cardsTop = $state<HTMLElement | null>(null);
-  function goToPage(direction: 'previous' | 'next') {
-    if (direction === 'previous') table.previousPage();
-    else table.nextPage();
+  function goToPage(page: number) {
+    table.setPageIndex(page - 1);
     // Back to the top of the card list, not the page - the intro and toolbar
     // above it would otherwise push the first new card off-screen.
     const top = (cardsTop?.getBoundingClientRect().top ?? 0) + window.scrollY - 80;
@@ -901,28 +900,12 @@
                the card and table views page identically. -->
           <div class="card-pagination">
             <div class="card-pagination-info">Page {pagination.pageIndex + 1} of {pageCount}</div>
-            <div class="card-pagination-buttons">
-              <Button
-                themed
-                variant="outline"
-                size="sm"
-                onclick={() => goToPage('previous')}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <ChevronLeft class="h-4 w-4" />
-                Previous
-              </Button>
-              <Button
-                themed
-                variant="outline"
-                size="sm"
-                onclick={() => goToPage('next')}
-                disabled={!table.getCanNextPage()}
-              >
-                Next
-                <ChevronRight class="h-4 w-4" />
-              </Button>
-            </div>
+            <NumberedPagination
+              count={table.getRowCount()}
+              perPage={pagination.pageSize}
+              page={pagination.pageIndex + 1}
+              onPageChange={goToPage}
+            />
           </div>
         {/if}
       </div>
@@ -1233,15 +1216,23 @@
 
   /* Mirrors DataTable.svelte's .pagination-controls plus the boxed
      .table-view override above, so both views' pagers look the same. */
+  /* Stacks and centres on narrow screens. */
   .card-pagination {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    padding: 15px;
+    gap: 12px 16px;
+    padding: 15px 15px 22px;
     background: var(--page-color);
     border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white);
     box-shadow: var(--box-shadow);
+  }
+
+  @media (max-width: 768px) {
+    .card-pagination {
+      justify-content: center;
+    }
   }
 
   .card-pagination-info {
@@ -1250,10 +1241,6 @@
     opacity: 0.8;
   }
 
-  .card-pagination-buttons {
-    display: flex;
-    gap: 8px;
-  }
 
   /* Card-view controls: the Filter & Sort sheet trigger and the removable
      chips for whatever's applied - hidden while the table (which has its own
