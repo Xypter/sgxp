@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Button, Checkbox } from '$lib/components';
-  import { CheckCircle2 } from 'lucide-svelte';
+  import { CheckCircle2, CircleX } from 'lucide-svelte';
 
   interface UserRef {
     id: number | string;
@@ -32,6 +32,8 @@
     // ArchiveStatusBadge earlier in the card, so repeating it here as a
     // second badge is redundant. Buttons still render as normal.
     hideBadge?: boolean;
+    /** Mini in table rows; the phone cards use the full size. */
+    size?: 'default' | 'mini';
   }
 
   let {
@@ -49,6 +51,7 @@
     onMarkUploaded,
     unsortedAsButton = false,
     hideBadge = false,
+    size = 'mini',
   }: Props = $props();
 
   function nameOf(ref: UserRef | number | string | null | undefined): string {
@@ -72,10 +75,7 @@
 {#if status === 'unsorted'}
   {#if canEdit}
     {#if unsortedAsButton}
-      <Button variant="outline" size="sm" onclick={onMarkReady} themed class="confirm-review-btn">
-        <CheckCircle2 size={14} />
-        Ready for Review
-      </Button>
+      <Button variant="secondary" {size} icon={CheckCircle2} onclick={onMarkReady} class="confirm-review-btn">Ready for Review</Button>
     {:else}
       <label class="mark-ready-label">
         <Checkbox checked={false} themed onCheckedChange={(checked) => checked && onMarkReady()} />
@@ -87,28 +87,23 @@
   {/if}
 {:else if status === 'ready-for-review'}
   {#if canEdit && !isPreparer}
-    <Button variant="outline" size="sm" onclick={onConfirm} themed class={willExclude ? 'exclude-btn' : 'confirm-review-btn'}>
-      <CheckCircle2 size={14} />
-      {willExclude ? 'Confirm Exclusion' : 'Confirm Review'}
-    </Button>
+    {#if willExclude}
+      <Button variant="danger" {size} icon={CircleX} onclick={onConfirm} class="confirm-review-btn">Confirm Exclusion</Button>
+    {:else}
+      <Button variant="secondary" {size} icon={CheckCircle2} onclick={onConfirm} class="confirm-review-btn">Confirm Review</Button>
+    {/if}
   {:else if !hideBadge}
     <span class="review-badge review-badge--pending">Awaiting review</span>
   {/if}
 {:else if status === 'ready-for-rating'}
   {#if isAdmin}
-    <Button variant="outline" size="sm" onclick={onMarkReadyToUpload} themed class="confirm-review-btn">
-      <CheckCircle2 size={14} />
-      Mark Ready to Upload
-    </Button>
+    <Button variant="secondary" {size} icon={CheckCircle2} onclick={onMarkReadyToUpload} class="confirm-review-btn">Mark Ready to Upload</Button>
   {:else if !hideBadge}
     <span class="review-badge review-badge--locked" title="Reviewed by {nameOf(reviewedBy)}">Ready for rating</span>
   {/if}
 {:else if status === 'ready-to-upload'}
   {#if isAdmin}
-    <Button variant="outline" size="sm" onclick={onMarkUploaded} themed class="confirm-review-btn">
-      <CheckCircle2 size={14} />
-      Mark Uploaded
-    </Button>
+    <Button variant="secondary" {size} icon={CheckCircle2} onclick={onMarkUploaded} class="confirm-review-btn">Mark Uploaded</Button>
   {:else if !hideBadge}
     <span class="review-badge review-badge--locked">Ready to upload</span>
   {/if}
@@ -167,19 +162,4 @@
     color: #ef4444;
   }
 
-  :global(.confirm-review-btn),
-  :global(.exclude-btn) {
-    font-size: 12px !important;
-    padding: 4px 10px !important;
-    height: auto !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 4px !important;
-    white-space: nowrap !important;
-  }
-
-  :global(.exclude-btn) {
-    color: #ef4444 !important;
-    border-color: #ef4444 !important;
-  }
 </style>

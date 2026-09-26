@@ -9,8 +9,8 @@
   } from '@tanstack/table-core';
   import { createSvelteTable, renderComponent } from '$components/ui/data-table';
   import * as Accordion from '$components/ui/accordion';
-  import { DataTable, Select, Input, Button } from '$lib/components';
-  import { ExternalLink, Check, X } from 'lucide-svelte';
+  import { DataTable, Select, Input, Button, NumberedPagination } from '$lib/components';
+  import { ExternalLink, Check, X, LogIn, Send, Images } from 'lucide-svelte';
   import Spinner from './Spinner.svelte';
   import { fade } from 'svelte/transition';
   import { toast } from 'svelte-sonner';
@@ -1017,9 +1017,7 @@
       <div class="header-side">
         <div class="access-status">
           {#if !user}
-            <Button themed size="sm" href="/login?redirect=/smackjeevesarchivetriage">
-              Log In to Participate
-            </Button>
+            <Button variant="primary" icon={LogIn} href="/login?redirect=/smackjeevesarchivetriage">Log In to Participate</Button>
           {:else if canEdit}
             <span class="access-badge access-badge--granted">
               <Check size={14} /> Archivist Access
@@ -1027,7 +1025,7 @@
           {:else if archivistRequestedAt}
             <span class="access-badge access-badge--pending">Archivist Request Pending</span>
           {:else}
-            <Button themed size="sm" disabled={requestingAccess} onclick={requestArchivistAccess}>
+            <Button variant="primary" icon={Send} loading={requestingAccess} onclick={requestArchivistAccess}>
               {requestingAccess ? 'Sending...' : 'Request Archivist Access'}
             </Button>
           {/if}
@@ -1060,11 +1058,9 @@
         themed
         class="status-filter-select"
       />
-      <Button themed variant="ghost" size="sm" class="clear-filters-btn" disabled={!hasActiveFilters} onclick={clearFilters}>
-        <X size={14} /> Clear Filters
-      </Button>
+      <Button variant="secondary" icon={X} disabled={!hasActiveFilters} onclick={clearFilters}>Clear Filters</Button>
       {#if canEdit}
-        <Button themed size="sm" class="quick-sort-btn" onclick={() => openQuickSort()}>Quick Sort</Button>
+        <Button variant="primary" icon={Images} onclick={() => openQuickSort()}>Quick Sort</Button>
       {/if}
     </div>
 
@@ -1134,6 +1130,7 @@
                 value={String(entry.isSpriteComic ?? false)}
                 options={YES_NO_OPTIONS}
                 disabled={!canEdit || locked(entry)}
+                size="default"
                 onSave={(v) => saveField(entry, 'isSpriteComic', v === 'true')}
               />
             </div>
@@ -1146,6 +1143,7 @@
                   value={String(entry.isGameRelated ?? false)}
                   options={YES_NO_OPTIONS}
                   disabled={!canEdit || locked(entry)}
+                  size="default"
                   onSave={(v) => saveField(entry, 'isGameRelated', v === 'true')}
                 />
               {/if}
@@ -1236,6 +1234,7 @@
               onMarkUploaded={() => markUploaded(entry)}
               unsortedAsButton
               hideBadge
+              size="default"
             />
           </div>
         </div>
@@ -1243,21 +1242,12 @@
 
       {#if pageCount > 1}
         <div class="mobile-pagination">
-          <button
-            class="pagination-btn"
-            onclick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </button>
-          <span class="pagination-info">Page {pagination.pageIndex + 1} of {pageCount}</span>
-          <button
-            class="pagination-btn"
-            onclick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </button>
+          <NumberedPagination
+            count={totalEntries}
+            perPage={pagination.pageSize}
+            page={pagination.pageIndex + 1}
+            onPageChange={(page) => table.setPageIndex(page - 1)}
+          />
         </div>
       {/if}
     </div>
@@ -1519,15 +1509,6 @@
     min-height: 42px !important;
   }
 
-  /* Matches the search input/status Select's 42px height (they mismatch
-     by default - see the search input's own override above) rather than
-     the button's default shadcn `size="sm"` height. */
-  :global(.quick-sort-btn),
-  :global(.clear-filters-btn) {
-    height: 42px !important;
-    min-height: 42px !important;
-  }
-
   .results-count {
     display: flex;
     flex-wrap: wrap;
@@ -1709,36 +1690,11 @@
 
   .mobile-pagination {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
+    justify-content: center;
     padding: 15px;
     background: var(--page-color);
     border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white);
     box-shadow: var(--box-shadow);
-  }
-
-  .pagination-btn {
-    padding: 8px 16px;
-    background: var(--font-link-color);
-    color: white;
-    border: none;
-    font-family: 'saira';
-    font-weight: 700;
-    font-size: 14px;
-    cursor: pointer;
-  }
-
-  .pagination-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
-  .pagination-info {
-    font-family: 'saira';
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--font-color);
   }
 
   @media (max-width: 768px) {
@@ -1864,22 +1820,20 @@
       width: 100%;
     }
 
-    .entry-card :global(.cell-toggle-group) :global(.theme-toggle-group-item) {
+    .entry-card :global(.cell-toggle-group) {
+      display: flex;
+    }
+
+    .entry-card :global(.cell-toggle-group > *) {
       flex: 1;
-      height: 40px !important;
-      font-size: 13px !important;
     }
 
     .entry-card-field--review {
       margin-top: 4px;
     }
 
-    .entry-card-field--review :global(.confirm-review-btn),
-    .entry-card-field--review :global(.exclude-btn) {
+    .entry-card-field--review :global(.confirm-review-btn) {
       width: 100%;
-      justify-content: center !important;
-      height: 44px !important;
-      font-size: 14px !important;
     }
   }
 

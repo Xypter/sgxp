@@ -11,33 +11,30 @@
   let { label, sorted, onclick }: Props = $props();
 </script>
 
-<Button variant="ghost" size="sm" {onclick} class="sortable-header-btn">
+<!-- The standard subtle button at mini size (12px, like the header text
+     around it); the sorted column's arrow is lit. -->
+<Button
+  variant="subtle"
+  size="mini"
+  {onclick}
+  class="sortable-header-btn"
+  data-state={sorted ? 'on' : undefined}
+  data-icon-fill="false"
+>
   {label}
   {#if sorted === 'asc'}
-    <ArrowUp size={14} />
+    <ArrowUp />
   {:else if sorted === 'desc'}
-    <ArrowDown size={14} />
+    <ArrowDown />
   {:else}
-    <ArrowUpDown size={14} />
+    <ArrowUpDown />
   {/if}
 </Button>
 
 <style>
+  /* Text lines up with the column's cells (the button's own padding sits
+     outside the header's). */
   :global(.sortable-header-btn) {
-    display: flex !important;
-    align-items: center !important;
-    gap: 4px !important;
-    padding: 0 !important;
-    height: auto !important;
-    background: transparent !important;
-    color: inherit !important;
-    font-family: 'saira', sans-serif !important;
-    font-weight: 600 !important;
-    font-size: inherit !important;
-  }
-
-  :global(.sortable-header-btn:hover) {
-    background: transparent !important;
-    color: var(--font-link-color) !important;
+    margin-left: -8px;
   }
 </style>

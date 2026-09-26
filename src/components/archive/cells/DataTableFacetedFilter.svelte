@@ -1,6 +1,8 @@
 <script lang="ts">
   import * as Popover from '$components/ui/popover';
   import { ListFilter, Square, SquareCheck, X } from 'lucide-svelte';
+  import { Button } from '$lib/components';
+  import { sgxpButtonClass } from '$components/ui/button';
 
   interface Option {
     value: string;
@@ -27,16 +29,16 @@
     onChange([]);
   }
 
-  const triggerClass = $derived(
-    `theme-faceted-filter-trigger${selected.length > 0 ? ' theme-faceted-filter-trigger--active' : ''}`
-  );
+  // The standard subtle icon button (a popover trigger, so via the class
+  // helper); how many values are picked shows as the standard corner badge.
+  const triggerClass = sgxpButtonClass({ variant: 'subtle', size: 'icon-mini' });
 </script>
 
 <Popover.Root bind:open>
   <Popover.Trigger class={triggerClass} aria-label="Filter {title}" title="Filter {title}">
-    <ListFilter size={13} />
+    <ListFilter />
     {#if selected.length > 0}
-      <span class="theme-faceted-filter-badge">{selected.length}</span>
+      <span class="sgxp-btn-badge sgxp-btn-badge--corner">{selected.length}</span>
     {/if}
   </Popover.Trigger>
   <Popover.Content class="theme-faceted-filter-content" align="start">
@@ -53,47 +55,14 @@
       {/each}
     </div>
     {#if selected.length > 0}
-      <button type="button" class="theme-faceted-filter-clear" onclick={clear}>
-        <X size={13} /> Clear filter
-      </button>
+      <div class="theme-faceted-filter-clear">
+        <Button variant="quiet" icon={X} onclick={clear}>Clear filter</Button>
+      </div>
     {/if}
   </Popover.Content>
 </Popover.Root>
 
 <style>
-  :global(.theme-faceted-filter-trigger) {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 2px !important;
-    background: transparent !important;
-    border: none !important;
-    color: color-mix(in srgb, var(--font-color) 60%, transparent) !important;
-    cursor: pointer;
-    padding: 2px !important;
-    border-radius: 0px !important;
-    position: relative;
-  }
-
-  :global(.theme-faceted-filter-trigger:hover) {
-    color: var(--font-link-color) !important;
-  }
-
-  :global(.theme-faceted-filter-trigger--active) {
-    color: var(--font-link-color) !important;
-  }
-
-  :global(.theme-faceted-filter-badge) {
-    font-size: 10px;
-    line-height: 1;
-    font-family: 'saira', monospace;
-    background: var(--font-link-color);
-    color: var(--page-color);
-    border-radius: 999px;
-    padding: 1px 5px;
-    font-weight: 700;
-  }
-
   :global(.theme-faceted-filter-content) {
     background: color-mix(in srgb, var(--page-color) 60%, black) !important;
     border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white) !important;
@@ -150,22 +119,9 @@
 
   .theme-faceted-filter-clear {
     display: flex;
-    align-items: center;
     justify-content: center;
-    gap: 6px;
-    width: 100%;
     margin-top: 4px;
-    padding: 6px 8px;
-    border: none;
+    padding-top: 6px;
     border-top: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white);
-    background: transparent;
-    color: color-mix(in srgb, var(--font-color) 70%, transparent);
-    cursor: pointer;
-    font-family: 'saira', monospace;
-    font-size: 12px;
-  }
-
-  .theme-faceted-filter-clear:hover {
-    color: var(--font-link-color);
   }
 </style>

@@ -9,6 +9,4 @@
   let { onClick }: Props = $props();
 </script>
 
-<Button themed variant="ghost" size="icon" onclick={onClick} aria-label="View in Quick Sort" title="View in Quick Sort">
-  <Images size={16} />
-</Button>
+<Button variant="tool" size="icon-mini" icon={Images} onclick={onClick} aria-label="View in Quick Sort" title="View in Quick Sort" />

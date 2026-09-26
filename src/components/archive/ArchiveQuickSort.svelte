@@ -1,7 +1,7 @@
 <script lang="ts">
   import { toast } from 'svelte-sonner';
   import { fade } from 'svelte/transition';
-  import { X, ChevronLeft, ChevronRight } from 'lucide-svelte';
+  import { X, ChevronLeft, ChevronRight, RotateCw, CircleCheck, CircleX } from 'lucide-svelte';
   import Spinner from '../Spinner.svelte';
   import { Button, ToggleGroup } from '$lib/components';
   import { applyArchiveFilters } from '$lib/archiveFilterQuery';
@@ -617,9 +617,7 @@
 {#if open}
   <div class="qs-overlay" role="dialog" aria-modal="true" transition:fade={{ duration: 200 }}>
     <div class="qs-top-bar">
-      <Button themed variant="ghost" size="icon" onclick={close} aria-label="Close">
-        <X size={22} />
-      </Button>
+      <Button variant="tool" size="icon" icon={X} onclick={close} aria-label="Close" title="Close" />
       <div class="qs-top-bar-text">
         {#if current}
           <div class="qs-title">
@@ -661,7 +659,7 @@
     {:else if error}
       <div class="qs-state-message">
         <p>{error}</p>
-        <Button themed size="sm" onclick={loadInitial}>Retry</Button>
+        <Button variant="secondary" icon={RotateCw} onclick={loadInitial}>Retry</Button>
       </div>
     {:else if doneForNow}
       <div class="qs-state-message">
@@ -673,17 +671,7 @@
         ontouchstart={handleTouchStart}
         ontouchend={handleTouchEnd}
       >
-        <Button
-          themed
-          variant="ghost"
-          size="icon"
-          class="qs-nav-arrow qs-nav-arrow--prev"
-          onclick={prev}
-          disabled={index === 0}
-          aria-label="Previous comic"
-        >
-          <ChevronLeft size={28} />
-        </Button>
+        <Button variant="tool" size="icon" icon={ChevronLeft} class="qs-nav-arrow qs-nav-arrow--prev" onclick={prev} disabled={index === 0} aria-label="Previous comic" />
 
         {#key current.id}
           {#if currentMeta && currentMeta.images.length === 0}
@@ -717,36 +705,12 @@
           {/if}
         {/key}
 
-        <Button
-          themed
-          variant="ghost"
-          size="icon"
-          class="qs-nav-arrow qs-nav-arrow--next"
-          onclick={next}
-          disabled={index >= entries.length - 1 && !hasNextPage}
-          aria-label="Next comic"
-        >
-          <ChevronRight size={28} />
-        </Button>
+        <Button variant="tool" size="icon" icon={ChevronRight} class="qs-nav-arrow qs-nav-arrow--next" onclick={next} disabled={index >= entries.length - 1 && !hasNextPage} aria-label="Next comic" />
 
         <div class="qs-mobile-comic-nav">
-          <Button
-            themed
-            size="sm"
-            class="qs-mobile-comic-nav-btn"
-            onclick={prev}
-            disabled={index === 0}
-          >
-            <ChevronLeft size={16} /> Previous
-          </Button>
-          <Button
-            themed
-            size="sm"
-            class="qs-mobile-comic-nav-btn"
-            onclick={next}
-            disabled={index >= entries.length - 1 && !hasNextPage}
-          >
-            Next <ChevronRight size={16} />
+          <Button variant="secondary" icon={ChevronLeft} data-icon="plain" class="qs-mobile-comic-nav-btn" onclick={prev} disabled={index === 0}>Previous</Button>
+          <Button variant="secondary" data-icon="plain" class="qs-mobile-comic-nav-btn" onclick={next} disabled={index >= entries.length - 1 && !hasNextPage}>
+            Next <ChevronRight />
           </Button>
         </div>
       </div>
@@ -825,28 +789,29 @@
 
           {#if current.status === 'unsorted'}
             <Button
-              themed
+              variant="primary"
+              icon={CircleCheck}
               class="qs-ready-btn"
+              loading={savingField === 'ready'}
               disabled={!!savingField || missingCategory}
               title={missingCategory ? 'Pick a category before submitting this for review' : undefined}
               onclick={markReady}
             >
-              {#if savingField === 'ready'}
-                <Spinner size={16} label={null} /> Submitting...
-              {:else}
-                Ready for Review →
-              {/if}
+              {savingField === 'ready' ? 'Submitting...' : 'Ready for Review'}
             </Button>
           {:else if current.status === 'ready-for-review'}
             {#if preparerOfThis}
               <div class="qs-readonly-note qs-ready-btn">You prepared this one - awaiting review from another archivist.</div>
             {:else}
-              <Button themed class="qs-ready-btn" disabled={!!savingField} onclick={confirmReviewAction}>
-                {#if savingField === 'confirm'}
-                  <Spinner size={16} label={null} /> Submitting...
-                {:else}
-                  {willExclude ? 'Confirm Exclusion' : 'Confirm Review'} →
-                {/if}
+              <Button
+                variant={willExclude ? 'danger' : 'primary'}
+                icon={willExclude ? CircleX : CircleCheck}
+                class="qs-ready-btn"
+                loading={savingField === 'confirm'}
+                disabled={!!savingField}
+                onclick={confirmReviewAction}
+              >
+                {savingField === 'confirm' ? 'Submitting...' : willExclude ? 'Confirm Exclusion' : 'Confirm Review'}
               </Button>
             {/if}
           {:else}
@@ -1089,9 +1054,6 @@
 
   :global(.qs-ready-btn) {
     margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
   }
 
   /* Mobile: three images side by side don't fit on a phone screen, so
@@ -1230,8 +1192,6 @@
     :global(.qs-mobile-comic-nav-btn) {
       flex: 1;
       max-width: 160px;
-      justify-content: center;
-      gap: 0.3rem;
     }
 
     .qs-bottom-bar {
@@ -1277,7 +1237,7 @@
       display: flex !important;
     }
 
-    :global(.qs-flags-row .qs-flag-buttons .theme-toggle-group-item) {
+    :global(.qs-flags-row .qs-flag-buttons > *) {
       flex: 1;
     }
 
@@ -1321,7 +1281,6 @@
 
     :global(.qs-ready-btn) {
       margin-left: 0;
-      justify-content: center;
       width: 100%;
     }
   }

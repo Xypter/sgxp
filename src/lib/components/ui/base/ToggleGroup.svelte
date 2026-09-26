@@ -1,5 +1,6 @@
 <script lang="ts">
   import * as ToggleGroupPrimitive from '$components/ui/toggle-group';
+  import { sgxpButtonClass } from '$components/ui/button';
 
   interface Option {
     value: string;
@@ -11,6 +12,8 @@
     options: Option[];
     themed?: boolean;
     disabled?: boolean;
+    /** The standard's sizes: mini (24px) for table rows. */
+    size?: 'default' | 'mini';
     class?: string;
     onValueChange?: (value: string) => void;
   }
@@ -20,12 +23,15 @@
     options,
     themed = false,
     disabled = false,
+    size = 'default',
     class: className,
     onValueChange
   }: ToggleGroupProps = $props();
 
-  const rootClass = themed ? `theme-toggle-group ${className || ''}` : className;
-  const itemClass = themed ? 'theme-toggle-group-item' : '';
+  // Themed: the button standard's toggles joined as a group (the selected
+  // item is data-state="on", which the toggle variant lights up).
+  const rootClass = $derived(themed ? `sgxp-btn-group ${className || ''}` : className);
+  const itemClass = $derived(themed ? sgxpButtonClass({ variant: 'toggle', size }) : '');
 
   function handleValueChange(newValue: string | undefined) {
     if (newValue !== undefined && newValue !== '') {
@@ -49,36 +55,3 @@
   {/each}
 </ToggleGroupPrimitive.Root>
 
-<style>
-  :global(.theme-toggle-group) {
-    display: inline-flex !important;
-    gap: 2px !important;
-  }
-
-  :global(.theme-toggle-group-item) {
-    background: color-mix(in srgb, var(--page-color) 60%, black) !important;
-    border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white) !important;
-    border-radius: 0px !important;
-    color: var(--font-color) !important;
-    font-family: 'saira', monospace !important;
-    font-size: 12px !important;
-    height: 30px !important;
-    padding: 0 10px !important;
-    transition: all var(--transition-speed, 200ms) ease-in-out !important;
-  }
-
-  :global(.theme-toggle-group-item:hover:not([data-disabled])) {
-    border-color: color-mix(in srgb, var(--font-link-color) 80%, white) !important;
-  }
-
-  :global(.theme-toggle-group-item[data-state='on']) {
-    background: var(--font-link-color) !important;
-    border-color: var(--font-link-color) !important;
-    color: var(--page-color) !important;
-  }
-
-  :global(.theme-toggle-group-item[data-disabled]) {
-    opacity: 0.6 !important;
-    cursor: not-allowed !important;
-  }
-</style>
