@@ -2,6 +2,7 @@
   import * as Popover from '$components/ui/popover';
   import { Bookmark, BookOpen, ImageOff } from 'lucide-svelte';
   import { Button } from '$lib/components';
+  import { sgxpButtonClass } from '$components/ui/button';
 
   interface Props {
     comicId: number;
@@ -104,10 +105,13 @@
 
     <!-- With notes, the rating square itself is the button that reveals them
          (a Popover, not a Tooltip - bits-ui tooltips only open on mouse
-         hover/focus, never on touch). The folded corner marks which ones. -->
+         hover/focus, never on touch). -->
     {#if notes}
       <Popover.Root>
-        <Popover.Trigger class="rating-block rating-block--notes" aria-label="{ratingLabel}. Show Xypter's notes">
+        <Popover.Trigger
+          class="{sgxpButtonClass({ variant: 'secondary', size: 'icon' })} rating-block rating-block--notes"
+          aria-label="{ratingLabel}. Show Xypter's notes"
+        >
           {@render ratingContent()}
         </Popover.Trigger>
         <Popover.Content side="bottom" align="end" sideOffset={6} class="theme-card-notes-popover">
@@ -220,6 +224,9 @@
   /* Top-right corner of the card, opposite the preview. :global because
      with notes it's rendered by Popover.Trigger (a <button> in another
      component), which this component's scoped styles can't reach. */
+  /* Styled as the standard secondary button. With notes it IS one (the
+     popover trigger carries the standard classes, so it presses like any
+     button); without notes it's a plain box drawn from the same tokens. */
   .comic-card :global(.rating-block) {
     position: relative;
     flex-shrink: 0;
@@ -228,42 +235,28 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 44px;
-    height: 44px;
+    gap: 0;
+    /* The standard square (same as icon buttons and page numbers). */
+    width: var(--control-height);
+    height: var(--control-height);
     padding: 0;
-    border: none;
-    background: var(--font-link-color);
-    /* Same as the themed buttons' text (.theme-button), e.g. Start reading. */
-    color: var(--page-color);
-    font-family: inherit;
+    font-family: 'saira', sans-serif;
     line-height: 1;
   }
 
-  /* Folded corner marks the ratings that open a note. */
-  .comic-card :global(.rating-block--notes) {
-    cursor: pointer;
+  /* The plain box only - the notes button gets these (plus its hover and
+     pressed states) from the standard classes, which this rule would
+     otherwise outrank. */
+  .comic-card :global(.rating-block:not(.sgxp-btn)) {
+    background: color-mix(in srgb, var(--page-color) 60%, black);
+    border: var(--border-width, 1px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 60%, white);
+    box-shadow: var(--btn-shadow);
+    color: var(--font-color);
   }
 
-  .comic-card :global(.rating-block--notes)::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    border-style: solid;
-    border-width: 0 10px 10px 0;
-    border-color: transparent var(--page-color) color-mix(in srgb, var(--font-link-color) 60%, black) transparent;
-  }
-
-  /* Hover only where there's a real hover pointer - on touchscreens a tap
-     leaves it stuck "hovered" until something else is tapped. */
-  @media (hover: hover) {
-    .comic-card :global(.rating-block--notes:hover) {
-      background: color-mix(in srgb, var(--font-link-color) 85%, white);
-    }
-  }
-
+  /* Open: the border stays in the accent, like a hovered secondary. */
   .comic-card :global(.rating-block--notes[data-state="open"]) {
-    background: color-mix(in srgb, var(--font-link-color) 85%, white);
+    border-color: var(--font-link-color);
   }
 
   .rating-number {
