@@ -1000,13 +1000,6 @@ body {
 .comment-footer-left, .comment-footer-right { display: flex; align-items: center; gap: 12px; }
 .comment-footer-right { margin-left: auto; }
 
-/* Pre-standard delete button in the uploads table (uploads/cells/ActionsCell);
-   goes when that page is migrated. */
-.delete-btn:not(.sgxp-btn) {
-  display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background: transparent; border: none;
-  font-family: 'saira'; font-size: 12px; font-weight: 600; color: var(--font-link-color); cursor: pointer; transition: all 0.2s ease; border-radius: 4px;
-}
-
 /* Toolbars & Edit Forms */
 .comment-input-wrapper, .reply-input-wrapper { flex: 1; display: flex; flex-direction: column; gap: 10px; }
 .formatting-toolbar, .edit-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; padding-top: 8px; }
@@ -1015,28 +1008,6 @@ body {
 .toolbar-buttons { display: flex; gap: 10px; }
 
 .form-actions, .edit-form-actions, .reply-form-actions { display: flex; gap: 10px; }
-
-/* Pre-standard buttons in form-action rows (Settings, Upload, Upload Guide) -
-   skips standard buttons, and goes once those pages are migrated. */
-.form-actions button:not(.sgxp-btn), .edit-form-actions button:not(.sgxp-btn), .reply-form-actions button:not(.sgxp-btn) {
-  font-family: 'saira', monospace !important;
-  font-size: 14px !important;
-  padding: 8px 16px !important;
-  font-weight: 700 !important;
-  background: var(--page-color) !important;
-  color: var(--font-color) !important;
-  border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 60%, white) !important;
-  border-radius: 0px !important;
-  box-shadow: var(--box-shadow) !important;
-  transition: all 0.2s ease !important;
-  cursor: url('/img/Sonic_Cursor.png'), pointer !important;
-}
-
-.form-actions button:not(.sgxp-btn):hover:not(:disabled), .edit-form-actions button:not(.sgxp-btn):hover:not(:disabled), .reply-form-actions button:not(.sgxp-btn):hover:not(:disabled) {
-  border-color: var(--font-link-color) !important;
-  cursor: url('/img/Sonic_Cursor_Spin.gif'), progress !important;
-  background: color-mix(in srgb, var(--page-color) 90%, white) !important;
-}
 
 .reply-form {
   margin-top: 12px;

@@ -9,6 +9,7 @@
   } from '@tanstack/table-core';
   import { createSvelteTable, renderComponent } from '$components/ui/data-table';
   import * as Accordion from '$components/ui/accordion';
+  import { sgxpButtonClass } from '$components/ui/button';
   import { DataTable, Select, Input, Button, NumberedPagination } from '$lib/components';
   import { ExternalLink, Check, X, LogIn, Send, Images } from 'lucide-svelte';
   import Spinner from './Spinner.svelte';
@@ -949,9 +950,9 @@
         <h1>Smack Jeeves Archive Triage</h1>
         <Accordion.Root type="single" bind:value={introValue} class="intro-accordion">
           <Accordion.Item value="intro" class="intro-accordion-item">
-            <Accordion.Trigger class="intro-accordion-trigger">
+            <Accordion.Trigger class="{sgxpButtonClass({ variant: 'quiet' })} intro-accordion-trigger">
               About This Project
-              <span class="intro-toggle-label">({introValue ? 'Collapse' : 'Expand'})</span>
+              <span class="sgxp-btn-hint">({introValue ? 'Collapse' : 'Expand'})</span>
             </Accordion.Trigger>
             <Accordion.Content class="intro-accordion-content">
               <div class="intro">
@@ -996,9 +997,9 @@
 
         <Accordion.Root type="single" bind:value={statusGuideValue} class="intro-accordion">
           <Accordion.Item value="statusGuide" class="intro-accordion-item">
-            <Accordion.Trigger class="intro-accordion-trigger">
+            <Accordion.Trigger class="{sgxpButtonClass({ variant: 'quiet' })} intro-accordion-trigger">
               Status Guide
-              <span class="intro-toggle-label">({statusGuideValue ? 'Collapse' : 'Expand'})</span>
+              <span class="sgxp-btn-hint">({statusGuideValue ? 'Collapse' : 'Expand'})</span>
             </Accordion.Trigger>
             <Accordion.Content class="intro-accordion-content">
               <div class="intro status-guide">
@@ -1328,33 +1329,10 @@
     border: none !important;
   }
 
+  /* The standard quiet button (via sgxpButtonClass); only its layout here. */
   :global(.intro-accordion-trigger) {
-    font-family: 'saira' !important;
-    font-size: 13px !important;
-    font-weight: 700 !important;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    color: var(--font-color) !important;
-    opacity: 0.75;
-    padding: 0 0 4px 0 !important;
-    display: inline-flex !important;
-    flex: none !important;
-    width: auto !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
-    gap: 6px !important;
-  }
-
-  :global(.intro-accordion-trigger:hover) {
-    opacity: 1;
-    text-decoration: none !important;
-  }
-
-  :global(.intro-toggle-label) {
-    font-style: italic;
-    font-weight: 400 !important;
-    text-transform: none;
-    opacity: 0.65;
+    flex: none;
+    margin-bottom: 4px;
   }
 
   :global(.intro-accordion-content) {

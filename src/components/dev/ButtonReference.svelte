@@ -204,14 +204,20 @@
     <h2>Quiet (provisional)</h2>
     <p class="ref-note">
       Low-emphasis text action, like the "About this archive" toggle. You marked this one as the least settled -
-      it's here to revisit with real scenarios.
+      it's here to revisit with real scenarios. The italic suffix is <code>sgxp-btn-hint</code>. On an accordion,
+      put <code>sgxpButtonClass(&#123; variant: 'quiet' &#125;)</code> on the <code>Accordion.Trigger</code> (its own
+      chevron follows the text colour).
     </p>
     <div class="ref-row">
       <Button variant="quiet" icon={ChevronDown} onclick={() => (expanded = !expanded)} aria-expanded={expanded}>
-        About this archive <span class="ref-quiet-hint">({expanded ? 'Collapse' : 'Expand'})</span>
+        About this archive <span class="sgxp-btn-hint">({expanded ? 'Collapse' : 'Expand'})</span>
       </Button>
     </div>
-    <pre class="ref-code"><code>{`<Button variant="quiet" icon={ChevronDown}>About this archive</Button>`}</code></pre>
+    <pre class="ref-code"><code>{`<Button variant="quiet" icon={ChevronDown}>About this archive <span class="sgxp-btn-hint">(Expand)</span></Button>
+
+<Accordion.Trigger class={sgxpButtonClass({ variant: 'quiet' })}>
+  About this archive <span class="sgxp-btn-hint">(Expand)</span>
+</Accordion.Trigger>`}</code></pre>
   </section>
 
   <section class="ref-section">
@@ -381,13 +387,6 @@ sgxpButtonClass({ variant, size, static: true }) a box that matches a button but
     border: 1px solid color-mix(in srgb, var(--page-color) 80%, white);
     font-size: 13px;
     line-height: 1.5;
-  }
-
-  .ref-quiet-hint {
-    font-style: italic;
-    font-weight: 400;
-    text-transform: none;
-    opacity: 0.65;
   }
 
   .ref-rules {

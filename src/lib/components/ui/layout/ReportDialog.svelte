@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { Flag, X } from 'lucide-svelte';
+  import Button from '../base/Button.svelte';
+
   interface ReportDialogProps {
     open: boolean;
     title?: string;
@@ -131,21 +134,8 @@
         </div>
 
         <div class="report-dialog-footer">
-          <button
-            type="button"
-            class="report-dialog-button cancel"
-            class:themed
-            onclick={handleCancel}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            class="report-dialog-button submit"
-            class:themed
-          >
-            Submit Report
-          </button>
+          <Button variant="secondary" icon={X} onclick={handleCancel}>Cancel</Button>
+          <Button variant="primary" type="submit" icon={Flag}>Submit Report</Button>
         </div>
       </form>
     </div>
@@ -312,71 +302,6 @@
     gap: 12px;
     justify-content: flex-end;
     margin-top: 24px;
-  }
-
-  .report-dialog-button {
-    padding: 8px 16px;
-    font-size: 14px;
-    font-weight: 500;
-    border-radius: 6px;
-    border: 1px solid #ddd;
-    background: white;
-    color: #333;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .report-dialog-button:hover {
-    border-color: var(--font-link-color);
-    transition: all 0.2s ease;
-  }
-
-  .report-dialog-button.cancel {
-    background: transparent;
-  }
-
-  .report-dialog-button.submit {
-    background: #dc2626;
-    color: white;
-    border-color: #dc2626;
-  }
-
-  .report-dialog-button.submit:hover {
-    background: #b91c1c;
-  }
-
-  /* Themed button styles */
-  .report-dialog-button.themed {
-    background: var(--page-color);
-    color: var(--font-color);
-    border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 60%, white);
-    border-radius: 0px;
-    font-family: 'saira', monospace;
-    font-weight: 700;
-    font-size: 14px;
-    transition: all var(--transition-speed, 200ms) ease-in-out;
-    cursor: url('/img/Sonic_Cursor.png'), pointer;
-    box-shadow: var(--box-shadow);
-  }
-
-  .report-dialog-button.themed:hover {
-    background: color-mix(in srgb, var(--page-color) 90%, var(--font-color));
-    cursor: url('/img/Sonic_Cursor_Spin.gif'), progress;
-    border-color: var(--font-link-color);
-    transition: all 0.2s ease;
-  }
-
-  .report-dialog-button.submit.themed {
-    background: var(--page-color);
-    color: var(--font-color);
-    border-color: color-mix(in srgb, var(--page-color) 60%, white);
-  }
-
-  .report-dialog-button.submit.themed:hover {
-    background: color-mix(in srgb, var(--page-color) 90%, var(--font-color));
-    cursor: url('/img/Sonic_Cursor_Spin.gif'), progress;
-    border-color: var(--font-link-color);
-    transition: all 0.2s ease;
   }
 
   @keyframes fadeIn {

@@ -18,7 +18,7 @@ Theme-aware wrappers around shadcn-svelte components. All base components accept
 
 #### Simple Components
 
-- **Button** - Themed button wrapper
+- **Button** - The site's button standard (`variant`: primary / secondary / danger / toggle / tool / subtle / quiet; see src/styles/buttons.css and /dev/buttons). It has no `themed` prop.
 - **Input** - Themed input field
 - **Label** - Themed label
 - **Badge** - Themed badge
@@ -29,11 +29,10 @@ Theme-aware wrappers around shadcn-svelte components. All base components accept
   import { Button, Input, Label } from '$lib/components';
 </script>
 
-<!-- Standard shadcn styling -->
-<Button variant="default">Click me</Button>
+<!-- The button standard -->
+<Button variant="primary" icon={Save}>Save</Button>
 
-<!-- With custom theme styling -->
-<Button themed>Themed Button</Button>
+<!-- Other components: custom theme styling -->
 <Input themed placeholder="Enter text..." />
 <Label themed>Field Label</Label>
 ```
@@ -193,13 +192,13 @@ A modal/dialog overlay component.
   let showModal = $state(false);
 </script>
 
-<Button onclick={() => showModal = true}>Open Modal</Button>
+<Button variant="secondary" onclick={() => showModal = true}>Open Modal</Button>
 
 <Modal bind:open={showModal} themed>
   <div class="p-6">
     <h2>Modal Title</h2>
     <p>Modal content goes here</p>
-    <Button onclick={() => showModal = false}>Close</Button>
+    <Button variant="secondary" icon={X} onclick={() => showModal = false}>Close</Button>
   </div>
 </Modal>
 ```
@@ -225,7 +224,7 @@ A consistent page header with title, description, and actions.
   description="This is a description of the page"
   themed
 >
-  <Button>Action</Button>
+  <Button variant="primary" icon={Plus}>Action</Button>
 </PageHeader>
 ```
 
@@ -384,8 +383,10 @@ All components support theme integration through the `themed` prop. When enabled
 Example themed component:
 
 ```svelte
-<Button themed>Themed Button</Button>
+<Input themed placeholder="Enter text..." />
 ```
+
+Buttons don't use `themed`: every `<Button>` takes one of the standard variants, which follow the theme on their own.
 
 This applies custom styles that integrate with your 8 theme options (ark, snow, cozy, sbn, style_v7, hpz, mfz, ssz).
 
@@ -449,7 +450,7 @@ This applies custom styles that integrate with your 8 theme options (ark, snow, 
         themed
       />
 
-      <Button themed type="submit">Submit</Button>
+      <Button variant="primary" type="submit" icon={Upload}>Submit</Button>
     </form>
   </PageSection>
 

@@ -4,7 +4,8 @@
   import Badge from '../lib/components/ui/base/Badge.svelte';
   import PageHeader from '../lib/components/ui/layout/PageHeader.svelte';
   import { FormInput, FormTextarea, FormCheckbox, Button, SelectWithSuggest, MultiSelect } from '$lib/components';
-  import { Pencil, MessageSquare, Trash2 } from 'lucide-svelte';
+  import { Pencil, MessageSquare, Trash2, Upload } from 'lucide-svelte';
+  import { sgxpButtonClass } from '$components/ui/button';
 
   // Example data for preview components
   const styleSourceTypeOptions = [
@@ -264,7 +265,8 @@
   </p>
 
   <div class="form-actions-preview">
-    <Button themed type="submit">Submit Sprite</Button>
+    <!-- Pictures of the real buttons: the same classes, not clickable. -->
+    <span class={sgxpButtonClass({ variant: 'primary', static: true })}><Upload aria-hidden="true" /> Submit Sprite</span>
     <p class="submit-note-preview">Your sprite will be submitted for review before being published.</p>
   </div>
 
@@ -310,18 +312,9 @@
   <div class="preview-section">
     <p class="preview-label">Actions available on your uploads:</p>
     <div class="actions-preview">
-      <Button themed variant="outline" size="sm" disabled>
-        <Pencil class="h-4 w-4" />
-        Edit
-      </Button>
-      <Button themed variant="outline" size="sm" disabled>
-        <MessageSquare class="h-4 w-4" />
-        Feedback
-      </Button>
-      <Button themed variant="outline" size="sm" disabled>
-        <Trash2 class="h-4 w-4" />
-        Delete
-      </Button>
+      <span class={sgxpButtonClass({ variant: 'secondary', size: 'mini', static: true })}><Pencil aria-hidden="true" /> Edit</span>
+      <span class={sgxpButtonClass({ variant: 'secondary', size: 'mini', static: true })}><MessageSquare aria-hidden="true" /> Feedback</span>
+      <span class={sgxpButtonClass({ variant: 'danger', size: 'mini', static: true })}><Trash2 aria-hidden="true" /> Delete</span>
     </div>
   </div>
 
@@ -552,14 +545,8 @@
 
   .actions-preview {
     display: flex;
-    gap: 0.5rem;
+    gap: 10px;
     flex-wrap: wrap;
-  }
-
-  .actions-preview :global(button) {
-    display: flex !important;
-    align-items: center !important;
-    gap: 6px !important;
   }
 
   /* Responsive */
