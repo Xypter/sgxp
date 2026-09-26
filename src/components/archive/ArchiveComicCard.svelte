@@ -1,6 +1,7 @@
 <script lang="ts">
   import * as Popover from '$components/ui/popover';
-  import { ArrowRight, Bookmark, BookmarkCheck, ImageOff } from 'lucide-svelte';
+  import { Bookmark, BookOpen, ImageOff } from 'lucide-svelte';
+  import { Button } from '$lib/components';
 
   interface Props {
     comicId: number;
@@ -135,22 +136,21 @@
       </span>
     {/if}
     {#if onToggleBookmark}
-      <!-- Quiet until used: a faint outline icon at the end of the stats row,
-           filled in the link color once bookmarked, with how many readers
-           have bookmarked it beside it. -->
-      <button
-        type="button"
+      <!-- Quiet until used (the standard's subtle button): a faint outline
+           icon at the end of the stats row that fills in once bookmarked,
+           with how many readers have bookmarked it beside it. -->
+      <Button
+        variant="subtle"
+        icon={Bookmark}
         class="comic-card-bookmark"
-        class:active={bookmarked}
         onclick={onToggleBookmark}
-        disabled={bookmarkBusy}
+        aria-busy={bookmarkBusy || undefined}
         aria-pressed={bookmarked}
         title="{bookmarkCountLabel}. {bookmarked ? 'Remove your bookmark' : 'Bookmark it (only you can see your bookmarks)'}"
         aria-label="{bookmarked ? `Remove bookmark for ${title || 'this comic'}` : `Bookmark ${title || 'this comic'}`} ({bookmarkCountLabel})"
       >
-        {#if bookmarked}<BookmarkCheck size={17} />{:else}<Bookmark size={17} />{/if}
         {#if bookmarkCount > 0}<span class="bookmark-count">{bookmarkCount.toLocaleString()}</span>{/if}
-      </button>
+      </Button>
     {:else if bookmarkCount > 0}
       <span class="comic-card-bookmark comic-card-bookmark--static" title={bookmarkCountLabel}>
         <Bookmark size={17} aria-hidden="true" />
@@ -159,11 +159,7 @@
     {/if}
   </div>
 
-  <!-- The empty touchstart listener is what makes iOS Safari apply :active
-       on tap at all (it skips it for elements with no touch listener). -->
-  <a {href} class="comic-card-cta no-theme-styles" ontouchstart={() => {}}>
-    Read comic <ArrowRight size={16} />
-  </a>
+  <Button variant="secondary" icon={BookOpen} {href} class="comic-card-cta">Read comic</Button>
 </article>
 
 <style>
@@ -413,72 +409,23 @@
   }
 
   /* Pushed to the bottom so cards in the same grid row line up their
-     footers even when their titles or stats wrap differently. Styled to
-     match the archive toolbar's Filter & Sort button (.filter-trigger in
-     SmackJeevesArchiveTable.svelte). */
-  .comic-card-cta {
+     footers even when their titles or stats wrap differently. (It's the
+     standard secondary button; the card's column layout stretches it full
+     width.) */
+  .comic-card :global(.comic-card-cta) {
     margin: auto 14px 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    height: 42px;
-    padding: 0 16px;
-    background: var(--font-link-color);
-    color: var(--page-color);
-    font-family: 'saira', sans-serif;
-    font-size: 14px;
-    font-weight: 700;
-    text-decoration: none;
-    text-shadow: none;
-    white-space: nowrap;
-    box-shadow: var(--box-shadow);
   }
 
-  @media (hover: hover) {
-    .comic-card-cta:hover {
-      background: color-mix(in srgb, var(--font-link-color) 85%, white);
-    }
-  }
-
-  /* Pressed state - the only feedback a tap gets on touchscreens, where the
-     hover above never applies. Replaces the browser's own tap highlight. */
-  .comic-card-cta {
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-  }
-
-  .comic-card-cta:active {
-    background: color-mix(in srgb, var(--font-link-color) 80%, black);
-    box-shadow: none;
-    transform: translateY(1px);
-  }
-
-  /* Sits at the end of the stats row (margin-left: auto), after the saved
-     meter. A 32px hit area around a 17px icon; the negative margin keeps it
-     from making the row any taller. */
-  .comic-card-bookmark {
-    flex-shrink: 0;
-    margin: -7px -7px -7px auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  /* The bookmark toggle (standard subtle button) sits at the end of the
+     stats row, after the saved meter; the negative margin keeps its 42px
+     hit area from making the row any taller. */
+  .comic-card :global(.comic-card-bookmark) {
+    margin: -12px -10px -12px auto;
+    padding: 0 10px;
     gap: 4px;
-    min-width: 32px;
-    height: 32px;
-    padding: 0 7px;
-    background: transparent;
-    border: none;
-    color: var(--font-color);
-    cursor: pointer;
   }
 
-  /* The icon stays faint until used; the count reads like the other stats. */
-  .comic-card-bookmark :global(svg) {
-    opacity: 0.45;
-    transition: opacity 0.15s ease, color 0.15s ease;
-  }
-
+  /* The count reads like the other stats. */
   .bookmark-count {
     font-family: 'saira', sans-serif;
     font-size: 13px;
@@ -487,31 +434,19 @@
     opacity: 0.8;
   }
 
-  .comic-card-bookmark.active :global(svg) {
-    color: var(--font-link-color);
-    opacity: 1;
-  }
-
-  .comic-card-bookmark:disabled {
-    cursor: default;
-  }
-
-  /* Logged out: just the count, nothing to click. */
+  /* Logged out: just the count, nothing to click - laid out and faded like
+     the subtle button beside a logged-in viewer's. */
   .comic-card-bookmark--static {
-    cursor: default;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    color: var(--font-color);
   }
 
-  @media (hover: hover) {
-    .comic-card-bookmark:hover:not(:disabled):not(.comic-card-bookmark--static) :global(svg) {
-      color: var(--font-link-color);
-      opacity: 1;
-    }
-  }
-
-  @media (max-width: 768px) {
-    .comic-card-cta {
-      height: 46px;
-    }
-
+  .comic-card-bookmark--static :global(svg) {
+    width: 16px;
+    height: 16px;
+    opacity: 0.45;
   }
 </style>

@@ -11,6 +11,7 @@
   let {
     themed = false,
     class: className,
+    ref = $bindable(null),
     children,
     ...restProps
   }: ButtonProps = $props();
@@ -23,7 +24,7 @@
   );
 </script>
 
-<ShadcnButton class={classes} {...restProps}>
+<ShadcnButton bind:ref class={classes} {...restProps}>
   {@render children?.()}
 </ShadcnButton>
 

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Sheet, Button } from '$lib/components';
-  import { Square, SquareCheck, Circle, CircleDot, Search } from 'lucide-svelte';
+  import { Square, SquareCheck, Circle, CircleDot, Search, X, Check } from 'lucide-svelte';
 
   interface Option {
     value: string;
@@ -74,17 +74,19 @@
     <div class="sort-grid" role="radiogroup" aria-label="Sort by">
       {#each sortOptions as option (option.value)}
         {@const active = option.value === sortValue}
-        <button
-          type="button"
+        <!-- Standard toggles; "on" comes from data-state because role=radio
+             already carries the checked state for screen readers. -->
+        <Button
+          variant="toggle"
+          icon={active ? CircleDot : Circle}
           role="radio"
           aria-checked={active}
+          data-state={active ? 'on' : undefined}
           class="sort-option"
-          class:sort-option--active={active}
           onclick={() => onSortChange(option.value)}
         >
-          {#if active}<CircleDot size={15} />{:else}<Circle size={15} />{/if}
-          <span>{option.label}</span>
-        </button>
+          {option.label}
+        </Button>
       {/each}
     </div>
   </section>
@@ -113,7 +115,7 @@
     <div class="filter-section-head">
       <h3 class="filter-section-title">Rating</h3>
       {#if ratingSelected.length > 0}
-        <button type="button" class="section-clear" onclick={() => onRatingChange([])}>Clear</button>
+        <Button variant="quiet" icon={X} onclick={() => onRatingChange([])}>Clear</Button>
       {/if}
     </div>
     <div class="check-list">
@@ -139,7 +141,7 @@
     <div class="filter-section-head">
       <h3 class="filter-section-title">Category</h3>
       {#if categorySelected.length > 0}
-        <button type="button" class="section-clear" onclick={() => onCategoryChange([])}>Clear</button>
+        <Button variant="quiet" icon={X} onclick={() => onCategoryChange([])}>Clear</Button>
       {/if}
     </div>
     <label class="category-search">
@@ -168,8 +170,8 @@
   </section>
 
   {#snippet footer()}
-    <Button themed variant="ghost" class="sheet-clear-btn" disabled={!hasFilters} onclick={onClearAll}>Clear all</Button>
-    <Button themed class="sheet-apply-btn" onclick={() => (open = false)}>
+    <Button variant="secondary" icon={X} class="sheet-clear-btn" disabled={!hasFilters} onclick={onClearAll}>Clear all</Button>
+    <Button variant="primary" icon={Check} class="sheet-apply-btn" onclick={() => (open = false)}>
       Show {resultCount.toLocaleString()} {resultCount === 1 ? 'comic' : 'comics'}
     </Button>
   {/snippet}
@@ -208,15 +210,14 @@
     margin-top: 12px !important;
   }
 
+  /* `auto` basis, not 0: the bottom sheet stacks the footer in a column,
+     where a zero basis squashed the button's height instead of widening it. */
   :global(.archive-filter-sheet .sheet-clear-btn) {
     flex: 0 0 auto;
-    height: 48px !important;
   }
 
   :global(.archive-filter-sheet .sheet-apply-btn) {
-    flex: 1;
-    height: 48px !important;
-    font-weight: 700 !important;
+    flex: 1 1 auto;
   }
 
   .filter-section {
@@ -246,47 +247,17 @@
     opacity: 0.75;
   }
 
-  .section-clear {
-    background: none;
-    border: none;
-    padding: 0;
-    color: var(--font-link-color);
-    font-family: 'saira', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-  }
-
   .sort-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
   }
 
-  .sort-option {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 44px;
+  /* Standard toggles, filling their grid cell with the label at the left. */
+  .sort-grid :global(.sort-option) {
+    width: 100%;
+    justify-content: flex-start;
     padding: 0 12px;
-    background: color-mix(in srgb, var(--page-color) 85%, white);
-    border: 1px solid color-mix(in srgb, var(--page-color) 75%, white);
-    color: var(--font-color);
-    font-family: 'saira', sans-serif;
-    font-size: 14px;
-    text-align: left;
-    cursor: pointer;
-  }
-
-  .sort-option--active {
-    border-color: var(--font-link-color);
-    background: color-mix(in srgb, var(--font-link-color) 18%, var(--page-color));
-    color: var(--font-color);
-    font-weight: 700;
-  }
-
-  .sort-option--active :global(svg) {
-    color: var(--font-link-color);
   }
 
   .check-list {

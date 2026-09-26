@@ -21,8 +21,9 @@
   import { createSvelteTable, renderComponent } from '$components/ui/data-table';
   import * as Tooltip from '$components/ui/tooltip';
   import * as Accordion from '$components/ui/accordion';
-  import { DataTable, Input, Button, NumberedPagination } from '$lib/components';
-  import { Bookmark, LayoutGrid, SlidersHorizontal, Table, X } from 'lucide-svelte';
+  import { DataTable, Input, Button, ButtonGroup, NumberedPagination } from '$lib/components';
+  import { sgxpButtonClass } from '$components/ui/button';
+  import { Bookmark, LayoutGrid, RotateCw, SlidersHorizontal, Table, X } from 'lucide-svelte';
 
   import ArchiveComicCard from './archive/ArchiveComicCard.svelte';
   import ArchiveFilterSheet from './archive/ArchiveFilterSheet.svelte';
@@ -751,89 +752,87 @@
           themed
           class="toolbar-search"
         />
-        <button
-          type="button"
+        <Button
+          variant="primary"
+          icon={SlidersHorizontal}
           class="filter-trigger card-view-only"
           aria-haspopup="dialog"
-          bind:this={inlineFilterTrigger}
+          bind:ref={inlineFilterTrigger}
           onclick={() => (filterSheetOpen = true)}
         >
-          <SlidersHorizontal size={16} />
           Filter & Sort
           {#if activeFilterCount > 0}
             <span class="filter-trigger-badge">{activeFilterCount}</span>
           {/if}
-        </button>
-        <Button themed variant="ghost" size="sm" class="clear-filters-btn" disabled={!hasActiveFilters} onclick={clearFilters}>
-          <X size={14} /> Clear Filters
+        </Button>
+        <Button variant="secondary" icon={X} class="clear-filters-btn" disabled={!hasActiveFilters} onclick={clearFilters}>
+          Clear Filters
         </Button>
         {#if loggedIn}
           <!-- ?from= gives /bookmarks a link straight back here. -->
-          <a
+          <Button
+            variant="secondary"
+            icon={Bookmark}
             href="/bookmarks?from=smackjeeves"
-            class="bookmarks-link no-theme-styles"
+            class="bookmarks-link"
             title="My bookmarks"
             aria-label="My bookmarks ({archiveBookmarkCount})"
           >
-            <Bookmark size={16} />
             <span class="bookmarks-link-label">My Bookmarks</span>
             {#if archiveBookmarkCount > 0}
               <span class="bookmarks-link-count">{archiveBookmarkCount}</span>
             {/if}
-          </a>
+          </Button>
         {/if}
         <!-- Only at 1400px+, where the table fits; narrower is always cards. -->
-        <div class="view-toggle" role="group" aria-label="View as">
-          <button
-            type="button"
-            class="view-toggle-btn"
-            aria-pressed={viewMode === 'cards'}
-            onclick={() => setViewMode('cards')}
-          >
-            <LayoutGrid size={16} /> Cards
-          </button>
-          <button
-            type="button"
-            class="view-toggle-btn"
-            aria-pressed={viewMode === 'table'}
-            onclick={() => setViewMode('table')}
-          >
-            <Table size={16} /> Table
-          </button>
-        </div>
+        <ButtonGroup label="View as" class="view-toggle">
+          <Button variant="toggle" icon={LayoutGrid} aria-pressed={viewMode === 'cards'} onclick={() => setViewMode('cards')}>
+            Cards
+          </Button>
+          <Button variant="toggle" icon={Table} aria-pressed={viewMode === 'table'} onclick={() => setViewMode('table')}>
+            Table
+          </Button>
+        </ButtonGroup>
       </div>
 
       <!-- What's currently applied, removable one at a time - the card view
            has no column headers to show active filters on. -->
       {#if activeFilterCount > 0 || sortValue !== 'random'}
         <div class="active-chips card-view-only">
+          <!-- Mini toggles shown "on" (data-state rather than aria-pressed: to a
+               screen reader they're remove buttons, not toggles); the trailing
+               X says a tap removes it. -->
           {#if sortValue !== 'random'}
-            <button type="button" class="active-chip active-chip--sort" onclick={() => setSort('random')}>
-              Sort: {sortLabel} <X size={13} />
-            </button>
+            <Button variant="toggle" size="mini" data-state="on" aria-label="Remove sort: {sortLabel}" onclick={() => setSort('random')}>
+              Sort: {sortLabel} <X />
+            </Button>
           {/if}
           {#if bookmarkedOnly}
-            <button type="button" class="active-chip" onclick={() => setBookmarkedOnly(false)}>
-              Bookmarked <X size={13} />
-            </button>
+            <Button variant="toggle" size="mini" data-state="on" aria-label="Remove filter: Bookmarked" onclick={() => setBookmarkedOnly(false)}>
+              Bookmarked <X />
+            </Button>
           {/if}
           {#each ratingFilterValues as value (value)}
-            <button
-              type="button"
-              class="active-chip"
+            <Button
+              variant="toggle"
+              size="mini"
+              data-state="on"
+              aria-label="Remove filter: Rating {ratingLabel(value)}"
               onclick={() => setRatingFilter(ratingFilterValues.filter((v) => v !== value))}
             >
-              Rating {ratingLabel(value)} <X size={13} />
-            </button>
+              Rating {ratingLabel(value)} <X />
+            </Button>
           {/each}
           {#each categoryFilterValues as value (value)}
-            <button
-              type="button"
-              class="active-chip"
+            <Button
+              variant="toggle"
+              size="mini"
+              data-state="on"
+              aria-label="Remove filter: {value}"
               onclick={() => setCategoryFilter(categoryFilterValues.filter((v) => v !== value))}
             >
-              {value} <X size={13} />
-            </button>
+              {value} <X />
+            </Button>
           {/each}
         </div>
       {/if}
@@ -852,7 +851,7 @@
     {#if error}
       <div class="error-state">
         <p>{error}</p>
-        <Button themed size="sm" onclick={fetchComics}>Try Again</Button>
+        <Button variant="secondary" icon={RotateCw} onclick={fetchComics}>Try Again</Button>
       </div>
     {:else if isLoading}
       <div class="loading-state">
@@ -889,7 +888,7 @@
             <div class="loading-state cards-empty">
               <p>No comics match your filters.</p>
               {#if hasActiveFilters}
-                <Button themed size="sm" onclick={clearFilters}>Clear Filters</Button>
+                <Button variant="secondary" icon={X} onclick={clearFilters}>Clear Filters</Button>
               {/if}
             </div>
           {/each}
@@ -914,9 +913,11 @@
 </Tooltip.Provider>
 
 {#if showFloatingFilter}
+  <!-- A plain <button> (use:portal and transition: can't go on a component)
+       wearing the standard's boxed icon-button look. -->
   <button
     type="button"
-    class="floating-filter-trigger no-theme-styles"
+    class="{sgxpButtonClass({ variant: 'tool', size: 'icon' })} floating-filter-trigger"
     aria-haspopup="dialog"
     aria-label={activeFilterCount > 0 ? `Filter & sort (${activeFilterCount} active)` : 'Filter & sort'}
     use:portal
@@ -1070,15 +1071,6 @@
   .toolbar :global(.toolbar-search) {
     flex: 1;
     min-width: 220px;
-    height: 42px !important;
-    min-height: 42px !important;
-  }
-
-  /* Matches the search input's 42px height rather than the button's
-     default shadcn `size="sm"` height. */
-  .toolbar :global(.clear-filters-btn) {
-    height: 42px !important;
-    min-height: 42px !important;
   }
 
   .results-count {
@@ -1242,35 +1234,10 @@
   }
 
 
-  /* Card-view controls: the Filter & Sort sheet trigger and the removable
-     chips for whatever's applied - hidden while the table (which has its own
-     header filters) is showing. */
-  .filter-trigger {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    height: 42px;
-    padding: 0 16px;
-    background: var(--font-link-color);
-    color: var(--page-color);
-    border: none;
-    font-family: 'saira', sans-serif;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    white-space: nowrap;
-    /* Same as the themed Button's (.theme-button) so it sits level with
-       Clear Filters beside it. */
-    box-shadow: var(--box-shadow);
-  }
-
-  @media (hover: hover) {
-    .filter-trigger:hover {
-      background: color-mix(in srgb, var(--font-link-color) 85%, white);
-    }
-  }
-
+  /* Card-view controls (the Filter & Sort trigger and the removable chips
+     for whatever's applied) are hidden while the table, which has its own
+     header filters, is showing. The buttons themselves are the standard
+     ones (src/styles/buttons.css); only layout lives here. */
   .filter-trigger-badge {
     display: inline-flex;
     align-items: center;
@@ -1285,65 +1252,23 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* Room below for the chips' block shadows. */
   .active-chips {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 12px;
+    gap: 10px;
+    margin-bottom: 16px;
   }
 
-  .active-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    min-height: 32px;
-    padding: 0 10px;
-    background: color-mix(in srgb, var(--font-link-color) 15%, var(--page-color));
-    border: 1px solid color-mix(in srgb, var(--font-link-color) 55%, transparent);
-    color: var(--font-color);
-    font-family: 'saira', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .active-chip :global(svg) {
-    opacity: 0.7;
-  }
-
-  @media (hover: hover) {
-    .active-chip:hover :global(svg) {
-      opacity: 1;
-      color: var(--font-link-color);
-    }
-  }
-
-  .active-chip--sort {
-    background: transparent;
-    border-style: dashed;
-  }
-
-  /* Sized and styled to match the Navbar's floating hamburger (fixed
-     top-3/right-3, p-2.5 + 20px icon + 1px border = 42px, rounded-lg,
-     shadow-lg) and stacked 8px below it. z-index 40 keeps it under the
-     hamburger and any open sheet (both z-50). */
-  .floating-filter-trigger {
+  /* Stacked 8px below the Navbar's floating hamburger (fixed top-3/right-3,
+     42px). z-index 40 keeps it under the hamburger and any open sheet (both
+     z-50). The look is the standard tool button; two classes so `fixed`
+     outranks the standard's `position: relative`. */
+  :global(.sgxp-btn.floating-filter-trigger) {
     position: fixed;
     top: calc(12px + 42px + 8px);
     right: 12px;
     z-index: 40;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 42px;
-    height: 42px;
-    padding: 0;
-    background-color: var(--page-color);
-    color: var(--font-color);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
-    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    cursor: pointer;
   }
 
   .floating-filter-badge {
@@ -1365,86 +1290,20 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* Styled after the Cards/Table toggle's unpressed buttons. */
-  .bookmarks-link {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    height: 42px;
-    padding: 0 14px;
-    background: color-mix(in srgb, var(--page-color) 60%, black);
-    border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white);
-    box-shadow: var(--box-shadow);
-    color: var(--font-color);
-    font-family: 'saira', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    text-decoration: none;
-    text-shadow: none;
-    white-space: nowrap;
-  }
-
-  .bookmarks-link :global(svg) {
-    color: var(--font-link-color);
-  }
-
   .bookmarks-link-count {
     opacity: 0.6;
     font-variant-numeric: tabular-nums;
   }
 
-  @media (hover: hover) {
-    .bookmarks-link:hover {
-      border-color: var(--font-link-color);
-    }
-  }
-
-  .view-toggle {
+  .toolbar :global(.view-toggle) {
     display: none;
     margin-left: auto;
-    box-shadow: var(--box-shadow);
-  }
-
-  .view-toggle-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    height: 42px;
-    padding: 0 14px;
-    background: color-mix(in srgb, var(--page-color) 60%, black);
-    border: var(--border-width, 2px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 80%, white);
-    color: var(--font-color);
-    font-family: 'saira', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    opacity: 0.75;
-    cursor: pointer;
-  }
-
-  .view-toggle-btn + .view-toggle-btn {
-    border-left: none;
-  }
-
-  @media (hover: hover) {
-    .view-toggle-btn:hover {
-      opacity: 1;
-    }
-  }
-
-  .view-toggle-btn[aria-pressed='true'] {
-    background: var(--font-link-color);
-    border-color: var(--font-link-color);
-    /* Matches the Filter & Sort trigger's text on the same accent fill. */
-    color: var(--page-color);
-    opacity: 1;
-    font-weight: 700;
   }
 
   /* 1400px+ is the only range wide enough for the table's rows, so that's
      the only place the Cards/Table switch appears and the table can show. */
   @media (min-width: 1400px) {
-    .view-toggle {
+    .toolbar :global(.view-toggle) {
       display: inline-flex;
     }
 
@@ -1457,7 +1316,7 @@
     }
 
     .view--table .card-view,
-    .view--table .card-view-only {
+    .view--table :global(.card-view-only) {
       display: none;
     }
   }
@@ -1474,27 +1333,20 @@
        gives up room, so Clear and the bookmarks button always stay on its
        row instead of the bookmarks button wrapping onto a line of its own
        on narrow phones. */
-    .filter-trigger {
+    .toolbar :global(.filter-trigger) {
       flex: 1 1 0;
       min-width: 0;
-      height: 46px;
     }
 
     /* Too tight for the icon on the smallest phones - the label wins. */
     @media (max-width: 340px) {
-      .filter-trigger :global(svg) {
+      .toolbar :global(.filter-trigger > svg) {
         display: none;
       }
     }
 
-    .toolbar :global(.clear-filters-btn) {
-      height: 46px !important;
-      min-height: 46px !important;
-    }
-
     /* Icon (and count) only, to share the row with Filter & Sort and Clear. */
-    .bookmarks-link {
-      height: 46px;
+    .toolbar :global(.bookmarks-link) {
       padding: 0 12px;
       gap: 6px;
     }
