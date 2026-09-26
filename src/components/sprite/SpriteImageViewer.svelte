@@ -587,87 +587,28 @@
             </div>
         </div>
 
+        <!-- Standard tool buttons. The on/off ones use aria-pressed; their
+             line-drawing icons opt out of the filled "on" look. -->
         <div class="viewer-controls">
-            <Button variant="outline" size="sm" onclick={zoomOut} disabled={zoom <= 1}>
-                <ZoomOut class="h-4 w-4" />
-            </Button>
+            <Button variant="tool" size="icon" icon={ZoomOut} onclick={zoomOut} disabled={zoom <= 1} aria-label="Zoom out" />
 
             <span class="zoom-indicator">{zoom}x</span>
 
-            <Button variant="outline" size="sm" onclick={zoomIn} disabled={zoom >= 25}>
-                <ZoomIn class="h-4 w-4" />
-            </Button>
+            <Button variant="tool" size="icon" icon={ZoomIn} onclick={zoomIn} disabled={zoom >= 25} aria-label="Zoom in" />
 
             <div class="control-separator"></div>
 
-            <Button
-                variant="outline"
-                size="sm"
-                onclick={rotateImage}
-            >
-                <RotateCw class="h-4 w-4" />
-            </Button>
-
-            <Button
-                variant="outline"
-                size="sm"
-                onclick={toggleFlipHorizontal}
-                class={flipHorizontal ? 'active' : ''}
-            >
-                <FlipHorizontal class="h-4 w-4" />
-            </Button>
-
-            <Button
-                variant="outline"
-                size="sm"
-                onclick={toggleFlipVertical}
-                class={flipVertical ? 'active' : ''}
-            >
-                <FlipVertical class="h-4 w-4" />
-            </Button>
-
-            <Button
-                variant="outline"
-                size="sm"
-                onclick={toggleGrid}
-                class={showGrid ? 'active' : ''}
-                disabled={zoom < 2}
-            >
-                <Grid3x3 class="h-4 w-4" />
-            </Button>
-
-            <Button
-                variant="outline"
-                size="sm"
-                onclick={togglePlainBackground}
-                class={plainBackground ? 'active' : ''}
-                title="Toggle plain background"
-            >
-                <Palette class="h-4 w-4" />
-            </Button>
-
-            <Button
-                variant="outline"
-                size="sm"
-                onclick={downloadImage}
-            >
-                <Download class="h-4 w-4" />
-            </Button>
+            <Button variant="tool" size="icon" icon={RotateCw} onclick={rotateImage} aria-label="Rotate" title="Rotate" />
+            <Button variant="tool" size="icon" icon={FlipHorizontal} onclick={toggleFlipHorizontal} aria-pressed={flipHorizontal} data-icon-fill="false" aria-label="Flip horizontally" title="Flip horizontally" />
+            <Button variant="tool" size="icon" icon={FlipVertical} onclick={toggleFlipVertical} aria-pressed={flipVertical} data-icon-fill="false" aria-label="Flip vertically" title="Flip vertically" />
+            <Button variant="tool" size="icon" icon={Grid3x3} onclick={toggleGrid} aria-pressed={showGrid} disabled={zoom < 2} data-icon-fill="false" aria-label="Pixel grid" title="Pixel grid (zoom to 2x or more)" />
+            <Button variant="tool" size="icon" icon={Palette} onclick={togglePlainBackground} aria-pressed={plainBackground} data-icon-fill="false" aria-label="Plain background" title="Toggle plain background" />
+            <Button variant="tool" size="icon" icon={Download} onclick={downloadImage} aria-label="Download" title="Download" />
 
             <div class="control-separator"></div>
 
-            <Button variant="outline" size="sm" onclick={centerImage}>
-                Center
-            </Button>
-
-            <Button
-                variant="outline"
-                size="sm"
-                class="close-btn"
-                onclick={handleClose}
-            >
-                <X class="h-4 w-4" />
-            </Button>
+            <Button variant="tool" onclick={centerImage}>Center</Button>
+            <Button variant="tool" size="icon" icon={X} onclick={handleClose} aria-label="Close viewer" title="Close" />
         </div>
     </div>
 {/if}
@@ -835,17 +776,14 @@
         transform: translateX(-50%);
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
         background-color: color-mix(in srgb, var(--page-color) 95%, transparent);
         backdrop-filter: blur(8px);
-        padding: 10px;
+        /* Right and bottom padding leave room for the buttons' block shadows. */
+        padding: 10px 17px 17px 10px;
         border-radius: 0;
         border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 80%, white);
         box-shadow: var(--box-shadow);
-    }
-
-    .viewer-controls :global(button) {
-        border-radius: 0;
     }
 
     .control-separator {
@@ -853,22 +791,6 @@
         height: 24px;
         background-color: color-mix(in srgb, var(--page-color) 60%, white);
         margin: 0 4px;
-    }
-
-    .viewer-controls :global(.active) {
-        background-color: color-mix(in srgb, var(--page-color) 70%, white);
-        color: var(--font-color);
-    }
-
-    .viewer-controls :global(.close-btn) {
-        background-color: #dc2626 !important;
-        border-color: #dc2626 !important;
-        color: white !important;
-    }
-
-    .viewer-controls :global(.close-btn:hover) {
-        background-color: #b91c1c !important;
-        border-color: #b91c1c !important;
     }
 
     .zoom-indicator {
@@ -919,21 +841,8 @@
             transform: none;
             flex-wrap: wrap;
             justify-content: center;
-            padding: 12px 8px;
-            gap: 8px;
-        }
-
-        /* Make control buttons larger on mobile for better touch targets */
-        .viewer-controls :global(button) {
-            padding: 10px !important;
-            min-width: 44px;
-            min-height: 44px;
-        }
-
-        /* Larger icons on mobile */
-        .viewer-controls :global(button svg) {
-            width: 20px !important;
-            height: 20px !important;
+            padding: 12px 15px 19px 8px;
+            gap: 10px;
         }
 
         .zoom-indicator {

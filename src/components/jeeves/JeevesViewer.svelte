@@ -293,6 +293,7 @@
     <Button
       variant="secondary"
       icon={ChevronLeft}
+      data-icon="plain"
       class="page-nav-btn"
       onclick={() => setPage(currentPage - 1)}
       disabled={currentPage <= 1}
@@ -315,6 +316,7 @@
 
     <Button
       variant="secondary"
+      data-icon="plain"
       class="page-nav-btn"
       onclick={() => setPage(currentPage + 1)}
       disabled={currentPage >= pageCount}
@@ -549,17 +551,11 @@
     background: color-mix(in srgb, var(--page-color) 70%, black);
   }
 
-  /* Standard secondary buttons. Their arrows are plain and bold like the
-     pagination arrows (the standard tints labelled buttons' icons with the
-     accent). */
+  /* Standard secondary buttons with plain arrows (data-icon="plain"), like
+     the pagination's; this only sets their spacing. */
   .page-nav :global(.page-nav-btn) {
     padding: 0 14px;
     gap: 4px;
-  }
-
-  .page-nav :global(.page-nav-btn > svg) {
-    color: inherit;
-    stroke-width: 3;
   }
 
   .page-select {

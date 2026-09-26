@@ -700,8 +700,7 @@
 
 <!-- Back button for non-modal mode - fixed at bottom left -->
 {#if !isModal && onClose}
-    <Button onclick={onClose} size="sm" class="fixed-back-button">
-        <ArrowLeft class="w-4 h-4 mr-2" />
+    <Button variant="secondary" icon={ArrowLeft} onclick={onClose} class="fixed-back-button">
         Back to Browser
     </Button>
 {/if}
@@ -737,46 +736,13 @@
         gap: 16px;
     }
 
-    /* Fixed back button at bottom left - styled like Post Comment button */
-    :global(.fixed-back-button) {
+    /* A standard secondary button pinned to the bottom left. Two classes so
+       `fixed` outranks the standard's `position: relative`. */
+    :global(.sgxp-btn.fixed-back-button) {
         position: fixed;
         bottom: 2rem;
         left: 2rem;
         z-index: 1000;
-        display: flex;
-        align-items: center;
-
-        /* Match Post Comment button styling */
-        font-family: 'saira', monospace !important;
-        font-size: 14px !important;
-        padding: 8px 16px !important;
-        font-weight: 700 !important;
-        background: var(--page-color) !important;
-        color: var(--font-color) !important;
-        border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 60%, white) !important;
-        border-radius: 0px !important;
-        box-shadow: var(--box-shadow) !important;
-        transition: all 0.2s ease !important;
-        cursor: url('/img/Sonic_Cursor.png'), pointer !important;
-    }
-
-    :global(.fixed-back-button:hover:not(:disabled)) {
-        border-color: var(--font-link-color) !important;
-        cursor: url('/img/Sonic_Cursor_Spin.gif'), progress !important;
-        background: color-mix(in srgb, var(--page-color) 90%, white) !important;
-    }
-
-    :global(.sprite-modal-close-btn) {
-        flex-shrink: 0;
-        background-color: #dc2626 !important;
-        border-color: #dc2626 !important;
-        color: white !important;
-        padding: 8px 12px;
-    }
-
-    :global(.sprite-modal-close-btn:hover) {
-        background-color: #b91c1c !important;
-        border-color: #b91c1c !important;
     }
 
     /* Sprite Sheet Section - Specific Layouts */

@@ -7,6 +7,7 @@
 
 	// Import from component library
 	import { Button, Input, Select, Combobox, NumberedPagination } from '$lib/components';
+	import { RotateCcw, Search } from 'lucide-svelte';
 
 	import SpriteViewer from './SpriteViewer.svelte';
 	import { applySpriteListFieldParams } from '$lib/spriteListQuery';
@@ -754,20 +755,12 @@
 									}
 								}}
 							/>
-							<Button
-								onclick={handleSearch}
-								themed={true}
-								disabled={isFetchingInProgress}
-								class="px-6"
-							>
+							<!-- Not disabled while a fetch runs (fetchSprites aborts the previous
+							     one, and fading the buttons on every fetch read as a flicker). -->
+							<Button variant="primary" icon={Search} onclick={handleSearch}>
 								Search
 							</Button>
-							<Button
-								onclick={resetAllFilters}
-								themed={true}
-								disabled={isFetchingInProgress}
-								class="px-6"
-							>
+							<Button variant="secondary" icon={RotateCcw} onclick={resetAllFilters}>
 								Reset Filters
 							</Button>
 						</div>
@@ -976,10 +969,7 @@
 								</div>
 								<h3 class="no-sprites-title">No Sprites Found</h3>
 								<p class="no-sprites-description">Try adjusting your search terms or filters.</p>
-								<Button
-									themed
-									onclick={resetAllFilters}
-								>
+								<Button variant="secondary" icon={RotateCcw} onclick={resetAllFilters}>
 									Reset All Filters
 								</Button>
 							</div>

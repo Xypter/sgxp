@@ -120,7 +120,7 @@
         </Popover.Content>
       </Popover.Root>
     {:else}
-      <div class="rating-block" aria-label={ratingLabel}>
+      <div class="{sgxpButtonClass({ variant: 'secondary', size: 'icon', static: true })} rating-block" aria-label={ratingLabel}>
         {@render ratingContent()}
       </div>
     {/if}
@@ -153,12 +153,12 @@
         title="{bookmarkCountLabel}. {bookmarked ? 'Remove your bookmark' : 'Bookmark it (only you can see your bookmarks)'}"
         aria-label="{bookmarked ? `Remove bookmark for ${title || 'this comic'}` : `Bookmark ${title || 'this comic'}`} ({bookmarkCountLabel})"
       >
-        {#if bookmarkCount > 0}<span class="bookmark-count">{bookmarkCount.toLocaleString()}</span>{/if}
+        {#if bookmarkCount > 0}<span class="sgxp-btn-count">{bookmarkCount.toLocaleString()}</span>{/if}
       </Button>
     {:else if bookmarkCount > 0}
       <span class="comic-card-bookmark comic-card-bookmark--static" title={bookmarkCountLabel}>
         <Bookmark size={17} aria-hidden="true" />
-        <span class="bookmark-count" aria-label={bookmarkCountLabel}>{bookmarkCount.toLocaleString()}</span>
+        <span class="sgxp-btn-count" aria-label={bookmarkCountLabel}>{bookmarkCount.toLocaleString()}</span>
       </span>
     {/if}
   </div>
@@ -224,9 +224,9 @@
   /* Top-right corner of the card, opposite the preview. :global because
      with notes it's rendered by Popover.Trigger (a <button> in another
      component), which this component's scoped styles can't reach. */
-  /* Styled as the standard secondary button. With notes it IS one (the
-     popover trigger carries the standard classes, so it presses like any
-     button); without notes it's a plain box drawn from the same tokens. */
+  /* The standard secondary look either way: with notes it's a real
+     secondary button (the popover trigger); without, the same classes with
+     `static` (no pointer, hover or press). Only the layout lives here. */
   .comic-card :global(.rating-block) {
     position: relative;
     flex-shrink: 0;
@@ -242,16 +242,6 @@
     padding: 0;
     font-family: 'saira', sans-serif;
     line-height: 1;
-  }
-
-  /* The plain box only - the notes button gets these (plus its hover and
-     pressed states) from the standard classes, which this rule would
-     otherwise outrank. */
-  .comic-card :global(.rating-block:not(.sgxp-btn)) {
-    background: color-mix(in srgb, var(--page-color) 60%, black);
-    border: var(--border-width, 1px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 60%, white);
-    box-shadow: var(--btn-shadow);
-    color: var(--font-color);
   }
 
   /* Open: the border stays in the accent, like a hovered secondary. */
@@ -416,15 +406,6 @@
     margin: -12px -10px -12px auto;
     padding: 0 10px;
     gap: 4px;
-  }
-
-  /* The count reads like the other stats. */
-  .bookmark-count {
-    font-family: 'saira', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    opacity: 0.8;
   }
 
   /* Logged out: just the count, nothing to click - laid out and faded like

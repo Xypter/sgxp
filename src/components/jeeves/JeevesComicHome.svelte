@@ -149,7 +149,7 @@
           </Popover.Content>
         </Popover.Root>
       {:else}
-        <div class="rating-block" aria-label={ratingLabel}>{@render ratingContent()}</div>
+        <div class="{sgxpButtonClass({ variant: 'secondary', size: 'icon', static: true })} rating-block" aria-label={ratingLabel}>{@render ratingContent()}</div>
       {/if}
     {/if}
   </div>
@@ -184,7 +184,7 @@
         title="{bookmarkCountLabel}. {bookmarked ? 'Remove your bookmark' : 'Bookmark it (only you can see your bookmarks)'}"
         aria-label="{bookmarked ? 'Remove bookmark' : 'Bookmark this comic'} ({bookmarkCountLabel})"
       >
-        {#if bookmarkCount > 0}<span class="hero-bookmark-count">{bookmarkCount.toLocaleString()}</span>{/if}
+        {#if bookmarkCount > 0}<span class="sgxp-btn-count">{bookmarkCount.toLocaleString()}</span>{/if}
       </Button>
     {/if}
   </div>
@@ -435,9 +435,9 @@
     background: color-mix(in srgb, var(--font-link-color) 15%, transparent);
   }
 
-  /* Same secondary-look rating square as ArchiveComicCard, a size up for the
-     page's headline rating. With notes it IS a standard secondary button;
-     without, a plain box drawn from the same tokens. */
+  /* Same secondary-look rating square as ArchiveComicCard (a real button
+     with notes, the same classes with `static` without), a size up for the
+     page's headline rating. Only the layout lives here. */
   .comic-hero :global(.rating-block) {
     position: relative;
     flex-shrink: 0;
@@ -452,15 +452,6 @@
     padding: 0;
     font-family: 'saira', sans-serif;
     line-height: 1;
-  }
-
-  /* The plain box only - the notes button gets these (plus its hover and
-     pressed states) from the standard classes, which this would outrank. */
-  .comic-hero :global(.rating-block:not(.sgxp-btn)) {
-    background: color-mix(in srgb, var(--page-color) 60%, black);
-    border: var(--border-width, 1px) var(--border-style, solid) color-mix(in srgb, var(--page-color) 60%, white);
-    box-shadow: var(--btn-shadow);
-    color: var(--font-color);
   }
 
   .comic-hero :global(.rating-block--notes[data-state="open"]) {
@@ -514,14 +505,6 @@
     margin: -10px -10px -10px 0;
     padding: 0 10px;
     gap: 5px;
-  }
-
-  /* The count reads like the stats. */
-  .hero-bookmark-count {
-    font-family: 'saira', sans-serif;
-    font-size: 15px;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
   }
 
   .hero-stats dt {

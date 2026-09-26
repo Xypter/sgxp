@@ -992,48 +992,33 @@ body {
 .comment-text em { font-style: italic; color: var(--font-color); }
 .comment-text u { text-decoration: underline; text-decoration-color: var(--font-link-color); }
 
-/* Buttons in Comments (Reply, Like, Report) */
+/* Comment buttons are standard <Button>s (src/styles/buttons.css); only
+   their layout lives here. */
 .comment-actions { display: flex; gap: 4px; }
-.comment-action-btn { padding: 4px 8px !important; height: auto !important; min-height: unset !important; color: var(--font-color) !important; opacity: 0.7; }
-.comment-action-btn:hover { background: color-mix(in srgb, var(--page-color) 85%, white); opacity: 1; color: var(--font-link-color); }
 
 .comment-footer, .reply-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 .comment-footer-left, .comment-footer-right { display: flex; align-items: center; gap: 12px; }
 .comment-footer-right { margin-left: auto; }
 
-.reply-btn, .view-replies-btn, .like-btn, .report-btn, .delete-btn, .comment-action-btn{
+/* Pre-standard delete button in the uploads table (uploads/cells/ActionsCell);
+   goes when that page is migrated. */
+.delete-btn:not(.sgxp-btn) {
   display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background: transparent; border: none;
   font-family: 'saira'; font-size: 12px; font-weight: 600; color: var(--font-link-color); cursor: pointer; transition: all 0.2s ease; border-radius: 4px;
 }
-.reply-btn:hover, .view-replies-btn:hover { background: color-mix(in srgb, var(--page-color) 85%, white); }
-.like-btn { color: var(--font-color); }
-.like-btn.liked { color: var(--font-link-color); opacity: 1; }
-.like-btn:hover { background: color-mix(in srgb, var(--page-color) 85%, white); opacity: 1; }
-.report-btn { color: var(--font-color); opacity: 0.5; }
-.report-btn:hover { opacity: 1; background: color-mix(in srgb, var(--page-color) 85%, white); color: var(--font-link-color); }
 
 /* Toolbars & Edit Forms */
 .comment-input-wrapper, .reply-input-wrapper { flex: 1; display: flex; flex-direction: column; gap: 10px; }
 .formatting-toolbar, .edit-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; padding-top: 8px; }
 .formatting-toolbar.edit-toolbar { flex-direction: column; align-items: flex-start; }
-.toolbar-buttons { display: flex; gap: 4px; }
+/* 10px gaps leave room for the standard buttons' block shadows. */
+.toolbar-buttons { display: flex; gap: 10px; }
 
-/* Global overrides for Shadcn buttons inside toolbars */
-.toolbar-btn {
-  background: color-mix(in srgb, var(--page-color) 80%, black) !important;
-  border: var(--border-width) var(--border-style) color-mix(in srgb, var(--page-color) 70%, white) !important;
-  color: var(--font-color) !important; padding: 6px 8px !important; height: auto !important; min-height: unset !important;
-}
-.toolbar-btn:hover { 
-  background: color-mix(in srgb, var(--page-color) 90%, white) !important; 
-  border-color: var(--font-link-color) !important; 
-  transition: all 0.2s ease;
-}
+.form-actions, .edit-form-actions, .reply-form-actions { display: flex; gap: 10px; }
 
-/* Form Actions - Style all buttons like AlertDialog cancel button */
-.form-actions, .edit-form-actions, .reply-form-actions { display: flex; gap: 8px; }
-
-.form-actions button, .edit-form-actions button, .reply-form-actions button {
+/* Pre-standard buttons in form-action rows (Settings, Upload, Upload Guide) -
+   skips standard buttons, and goes once those pages are migrated. */
+.form-actions button:not(.sgxp-btn), .edit-form-actions button:not(.sgxp-btn), .reply-form-actions button:not(.sgxp-btn) {
   font-family: 'saira', monospace !important;
   font-size: 14px !important;
   padding: 8px 16px !important;
@@ -1047,7 +1032,7 @@ body {
   cursor: url('/img/Sonic_Cursor.png'), pointer !important;
 }
 
-.form-actions button:hover:not(:disabled), .edit-form-actions button:hover:not(:disabled), .reply-form-actions button:hover:not(:disabled) {
+.form-actions button:not(.sgxp-btn):hover:not(:disabled), .edit-form-actions button:not(.sgxp-btn):hover:not(:disabled), .reply-form-actions button:not(.sgxp-btn):hover:not(:disabled) {
   border-color: var(--font-link-color) !important;
   cursor: url('/img/Sonic_Cursor_Spin.gif'), progress !important;
   background: color-mix(in srgb, var(--page-color) 90%, white) !important;

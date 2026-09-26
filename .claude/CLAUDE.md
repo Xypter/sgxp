@@ -27,6 +27,7 @@ The SGXP is an open-source sprite website where users can upload sprite sheets, 
 - Never set a button's height, colors, radius or shadow by hand: sizes use `--control-height` (42px on desktop and phones), which search inputs share so toolbars line up.
 - Anything that waits on the server uses `loading` (disables the button and shows the site `Spinner`) - don't hand-roll "Saving..." spinners.
 - If no variant fits, stop and ask the user rather than inventing a one-off look. Exceptions: navbar items keep their own pixel-font look.
+- **Every solution references the standard, so a change in `buttons.css` tracks across its whole category.** Page CSS may only set *layout* on a button (position, margins, width/flex, gaps) - never colour, border, shadow, font, icon colour or size. Anything visual a page needs becomes a documented option in `buttons.css` and on `/dev/buttons`: counts (`sgxp-btn-count`), badges (`sgxp-btn-badge`, `--corner`), plain arrow icons (`data-icon="plain"`), icon fill opt-in/out (`data-icon-fill="true"/"false"`), and non-clickable boxes that match a button (`sgxpButtonClass({ variant, size, static: true })`). Buttons that can't be `<Button>` (portalled/animated elements, popover triggers, pagination links) use `sgxpButtonClass(...)`.
 - Pages are being migrated one commit at a time (started 2026-09-26); buttons with `themed` or stock shadcn variants (`default`/`outline`/`ghost`) are pre-standard and get converted when their page is migrated.
 
 ## Project Structure

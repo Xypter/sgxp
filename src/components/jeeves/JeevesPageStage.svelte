@@ -383,16 +383,6 @@
     }
   }
 
-  /* The zoom level is a standard tool button showing text ("2x"): square
-     until a wider level needs more room. */
-  .stage-tools :global(.zoom-label) {
-    width: auto;
-    min-width: var(--control-height);
-    padding: 0 6px;
-    font-size: 13px;
-    font-variant-numeric: tabular-nums;
-  }
-
   .stage-area {
     position: relative;
     background: var(--stage-bg);

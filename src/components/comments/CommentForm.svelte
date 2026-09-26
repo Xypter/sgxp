@@ -1,6 +1,6 @@
 <script>
   import { Button, Card, Avatar, Textarea } from '$lib/components';
-  import { Bold, Italic, Underline } from 'lucide-svelte';
+  import { Bold, Italic, Underline, Send, X } from 'lucide-svelte';
   import { applyFormatting, getDisplayName } from '$lib/spriteUtils';
 
   /**
@@ -107,56 +107,18 @@
       <div class="formatting-toolbar {showAvatar ? '' : 'edit-toolbar'}">
         <!-- Formatting Buttons -->
         <div class="toolbar-buttons">
-          <Button
-            variant="ghost"
-            size="sm"
-            onclick={() => formatText('bold')}
-            disabled={isSubmitting}
-            title="Bold"
-            class="toolbar-btn"
-          >
-            <Bold class="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onclick={() => formatText('italic')}
-            disabled={isSubmitting}
-            title="Italic"
-            class="toolbar-btn"
-          >
-            <Italic class="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onclick={() => formatText('underline')}
-            disabled={isSubmitting}
-            title="Underline"
-            class="toolbar-btn"
-          >
-            <Underline class="h-4 w-4" />
-          </Button>
+          <Button variant="tool" size="icon" icon={Bold} onclick={() => formatText('bold')} disabled={isSubmitting} title="Bold" aria-label="Bold" />
+          <Button variant="tool" size="icon" icon={Italic} onclick={() => formatText('italic')} disabled={isSubmitting} title="Italic" aria-label="Italic" />
+          <Button variant="tool" size="icon" icon={Underline} onclick={() => formatText('underline')} disabled={isSubmitting} title="Underline" aria-label="Underline" />
         </div>
 
         <!-- Action Buttons -->
         <div class="{showAvatar ? 'reply-form-actions' : 'edit-form-actions'}">
-          <Button
-            onclick={handleSubmit}
-            disabled={isSubmitting || !value.trim()}
-            size="sm"
-          >
+          <Button variant="primary" icon={Send} onclick={handleSubmit} disabled={!value.trim()} loading={isSubmitting}>
             {isSubmitting ? submittingText : submitText}
           </Button>
           {#if showCancel && onCancel}
-            <Button
-              onclick={handleCancel}
-              disabled={isSubmitting}
-              variant="outline"
-              size="sm"
-            >
-              Cancel
-            </Button>
+            <Button variant="secondary" icon={X} onclick={handleCancel} disabled={isSubmitting}>Cancel</Button>
           {/if}
         </div>
       </div>
@@ -198,56 +160,18 @@
         <div class="formatting-toolbar">
           <!-- Formatting Buttons -->
           <div class="toolbar-buttons">
-            <Button
-              variant="ghost"
-              size="sm"
-              onclick={() => formatText('bold')}
-              disabled={isSubmitting}
-              title="Bold"
-              class="toolbar-btn"
-            >
-              <Bold class="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onclick={() => formatText('italic')}
-              disabled={isSubmitting}
-              title="Italic"
-              class="toolbar-btn"
-            >
-              <Italic class="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onclick={() => formatText('underline')}
-              disabled={isSubmitting}
-              title="Underline"
-              class="toolbar-btn"
-            >
-              <Underline class="h-4 w-4" />
-            </Button>
+            <Button variant="tool" size="icon" icon={Bold} onclick={() => formatText('bold')} disabled={isSubmitting} title="Bold" aria-label="Bold" />
+            <Button variant="tool" size="icon" icon={Italic} onclick={() => formatText('italic')} disabled={isSubmitting} title="Italic" aria-label="Italic" />
+            <Button variant="tool" size="icon" icon={Underline} onclick={() => formatText('underline')} disabled={isSubmitting} title="Underline" aria-label="Underline" />
           </div>
 
           <!-- Action Buttons -->
           <div class="form-actions">
-            <Button
-              onclick={handleSubmit}
-              disabled={isSubmitting || !value.trim()}
-              size="sm"
-            >
+            <Button variant="primary" icon={Send} onclick={handleSubmit} disabled={!value.trim()} loading={isSubmitting}>
               {isSubmitting ? submittingText : submitText}
             </Button>
             {#if showCancel && onCancel}
-              <Button
-                onclick={handleCancel}
-                disabled={isSubmitting}
-                variant="outline"
-                size="sm"
-              >
-                Cancel
-              </Button>
+              <Button variant="secondary" icon={X} onclick={handleCancel} disabled={isSubmitting}>Cancel</Button>
             {/if}
           </div>
         </div>

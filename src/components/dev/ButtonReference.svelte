@@ -2,8 +2,9 @@
   import { Button, ButtonGroup, Input } from '$lib/components';
   import {
     ArrowRight, BookOpen, Bookmark, ChevronLeft, ChevronRight, LayoutGrid, Pencil, Save, Search,
-    SlidersHorizontal, Table, Trash2, Upload, X, ZoomIn, ZoomOut, ChevronDown,
+    SlidersHorizontal, Table, Trash2, Upload, X, ZoomIn, ZoomOut, ChevronDown, Heart,
   } from 'lucide-svelte';
+  import { sgxpButtonClass } from '$components/ui/button';
 
   // Live demo state
   let view = $state<'cards' | 'table'>('cards');
@@ -12,6 +13,7 @@
   let page = $state(2);
   let saving = $state(false);
   let expanded = $state(false);
+  let liked = $state(false);
 
   function fakeSave() {
     saving = true;
@@ -193,6 +195,46 @@
       </Button>
     </div>
     <pre class="ref-code"><code>{`<Button variant="quiet" icon={ChevronDown}>About this archive</Button>`}</code></pre>
+  </section>
+
+  <section class="ref-section">
+    <h2>Pieces and options</h2>
+    <p class="ref-note">
+      Everything a button needs lives in the standard, so a change there reaches every button in the category.
+      If a page needs a look that isn't here, add it to <code>buttons.css</code> as an option like these - never
+      as page-level CSS.
+    </p>
+    <div class="ref-grid">
+      <div class="ref-cell">
+        <span class="ref-label">Count</span>
+        <Button variant="toggle" icon={Heart} data-icon-fill="true" aria-pressed={liked} onclick={() => (liked = !liked)}>
+          <span class="sgxp-btn-count">{liked ? 13 : 12}</span>
+        </Button>
+      </div>
+      <div class="ref-cell">
+        <span class="ref-label">Badge</span>
+        <Button variant="primary" icon={SlidersHorizontal}>Filter & Sort <span class="sgxp-btn-badge">3</span></Button>
+      </div>
+      <div class="ref-cell">
+        <span class="ref-label">Corner badge</span>
+        <Button variant="tool" size="icon" icon={SlidersHorizontal} aria-label="Filter & sort (3 active)">
+          <span class="sgxp-btn-badge sgxp-btn-badge--corner">3</span>
+        </Button>
+      </div>
+      <div class="ref-cell">
+        <span class="ref-label">Plain icon</span>
+        <Button variant="secondary" icon={ChevronLeft} data-icon="plain">Prev</Button>
+      </div>
+      <div class="ref-cell">
+        <span class="ref-label">Static (not clickable)</span>
+        <div class={sgxpButtonClass({ variant: 'secondary', size: 'icon', static: true })}>7</div>
+      </div>
+    </div>
+    <pre class="ref-code"><code>{`<span class="sgxp-btn-count">12</span>          count beside an icon
+<span class="sgxp-btn-badge">3</span>           pill after a label (+ sgxp-btn-badge--corner to pin it)
+data-icon="plain"                               icon in the text colour, bold (arrows)
+data-icon-fill="true" | "false"                 fill the icon when on: opt in (labelled) / out (line icons)
+sgxpButtonClass({ variant, size, static: true }) a box that matches a button but isn't one`}</code></pre>
   </section>
 
   <section class="ref-section">

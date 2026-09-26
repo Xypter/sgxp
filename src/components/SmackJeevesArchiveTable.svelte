@@ -762,7 +762,7 @@
         >
           Filter & Sort
           {#if activeFilterCount > 0}
-            <span class="filter-trigger-badge">{activeFilterCount}</span>
+            <span class="sgxp-btn-badge">{activeFilterCount}</span>
           {/if}
         </Button>
         <Button variant="secondary" icon={X} class="clear-filters-btn" disabled={!hasActiveFilters} onclick={clearFilters}>
@@ -780,7 +780,7 @@
           >
             <span class="bookmarks-link-label">My Bookmarks</span>
             {#if archiveBookmarkCount > 0}
-              <span class="bookmarks-link-count">{archiveBookmarkCount}</span>
+              <span class="sgxp-btn-count">{archiveBookmarkCount}</span>
             {/if}
           </Button>
         {/if}
@@ -926,7 +926,7 @@
   >
     <SlidersHorizontal size={20} />
     {#if activeFilterCount > 0}
-      <span class="floating-filter-badge">{activeFilterCount}</span>
+      <span class="sgxp-btn-badge sgxp-btn-badge--corner">{activeFilterCount}</span>
     {/if}
   </button>
 {/if}
@@ -1238,19 +1238,6 @@
      for whatever's applied) are hidden while the table, which has its own
      header filters, is showing. The buttons themselves are the standard
      ones (src/styles/buttons.css); only layout lives here. */
-  .filter-trigger-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 5px;
-    background: var(--page-color);
-    color: var(--font-link-color);
-    border-radius: 10px;
-    font-size: 12px;
-    font-variant-numeric: tabular-nums;
-  }
 
   /* Room below for the chips' block shadows. */
   .active-chips {
@@ -1271,29 +1258,6 @@
     z-index: 40;
   }
 
-  .floating-filter-badge {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 4px;
-    background: var(--font-link-color);
-    color: var(--font-color);
-    border-radius: 9px;
-    font-family: 'saira', sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .bookmarks-link-count {
-    opacity: 0.6;
-    font-variant-numeric: tabular-nums;
-  }
 
   .toolbar :global(.view-toggle) {
     display: none;

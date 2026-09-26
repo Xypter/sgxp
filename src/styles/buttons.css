@@ -115,6 +115,11 @@
   padding: 0 8px;
   gap: 5px;
   font-size: 12px;
+  /* Raised variants at this size get a block shadow and press scaled to
+     it: 3 steps and 2px instead of 7 and 4. */
+  --btn-press-offset: 2px;
+  --btn-shadow: 1px 1px 0 var(--btn-shadow-color), 2px 2px 0 var(--btn-shadow-color), 3px 3px 0 var(--btn-shadow-color);
+  --btn-shadow-pressed: 1px 1px 0 var(--btn-shadow-color), 1px 1px 0 var(--btn-shadow-color), 1px 1px 0 var(--btn-shadow-color);
 }
 
 .sgxp-btn--mini > svg {
@@ -123,12 +128,14 @@
 }
 
 .sgxp-btn--icon {
-  width: var(--control-height);
-  padding: 0;
+  /* Square for an icon; grows for short text (page numbers, "2x"). */
+  min-width: var(--control-height);
+  padding: 0 10px;
 }
 
 .sgxp-btn--mini.sgxp-btn--icon {
-  width: 24px;
+  min-width: 24px;
+  padding: 0 4px;
 }
 
 /* ---------- raised variants: primary, secondary, danger, tool ---------- */
@@ -218,13 +225,6 @@
 
 /* Pagination uses secondary buttons; the current page fills with the accent. */
 
-/* Page numbers are square until a 3+ digit page needs more room. */
-[data-slot='pagination-link'].sgxp-btn--icon {
-  width: auto;
-  min-width: var(--control-height);
-  padding: 0 10px;
-}
-
 .sgxp-btn--secondary[aria-current='page'] {
   background: var(--font-link-color);
   border-color: var(--font-link-color);
@@ -235,9 +235,12 @@
   color: var(--font-link-color);
 }
 
-/* With no label the icon IS the label (pagination arrows): text colour and
-   a bolder stroke, to match the page numbers beside them. */
-.sgxp-btn--secondary.sgxp-btn--icon > svg {
+/* Plain icons: text colour and a bolder stroke instead of the accent tint.
+   Automatic when the icon IS the label (icon-only secondaries, e.g. the
+   pagination arrows); opt in with data-icon="plain" for icons beside a
+   label that act as arrows (the reader's Prev/Next). */
+.sgxp-btn--secondary.sgxp-btn--icon > svg,
+.sgxp-btn[data-icon='plain'] > svg {
   color: inherit;
   stroke-width: 3;
 }
@@ -305,10 +308,9 @@
    press) scaled to its 24px height: a 3-step shadow and a 2px press. On =
    accent fill, same as the full-size toggle. */
 .sgxp-btn--toggle.sgxp-btn--mini {
-  --btn-press-offset: 2px;
   border-color: color-mix(in srgb, var(--page-color) 60%, white);
   font-weight: 700;
-  box-shadow: 1px 1px 0 var(--btn-shadow-color), 2px 2px 0 var(--btn-shadow-color), 3px 3px 0 var(--btn-shadow-color);
+  box-shadow: var(--btn-shadow);
 }
 
 .sgxp-btn--toggle.sgxp-btn--mini:not([aria-pressed='true']):not([data-state='on']) {
@@ -317,7 +319,7 @@
 
 .sgxp-btn--toggle.sgxp-btn--mini:active {
   transform: translate(var(--btn-press-offset), var(--btn-press-offset));
-  box-shadow: 1px 1px 0 var(--btn-shadow-color), 1px 1px 0 var(--btn-shadow-color), 1px 1px 0 var(--btn-shadow-color);
+  box-shadow: var(--btn-shadow-pressed);
   transition-duration: var(--btn-press-in);
 }
 
@@ -438,11 +440,13 @@
 
 /* An icon button that's "on" (a bookmark that's set) fills its icon in; off
    is the outline. Only icon buttons: a filled icon beside a text label
-   (e.g. the Cards/Table toggle's grid icon) would read as a solid block. */
-.sgxp-btn--icon[aria-pressed='true'] > svg,
-.sgxp-btn--icon[data-state='on'] > svg,
-.sgxp-btn--subtle[aria-pressed='true'] > svg,
-.sgxp-btn--subtle[data-state='on'] > svg {
+   (e.g. the Cards/Table toggle's grid icon) would read as a solid block.
+   Line-drawing icons that turn into a blob when filled (grid, palette,
+   flip arrows) opt out with data-icon-fill="false". */
+.sgxp-btn--icon[aria-pressed='true']:not([data-icon-fill='false']) > svg,
+.sgxp-btn--icon[data-state='on']:not([data-icon-fill='false']) > svg,
+.sgxp-btn--subtle[aria-pressed='true']:not([data-icon-fill='false']) > svg,
+.sgxp-btn--subtle[data-state='on']:not([data-icon-fill='false']) > svg {
   fill: currentColor;
 }
 
@@ -453,4 +457,62 @@
 .sgxp-btn > .sgxp-btn-spinner {
   position: relative;
   top: 2px;
+}
+
+/* Labelled buttons don't fill by default; shape icons that read better
+   filled when on (a like's heart, a favourite's bookmark) opt in. */
+.sgxp-btn[aria-pressed='true'][data-icon-fill='true'] > svg,
+.sgxp-btn[data-state='on'][data-icon-fill='true'] > svg {
+  fill: currentColor;
+}
+
+/* ---------- pieces used inside buttons ---------- */
+
+/* A count beside the icon (bookmarks, likes, favourites). */
+.sgxp-btn-count {
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+
+/* A pill badge after the label (e.g. how many filters are active). */
+.sgxp-btn-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: var(--page-color);
+  color: var(--font-link-color);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- static: a button look on something that isn't clickable ---------- */
+
+/* e.g. a rating box that only opens notes on some comics: the same look as
+   the variant beside it, with no pointer, hover, press or focus states. Use
+   via sgxpButtonClass({ variant, size, static: true }). */
+.sgxp-btn--static {
+  cursor: default;
+  pointer-events: none;
+}
+
+/* The same badge pinned to a button's top-right corner, in the accent so it
+   shows on dark icon buttons (e.g. the floating Filter & Sort). */
+.sgxp-btn-badge--corner {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--font-link-color);
+  color: var(--page-color);
+  font-size: 11px;
+  font-weight: 700;
 }

@@ -4,7 +4,7 @@
   import { Separator } from '$components/ui/separator';
 
   // Import Lucide icons
-  import { Reply, Edit2, Trash2, Heart, Flag } from 'lucide-svelte';
+  import { Reply, Edit2, Trash2, Heart, Flag, ChevronDown, ChevronUp } from 'lucide-svelte';
 
   // Import utility functions
   import { formatDate, getDisplayName, getUsername, getProfilePicture, renderCommentText } from '$lib/spriteUtils';
@@ -110,24 +110,15 @@
 
     {#if canEditDelete(comment)}
       <div class="comment-actions">
+        <Button variant="subtle" size="icon" icon={Edit2} onclick={() => onEdit(comment)} title="Edit" aria-label="Edit comment" />
         <Button
-          variant="ghost"
-          size="sm"
-          onclick={() => onEdit(comment)}
-          title="Edit"
-          class="comment-action-btn"
-        >
-          <Edit2 class="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
+          variant="subtle"
+          size="icon"
+          icon={Trash2}
           onclick={() => onDelete(comment.id, isReply, parentCommentId || getParentId(comment))}
           title="Delete"
-          class="comment-action-btn delete-btn"
-        >
-          <Trash2 class="h-4 w-4" />
-        </Button>
+          aria-label="Delete comment"
+        />
       </div>
     {/if}
   </div>
@@ -165,45 +156,37 @@
     <div class="comment-footer">
       <div class="comment-footer-left">
         {#if user}
-          <button
-            class="reply-btn"
-            onclick={() => onReply(comment.id)}
-          >
-            <Reply class="h-4 w-4" />
-            Reply
-          </button>
+          <Button variant="quiet" icon={Reply} onclick={() => onReply(comment.id)}>Reply</Button>
         {/if}
 
         {#if comment.replyCount > 0}
-          <button
-            class="view-replies-btn"
+          <Button
+            variant="quiet"
+            icon={expanded ? ChevronUp : ChevronDown}
             onclick={() => onToggleReplies(comment.id)}
+            aria-expanded={expanded}
           >
             {expanded ? 'Hide' : 'View'} {comment.replyCount} {comment.replyCount === 1 ? 'reply' : 'replies'}
-          </button>
+          </Button>
         {/if}
       </div>
 
       <div class="comment-footer-right">
         {#if user}
-          <button
-            class="like-btn {comment.userHasLiked ? 'liked' : ''}"
+          <Button
+            variant="subtle"
+            size="mini"
+            icon={Heart}
             onclick={() => onLike(comment.id, false, null)}
+            aria-pressed={!!comment.userHasLiked}
             title={comment.userHasLiked ? 'Unlike' : 'Like'}
           >
-            <Heart class="h-4 w-4" fill={comment.userHasLiked ? 'currentColor' : 'none'} />
             {#if comment.likeCount > 0}
-              <span class="like-count">{comment.likeCount}</span>
+              <span class="sgxp-btn-count">{comment.likeCount}</span>
             {/if}
-          </button>
+          </Button>
           {#if !canEditDelete(comment)}
-            <button
-              class="report-btn"
-              onclick={() => onReport(comment.id)}
-              title="Report comment"
-            >
-              <Flag class="h-4 w-4" />
-            </button>
+            <Button variant="subtle" size="icon-mini" icon={Flag} onclick={() => onReport(comment.id)} title="Report comment" aria-label="Report comment" />
           {/if}
         {/if}
       </div>
@@ -213,24 +196,20 @@
     {#if user}
       <div class="comment-footer reply-footer">
         <div class="comment-footer-right">
-          <button
-            class="like-btn {comment.userHasLiked ? 'liked' : ''}"
+          <Button
+            variant="subtle"
+            size="mini"
+            icon={Heart}
             onclick={() => onLike(comment.id, true, parentCommentId || getParentId(comment))}
+            aria-pressed={!!comment.userHasLiked}
             title={comment.userHasLiked ? 'Unlike' : 'Like'}
           >
-            <Heart class="h-4 w-4" fill={comment.userHasLiked ? 'currentColor' : 'none'} />
             {#if comment.likeCount > 0}
-              <span class="like-count">{comment.likeCount}</span>
+              <span class="sgxp-btn-count">{comment.likeCount}</span>
             {/if}
-          </button>
+          </Button>
           {#if !canEditDelete(comment)}
-            <button
-              class="report-btn"
-              onclick={() => onReport(comment.id)}
-              title="Report comment"
-            >
-              <Flag class="h-4 w-4" />
-            </button>
+            <Button variant="subtle" size="icon-mini" icon={Flag} onclick={() => onReport(comment.id)} title="Report comment" aria-label="Report comment" />
           {/if}
         </div>
       </div>

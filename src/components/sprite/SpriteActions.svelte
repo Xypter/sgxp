@@ -4,6 +4,7 @@
 
   // Import Lucide icons
   import { Heart, Bookmark } from 'lucide-svelte';
+  import { Button } from '$lib/components';
 
   // Import toast notifications
   import { toast } from 'svelte-sonner';
@@ -287,63 +288,46 @@
   });
 </script>
 
+<!-- Standard toggles: accent fill when liked / favorited, with the count
+     beside the icon. -->
 <div class="sprite-actions">
-  <button
-    class="sprite-action-btn {isLiked ? 'liked' : ''}"
+  <Button
+    variant="toggle"
+    icon={Heart}
+    data-icon-fill="true"
     onclick={toggleLike}
+    aria-pressed={isLiked}
     title={isLiked ? 'Unlike' : 'Like'}
+    aria-label="{isLiked ? 'Unlike' : 'Like'} ({likeCount})"
   >
-    <Heart class="h-6 w-6" fill={isLiked ? 'currentColor' : 'none'} />
-    <span class="action-count">{likeCount}</span>
-  </button>
+    <span class="sgxp-btn-count">{likeCount}</span>
+  </Button>
 
-  <button
-    class="sprite-action-btn {isFavorited ? 'favorited' : ''}"
+  <Button
+    variant="toggle"
+    icon={Bookmark}
+    data-icon-fill="true"
     onclick={toggleFavorite}
+    aria-pressed={isFavorited}
     title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+    aria-label="{isFavorited ? 'Remove from favorites' : 'Add to favorites'} ({favoriteCount})"
   >
-    <Bookmark class="h-6 w-6" fill={isFavorited ? 'currentColor' : 'none'} />
-    <span class="action-count">{favoriteCount}</span>
-  </button>
+    <span class="sgxp-btn-count">{favoriteCount}</span>
+  </Button>
 </div>
 
 <style>
   .sprite-actions {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     align-items: center;
     justify-content: center;
     padding: 12px 0;
   }
 
-  .sprite-action-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    background: transparent;
-    border: none;
-    font-family: 'saira', monospace;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--font-color);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border-radius: 4px;
+  /* Wide enough that 0 and 1,234 give the same-width buttons. */
+  .sprite-actions :global(.sgxp-btn) {
+    min-width: 80px;
   }
 
-  .sprite-action-btn:hover {
-    background: color-mix(in srgb, var(--page-color) 85%, white);
-  }
-
-  .sprite-action-btn.liked,
-  .sprite-action-btn.favorited {
-    color: var(--font-link-color);
-  }
-
-  .action-count {
-    font-size: 14px;
-    font-weight: 600;
-    font-family: 'saira', monospace;
-  }
 </style>

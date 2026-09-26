@@ -47,13 +47,19 @@
 		SGXP_VARIANTS.includes(variant as SgxpVariant);
 
 	/** Class list for the standard look - also for things that must look like a
-	 *  button without being <Button> (e.g. pagination links). */
-	export function sgxpButtonClass({ variant = "primary", size = "default" }: { variant?: SgxpVariant; size?: string | null } = {}) {
+	 *  button without being <Button> (pagination links, a portalled button),
+	 *  and, with `static`, for a non-clickable box that should match one. */
+	export function sgxpButtonClass({
+		variant = "primary",
+		size = "default",
+		static: isStatic = false,
+	}: { variant?: SgxpVariant; size?: string | null; static?: boolean } = {}) {
 		return cn(
 			"sgxp-btn",
 			`sgxp-btn--${variant}`,
 			(size === "mini" || size === "icon-mini") && "sgxp-btn--mini",
-			(size === "icon" || size === "icon-mini") && "sgxp-btn--icon"
+			(size === "icon" || size === "icon-mini") && "sgxp-btn--icon",
+			isStatic && "sgxp-btn--static"
 		);
 	}
 
