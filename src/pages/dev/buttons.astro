@@ -1,0 +1,13 @@
+---
+// Button standard reference - dev server only (404 in production builds).
+import FrontPageLayout from '../../layouts/FrontPageLayout.astro';
+import ButtonReference from '../../components/dev/ButtonReference.svelte';
+
+if (!import.meta.env.DEV) {
+  return new Response(null, { status: 404 });
+}
+---
+
+<FrontPageLayout title="Button standard">
+  <ButtonReference client:load />
+</FrontPageLayout>

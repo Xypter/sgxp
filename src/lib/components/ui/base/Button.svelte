@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import { Button as ShadcnButton } from '$components/ui/button';
+  import { Button as ShadcnButton, isSgxpVariant } from '$components/ui/button';
   import type { ButtonProps as ShadcnButtonProps } from '$components/ui/button';
 
   interface ButtonProps extends ShadcnButtonProps {
@@ -15,8 +15,12 @@
     ...restProps
   }: ButtonProps = $props();
 
-  // Combine theme class with any custom classes
-  const classes = themed ? `theme-button ${className || ''}` : className;
+  // `themed` is the pre-standard look. The standard variants (primary,
+  // secondary, ... - see src/styles/buttons.css) are themed already, and
+  // .theme-button's !important rules would override them, so it's skipped.
+  const classes = $derived(
+    themed && !isSgxpVariant(restProps.variant) ? `theme-button ${className || ''}` : className
+  );
 </script>
 
 <ShadcnButton class={classes} {...restProps}>
